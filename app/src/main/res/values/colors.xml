@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bio-luminescent palette. On the X3 waveguides black is transparent, so
+         every UI color is bright and saturated. -->
+    <color name="accent">#FF5C7A</color>        <!-- oxygenated rose (membrane, highlights) -->
+    <color name="accent_dark">#B8324F</color>
+    <color name="hud">#FFCF8C</color>           <!-- warm amber telemetry text -->
+    <color name="hud_glow">#FF4D6D</color>
+    <color name="cell">#2AD4C4</color>          <!-- cytoplasm teal -->
+    <color name="nucleus">#8C6BFF</color>       <!-- nucleus violet -->
+    <color name="lamp">#FFC46B</color>          <!-- the Mote's bow lamp -->
+    <color name="ink">#07030A</color>
+</resources>

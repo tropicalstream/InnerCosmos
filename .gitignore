@@ -1,0 +1,21 @@
+.gradle/
+build/
+app/build/
+local.properties
+.DS_Store
+*.apk.idsig
+.idea/
+*.iml
+captures/
+.kotlin/
+fish_audio.config
+fish.config
+*.jks
+*.keystore
+*.pem
+*.p12
+*.env
+
+# Trailer masters: too large for a normal git push (one exceeds GitHub's 100 MB hard limit).
+# Rendered from demo/capture_trailer.sh + demo/assemble_trailer.py; not needed to build the app.
+demo/*.mp4

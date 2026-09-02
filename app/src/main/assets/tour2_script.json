@@ -1,0 +1,915 @@
+{
+ "title": "InnerCosmos II: The Living Machine",
+ "durationMs": 2100000,
+ "keyframes": [
+  [
+   0,
+   0
+  ],
+  [
+   222100,
+   0
+  ],
+  [
+   230100,
+   1
+  ],
+  [
+   322000,
+   1
+  ],
+  [
+   330000,
+   1.5
+  ],
+  [
+   395900,
+   1.5
+  ],
+  [
+   403900,
+   2
+  ],
+  [
+   514400,
+   2
+  ],
+  [
+   517400,
+   2.5
+  ],
+  [
+   649800,
+   2.5
+  ],
+  [
+   657800,
+   3
+  ],
+  [
+   759400,
+   3
+  ],
+  [
+   767400,
+   4
+  ],
+  [
+   908300,
+   4
+  ],
+  [
+   916300,
+   5
+  ],
+  [
+   1039300,
+   5
+  ],
+  [
+   1047300,
+   6
+  ],
+  [
+   1180700,
+   6
+  ],
+  [
+   1188700,
+   7
+  ],
+  [
+   1341300,
+   7
+  ],
+  [
+   1349300,
+   8
+  ],
+  [
+   1501300,
+   8
+  ],
+  [
+   1509300,
+   9
+  ],
+  [
+   1640800,
+   9
+  ],
+  [
+   1648800,
+   10
+  ],
+  [
+   1816900,
+   10
+  ],
+  [
+   1824900,
+   11
+  ],
+  [
+   1939900,
+   11
+  ],
+  [
+   2019900,
+   12
+  ],
+  [
+   2100000,
+   12
+  ]
+ ],
+ "cues": [
+  {
+   "t": 3000,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_welcome_aboard",
+   "text": "[warm] Welcome back aboard the M.S.V. Mote: twelve metres of hull, one scale drive, and a crew still a little giddy from the last descent. [chuckle] This time we skip the nose. We go in the way food does, on somebody's next sip of soup. Doc, Chief, sound off."
+  },
+  {
+   "t": 30000,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_rule_of_evidence",
+   "text": "[warm] Doc here, your Physiologist. One rule for this trip, the rule that built every fact you'll hear: we believe what we can measure, not whoever says it loudest. Doubt isn't the enemy in here; it's the tool. [wonder] And that swallow coming? Dozens of muscles, a valve, a travelling wave. None of it taught. Ready?"
+  },
+  {
+   "t": 56600,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_call_first_drop",
+   "text": "[warm] Here comes the sip. Helm calling the first drop, three decades in one go: twelve metres to twelve millimetres, a thousandfold down, a fingernail. [tense] Chief, on my mark. Hands on the rail. Mark.",
+   "sfx": "drive_engage"
+  },
+  {
+   "t": 71400,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_first_drop_count",
+   "text": "[tense] Three, two, one, dropping. [awe] Twelve millimetres, and that shadow going past is a single tooth. [dry] Drive's warm, camouflage is holding, and I polished the hull this morning. Don't scuff it."
+  },
+  {
+   "t": 73400,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 90900,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_saliva_lysozyme",
+   "text": "[awe] We're swallowed, riding a river of saliva, and saliva is not just wet. Amylase is cutting starch into sugar; lysozyme is nicking open some bacterial walls. Only some: a hundred million microbes ride every millilitre, and most shrug it off. [warm] Alexander Fleming found lysozyme in 1921, seven years before penicillin. He had a cold. He cultured his own mucus anyway."
+  },
+  {
+   "t": 119600,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_epiglottis_flip",
+   "text": "[urgent] Ship-sized boulders to port are teeth, and the red hill heaving under us is the tongue, shoving us back. Larynx climbing under the tongue, cords slamming shut, epiglottis folding over the airway ahead and below. [warm] We ride over its top. Three safeguards, not one, keep lunch out of the lungs. Clear. Oesophagus, and that squeeze is peristalsis, a wave of muscle walking us down.",
+   "sfx": "squelch"
+  },
+  {
+   "t": 158100,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_stomach_acid",
+   "text": "[grave] Eight to ten seconds down the pipe, and here's the stomach. The fluid sits around pH one and a half to three and a half, acid enough to strip unprotected tissue, and pepsin works in it, chopping proteins to pieces. [wonder] The wall survives under a blanket of mucus and bicarbonate that holds its own surface near neutral, and it repaints itself every few days behind that shield."
+  },
+  {
+   "t": 202500,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_pyloric_call",
+   "text": "[warm] Pyloric valve dead ahead, and beyond it about five metres of small intestine, seven once the muscle lets go, folded into a lunchbox. [gentle] Helm calling one decade down, Chief, twelve millimetres to one point two, so we can fly between the fingers."
+  },
+  {
+   "t": 220100,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_gut_drop_count",
+   "text": "[tense] Three, two, one, dropping. [awe] One point two millimetres, and the wall's all fingers, each as long as we are. [chuckle] She handles better small. Always has."
+  },
+  {
+   "t": 222100,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 236400,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_villi_forest",
+   "text": "[awe] Villi. Thousands of them, swaying like kelp, each a finger half a millimetre to a millimetre and a half tall, packed so tight we can only skim the tips. We're a grain of sand riding over them. [warm] Watch the walls. They're drinking."
+  },
+  {
+   "t": 258700,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_absorb_surface",
+   "text": "[wonder] Every villus is coated in cells, and every cell is fringed with microvilli. Fringe on fringe on fringe. Your textbook may say all that surface would carpet a tennis court. [dry] In 2014 two Swedish researchers redid the arithmetic from real measurements of villi and microvilli: about thirty square metres. A studio apartment. [warm] Smaller, and true. I'll take true every time."
+  },
+  {
+   "t": 296400,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_colon_call",
+   "text": "[warm] Sugar and amino acids are crossing that wall into capillaries and riding the portal vein to the liver for inspection; we'll take that road ourselves later. [gentle] Course change: downstream into the colon, and the crowd down there is thick. Helm calling two decades down, Chief. One point two millimetres to twelve micrometres."
+  },
+  {
+   "t": 320000,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_microbiome_drop_count",
+   "text": "[tense] Three, two, one, dropping. [dry] Two decades that time; I counted twice. [hushed] Twelve micrometres, and... oh. Oh, there are a lot of them."
+  },
+  {
+   "t": 322000,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 336300,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_microbiome_household",
+   "text": "[awe] Bacteria. Roughly thirty-eight trillion of them, about as many as your own cells, mostly right here. That's a 2016 estimate; it retired a ten-to-one figure, a rough nineteen-seventies guess nobody rechecked for forty years. They make vitamin K, B vitamins, food for your gut wall. [reflective] A crowd like this rides in every human gut on Earth. Different meals, different species, same families, same jobs. One household."
+  },
+  {
+   "t": 379500,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_phage_call",
+   "text": "[tense] Doc, that rod ahead. Something's settling on it. [warm] Helm calling two decades down, Chief, twelve micrometres to a hundred and twenty nanometres, quick and quiet. Nobody's skipping this one."
+  },
+  {
+   "t": 393900,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_phage_drop_count",
+   "text": "[tense] Three, two, one, dropping. [hushed] One hundred and twenty nanometres. That rod's a battleship now, and we're a rowing boat. Look up."
+  },
+  {
+   "t": 395900,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 407300,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t2_doc_phage_intro",
+   "text": "[hushed] E. coli, two micrometres long. Those lunar landers settling on its hull are T4 bacteriophages: a twenty-sided head packed with DNA, a spring-loaded tail, six fibres tasting the surface. [excited] They hunt bacteria and only bacteria; no key they carry fits a human cell. [awe] Phages of every kind, ten to the thirty-one on Earth, mostly in ocean and soil. More than every star we can see."
+  },
+  {
+   "t": 434800,
+   "view": 0,
+   "sfx": "klaxon"
+  },
+  {
+   "t": 436300,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_injection",
+   "text": "[urgent] Fibres locked. Tail contracting. It's injecting, the DNA going in like a syringe. [tense] Chief, idle the drive, keep us off that surface. Two minutes, the cell's theirs; injection to burst, twenty-five to thirty minutes, and we hold station for all of them.",
+   "sfx": "impact_soft"
+  },
+  {
+   "t": 475400,
+   "view": 0,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_hostile_takeover",
+   "text": "[gentle] Nothing on those fibres knows we exist; they're keyed to that surface, not ours. [tense] Clock's run. Half an hour ago that was a bacterium making bacterium parts. Now every ribosome is stamping out phage heads and tails, and the demolition charge is set: wall-cutting enzyme, locked in till a timer opens the membrane. [dry] Hostile takeover, and the old management hasn't been told it's fired.",
+   "sfx": "alarm"
+  },
+  {
+   "t": 504000,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_pressure_run",
+   "text": "[urgent] Wall's bulging. Same pressure, weaker wall. It'll burst. Everyone to the bridge rail. Chief, thirty metres back, ready to run. [tense] Watch the cell. Watch the cell. Now."
+  },
+  {
+   "t": 514400,
+   "view": 1,
+   "sfx": "lysis"
+  },
+  {
+   "t": 515400,
+   "view": 1,
+   "sfx": "impact_soft"
+  },
+  {
+   "t": 518600,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t2_doc_lysis_dherelle",
+   "text": "[awe] Lysis. Half an hour, landing to bursting, and a hundred, two hundred new phages spill out after the next cell. [warm] London, 1915: Frederick Twort watched colonies go glassy and dissolve. Paris, 1917: Felix d'Herelle saw clear patches in a lawn of bacteria and reasoned something invisible was killing them. He named it bacteriophage, and by 1919 was treating patients, before anyone had seen a virus."
+  },
+  {
+   "t": 552825,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_phage_therapy_crispr",
+   "text": "[reflective] Antibiotics buried the idea in the West; Georgia and Poland never stopped. A 2016 San Diego rescue reopened it: case by case, when antibiotics fail. [excited] Some bacteria fight back with memory. A rare survivor files a snippet of phage DNA in its genome, a wanted poster its descendants inherit, so Cas enzymes cut that phage. That's CRISPR. Doudna and Charpentier turned it into gene editing. Nobel, 2020."
+  },
+  {
+   "t": 586670,
+   "view": 3,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_same_manifest",
+   "text": "[reflective] Here's what gets me. Every gut on the planet runs the same trades, fights the same war. A rice farmer, a banker, a kid in Nairobi, a grandmother in Oslo, our volunteer upstairs. [warm] Different species, different strains, phages near enough personal. Different crews. Identical job descriptions. [chuckle] Doc, that's your line and I stole it."
+  },
+  {
+   "t": 627800,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_portal_call",
+   "text": "[warm] Enough of the battlefield. We're riding the portal vein to the liver, and for once the Chief gets to make us bigger. Helm calling two decades up, a hundred and twenty nanometres to twelve micrometres. [gentle] Deep breath, everyone. It's about to get calm."
+  },
+  {
+   "t": 647800,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_liver_rise_count",
+   "text": "[warm] Three, two, one, rising. [chuckle] Twelve micrometres. Back to being a cell among cells, and she likes this direction better. I can hear myself think."
+  },
+  {
+   "t": 649800,
+   "view": 1,
+   "sfx": "grow"
+  },
+  {
+   "t": 664500,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_hepatocyte_jobs",
+   "text": "[awe] Plates of cells one cell thick, blood seeping between them through sinusoids, leaky on purpose. [wonder] A kilo and a half of this, your biggest internal organ, and each hepatocyte works hundreds of jobs: between them they bank about a hundred grams of glycogen, make albumin, clotting factors, bile to break up fats. [dry] It takes alcohol apart: acetaldehyde, the toxic step, then harmless acetate."
+  },
+  {
+   "t": 695600,
+   "view": 0,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_kupffer_janitor",
+   "text": "[chuckle] See those big lumpy fellows squatting in the channel? Kupffer cells. Resident macrophages. They eat whatever the gut lets through: bacteria, worn-out red cells, debris. [dry] Every plant needs a janitor who bites."
+  },
+  {
+   "t": 715500,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t2_doc_liver_regrows",
+   "text": "[awe] Here's what still stops me about this organ. Cut two thirds of a liver away and within weeks it grows back to full size. Not scar. Organ. [reflective] Surgeons learned that by measuring, patient by patient, and it's why half a liver from a living donor becomes two whole livers."
+  },
+  {
+   "t": 759400,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_glomerulus_dive",
+   "text": "[warm] Out by the hepatic vein, through the heart, down the renal artery. No drive work this leg, Chief. [awe] And we're diving into a glomerulus: a knot of capillaries balled up inside a cup, plasma pressed through the wall around us like water through a coffee filter. Doc, tell them how much."
+  },
+  {
+   "t": 786900,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_filter_reclaim",
+   "text": "[wonder] One hundred and eighty litres of plasma a day through these sieves. Your whole plasma supply, about fifty times over. [emphasis] And the tubules take back ninety-nine percent of it, water, salt, glucose, all of it, leaving a litre and a half of urine. The kidney doesn't clean blood by throwing away. It cleans by choosing what to keep."
+  },
+  {
+   "t": 817200,
+   "view": 0,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_million_filters",
+   "text": "[reflective] I'm just a passenger here, so I'm admiring. A million of these filters in each kidney, packed into something the size of a fist. [chuckle] I couldn't fit a million of anything into a fist, and I've tried with bolts."
+  },
+  {
+   "t": 839900,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_loop_epo",
+   "text": "[warm] Down the loop now, this long hairpin, and the fluid's getting saltier around us. That's the loop of Henle, concentrating. [excited] And the kidney talks. It sends out renin, which helps set your blood pressure, and erythropoietin, EPO, a hormone that tells the bone marrow: make more red cells. Remember that order slip. We'll watch it delivered."
+  },
+  {
+   "t": 882300,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_muscle_call",
+   "text": "[warm] Collecting duct ahead, and that's a road we won't ride to the end. [excited] Back into the blood and out to a thigh muscle, where Doc has timed a contraction to roll through while we're inside one cell longer than your forearm. Helm calling one decade down, Chief. Twelve micrometres to one point two."
+  },
+  {
+   "t": 906300,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_muscle_drop_count",
+   "text": "[tense] Three, two, one, dropping. [awe] One point two micrometres. Look at the stripes: ranks of them, a barcode running to the horizon. [dry] Each stripe's a sarcomere, Doc tells me. I'd have called it a piston row."
+  },
+  {
+   "t": 908300,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 927800,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_sliding_filaments",
+   "text": "[wonder] Each sarcomere is about two micrometres: thin filaments of actin laced between thick filaments of myosin. This fibre is one cell, thirty centimetres long. In 1954 two unrelated scientists, both named Huxley, published one honest answer: muscles don't shrink, filaments slide. [emphasis] Myosin heads grab actin, pull five to ten nanometres, let go, grab again. One ATP per stroke."
+  },
+  {
+   "t": 959784,
+   "view": 0,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_calcium_contract",
+   "text": "[tense] Calcium's flooding the fibre. Hold the rail. [awe] There. The bands slid together, the whole corridor shortened around us, thousands of tiny hands rowing at once. [chuckle] Our volunteer just shifted in her chair. That's all that was.",
+   "sfx": "heartbeat"
+  },
+  {
+   "t": 980100,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t2_doc_heart_never_rests",
+   "text": "[reverent] Six hundred skeletal muscles in you, and then there's the heart, a different kind of muscle entirely, doing this same stroke since before you were born, without one break. [gentle] Every heartbeat is molecules walking along ropes. Feel your pulse. That's the sound of it."
+  },
+  {
+   "t": 1017700,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_marrow_call",
+   "text": "[warm] Out through the tendon and into the femur. We're heading for the marrow, the place every blood cell you own was born. [gentle] Helm calling one decade up, Chief, one point two micrometres to twelve. Let's see if that order slip got delivered."
+  },
+  {
+   "t": 1037300,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_marrow_rise_count",
+   "text": "[warm] Three, two, one, rising. [awe] Twelve micrometres, and welcome to the factory that made your blood. [chuckle] And look at the size of that one to starboard, shedding bits of itself on purpose. Megakaryocyte. The bits are platelets, the plugs that stop you bleeding. Your body plugs its leaks with confetti."
+  },
+  {
+   "t": 1039300,
+   "view": 1,
+   "sfx": "grow"
+  },
+  {
+   "t": 1064400,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_snow_globe",
+   "text": "[awe] Inside the bone. Struts around us like the girders of a bridge, and between them red marrow, thick and alive. [wonder] It's like flying into a snow globe somebody's shaking: cells budding, cells drifting, cells slipping into the blood every second we watch."
+  },
+  {
+   "t": 1088400,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_blood_factory",
+   "text": "[wonder] Hematopoietic stem cells. Blood-makers. They bud off two to three million red cells every second, plus every white cell and every platelet: roughly two hundred billion blood cells a day, every day of your life. [emphasis] And the rate is set by that order slip from the kidney. EPO arrives here, and the line speeds up."
+  },
+  {
+   "t": 1117500,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_bcell_school",
+   "text": "[warm] This is also where B cells are born and educated, the cells that will make your antibodies. Their cousins, the T cells, go to school in the thymus. [reflective] A marrow transplant works by handing a patient a brand-new version of this room. A stranger's stem cells, making a survivor's blood."
+  },
+  {
+   "t": 1157500,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_vdj_call",
+   "text": "[gentle] That young B cell by the vessel wall, Doc. We're going inside it, all the way to the nucleus, to watch it write something no cell has ever written before. [tense] Helm calling three decades down in one go, Chief. Twelve micrometres to twelve nanometres. She'll grumble.",
+   "sfx": "drive_engage"
+  },
+  {
+   "t": 1178700,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_vdj_drop_count",
+   "text": "[tense] Three, two, one, dropping. [hushed] Twelve nanometres. We're in DNA's own room, and that thread thicker than our hull is a chromosome. [dry] Something's cutting it. On purpose, Doc says."
+  },
+  {
+   "t": 1180700,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 1197400,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_segment_library",
+   "text": "[excited] On purpose. This cell is building its antibody gene from a library. Roughly forty to fifty V segments, twenty-five D, six J. It picks one of each, at random, and two enzymes, RAG1 and RAG2, cut them out while the cell's repair crew pastes them together. [awe] Then it adds random extra letters at the joints. Deliberately."
+  },
+  {
+   "t": 1226900,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_parts_bin_question",
+   "text": "[chuckle] A parts bin, a pair of scissors and some glue. I've built worse with better tools. [reflective] How many combinations, Doc? And does the bin care whose body it's in?"
+  },
+  {
+   "t": 1243500,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_tonegawa_lottery",
+   "text": "[excited] With those extra letters and a light chain built the same way, past a hundred billion antibodies from a few hundred parts. [reflective] And for years nobody believed a gene could rearrange; genes were supposed to stay put. Susumu Tonegawa compared embryo DNA with antibody-cell DNA and showed they differed. Nobel, 1987, for proving the textbook wrong."
+  },
+  {
+   "t": 1273000,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t2_doc_tolerance_no_ancestry",
+   "text": "[gentle] And no, Chief, the bin doesn't care. Any antibody that reacts against your own molecules, the cell that made it is deleted, right here. That's tolerance. [heartfelt] This lottery runs identically in every human being alive. Same segments, same enzymes, same odds. The immune system reads molecules. It has never once read ancestry, and it never will."
+  },
+  {
+   "t": 1319700,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_highway_call",
+   "text": "[warm] Now the part I've been looking forward to since we planned the route. Back into a liver cell, and this time it's a city, and we fly the highway. [excited] Helm calling one decade up, Chief. Twelve nanometres to a hundred and twenty."
+  },
+  {
+   "t": 1339300,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_highway_rise_count",
+   "text": "[warm] Three, two, one, rising. [chuckle] One hundred and twenty nanometres, and would you look at the traffic."
+  },
+  {
+   "t": 1341300,
+   "view": 1,
+   "sfx": "grow"
+  },
+  {
+   "t": 1352800,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_meet_kinesin",
+   "text": "[awe] A liver cell, seen as a city. Those hollow rails are microtubules, twenty-five nanometres across, and something is walking along one. Walking. [warm] Two feet, a long neck, and a balloon of cargo bigger than its whole body, on a string. Matching its pace now. Meet kinesin."
+  },
+  {
+   "t": 1378300,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t2_doc_kinesin_steps",
+   "text": "[wonder] Two motor heads, its feet. Each step exactly eight nanometres, one ATP per step, about a hundred steps a second, hand over hand like a child on monkey bars, hauling that vesicle out toward the edge of the cell. [emphasis] Discovered in 1985 by Vale, Reese and Sheetz, in squid nerve, because they watched instead of assumed."
+  },
+  {
+   "t": 1407800,
+   "view": 1,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_kinesin_stumble",
+   "text": "[chuckle] Look at it stumble. Wobbles, slips, catches itself, keeps going. The famous animations are nearly right, but the real thing walks like me after a double shift. [warm] I have never admired a machine more. A hundred steps before it lets go, and it never asks for a map."
+  },
+  {
+   "t": 1434100,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_dynein_lysosome",
+   "text": "[awe] The one walking the other way is dynein, hauling back toward the centre. In a nerve cell this track can run a metre, spine to toe, and the cargo is passed motor to motor the whole way, a relay. [dry] Those acid sacs are lysosomes, sixty enzymes each, the recycling plant. Christian de Duve found them by patient centrifuging. Nobel, 1974."
+  },
+  {
+   "t": 1478100,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_city_tour",
+   "text": "[warm] Rough ER to port, sheets crusted with ribosomes. Golgi ahead, stacked like pancakes. Mitochondria everywhere, humming. [gentle] Billions of protein molecules in this one cell, and every one was built somewhere. Helm calling a pancreas next, Chief, one decade down. Doc wants to show you the line."
+  },
+  {
+   "t": 1499300,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_factory_drop_count",
+   "text": "[tense] Three, two, one, dropping. [hushed] Twelve nanometres, a beta cell, and the line's running. [dry] An assembly line nobody designed, never once shut down for maintenance. I'd give a lot for that uptime."
+  },
+  {
+   "t": 1501300,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 1519200,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_gene_read",
+   "text": "[awe] We're at the nucleus wall, and a gene is being read. RNA polymerase crawling along the DNA, spooling out messenger RNA behind it, tens of letters a second. [warm] Follow that strand. It's headed for the pore, and so are we."
+  },
+  {
+   "t": 1542300,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_ribosome_signal",
+   "text": "[wonder] Through the pore, and a ribosome grabs it. It reads three letters at a time and adds five or six amino acids a second. [emphasis] The chain's first stretch is a signal, an address label, steering it into the ER, where chaperones fold it and disulfide bonds lock the shape. Then a vesicle carries it to the Golgi for sorting."
+  },
+  {
+   "t": 1573000,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_insulin_sanger",
+   "text": "[warm] The product is insulin. Fifty-one amino acids, made long, trimmed twice, the last cut inside the granule the Golgi packed it in. Banting and Best pulled it from dog pancreas in 1921, and diabetes stopped being a death sentence. [reflective] In 1955 Sanger read its sequence, the first protein ever spelled out letter by letter. Measurement, then medicine. That order matters."
+  },
+  {
+   "t": 1604100,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_exocytosis",
+   "text": "[gentle] Blood sugar's rising upstairs. Watch the granule fuse with the wall. [awe] Exocytosis. There goes insulin, into the blood, to tell muscle, fat and liver: take the sugar in. [warm] Chief, the deep one now. Heart muscle, a mitochondrion. Helm calling one decade, in three stages. Take her to the floor."
+  },
+  {
+   "t": 1633800,
+   "view": 2,
+   "sfx": "drive_engage"
+  },
+  {
+   "t": 1635800,
+   "view": 2,
+   "sfx": "spark"
+  },
+  {
+   "t": 1639800,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_three_stage_drop",
+   "text": "[grave] Three, two, one, and one, and one. [hushed] Membrane, outer wall, inner wall. One point two nanometres. That is as small as she goes, and she knows it. [softly] Nobody breathe on anything.",
+   "sfx": "drive_engage"
+  },
+  {
+   "t": 1640800,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 1641800,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 1642800,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 1659700,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_synthase_spin",
+   "text": "[hushed] Inner membrane of a mitochondrion, in a cell of the heart. That thing turning in the wall beside us: a ring set in the membrane, a stalk, a head above it. [awe] It's spinning. It is actually spinning. ATP synthase. Holding one nanometre off it, Doc. Go."
+  },
+  {
+   "t": 1685200,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_rotary_motor",
+   "text": "[wonder] A rotary motor, made of protein. Protons pile up on the far side, pour through the ring, and the ring turns: eight subunits in mammals, about a hundred turns a second. The stalk turns inside the head, three pockets in the head, and each clicks out one ATP per turn. [emphasis] Most energy you've ever spent came through a wheel like this."
+  },
+  {
+   "t": 1716700,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_own_weight_atp",
+   "text": "[softly] I build engines. I've never built one this good. No bearings, no oil, a rotor a few nanometres across, and it runs for as long as you do. [awe] Every day your body makes and spends roughly its own weight in ATP, recycled through wheels like this one. [dry] And they call me a mechanic."
+  },
+  {
+   "t": 1745400,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t2_doc_noji_watched_it",
+   "text": "[reflective] Boyer reasoned it must rotate, from the chemistry alone. Walker solved its structure. Nobel, 1997. But that same year Noji's team did the thing that ends arguments. [awe] They fixed a glowing filament to a single motor and watched it turn under a microscope, always the same direction. Nobody needed anyone's word after that. They could look."
+  },
+  {
+   "t": 1792100,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_climb_call",
+   "text": "[warm] That's the floor of the whole trip, crew. Time to climb. One more stop on the way up: a cell in the gut lining, the same lining we swallowed into, about to split in two. [excited] Helm calling three decades up, Chief. One point two nanometres to one point two micrometres."
+  },
+  {
+   "t": 1814900,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_mitosis_rise_count",
+   "text": "[warm] Three, two, one, rising. [awe] One point two micrometres, and she's happy about it. [chuckle] Look at those X's lining up. Forty-six of them, like a parade waiting for the band."
+  },
+  {
+   "t": 1816900,
+   "view": 1,
+   "sfx": "grow"
+  },
+  {
+   "t": 1834000,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_mitosis_hour",
+   "text": "[wonder] Forty-six chromosomes, each two identical copies joined at the waist. Eight hours ago this cell copied all three point two billion base pairs, thousands of forks reading at once. Now, one hour of mitosis: condense, line up on the plate, and sisters hauled apart at about a micrometre a minute. [emphasis] Then an actin ring cinches the middle shut."
+  },
+  {
+   "t": 1864300,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t2_doc_p53_brakes",
+   "text": "[grave] Checkpoints guard every step. A protein called p53 halts damaged cells before they divide. When those brakes fail, division without brakes has a name: cancer. [warm] The control genes were found by Hartwell and Nurse in yeast and by Hunt in sea urchin eggs, Nobel 2001, because a yeast, an urchin and you run the very same cycle."
+  },
+  {
+   "t": 1894200,
+   "view": 1,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_seven_i_counted",
+   "text": "[chuckle] And there's two. Three hundred billion times a day, somewhere in you, same genome in each, reading different pages. [reflective] Helm, that's the ladder done. Take us home: six decades... no. Seven. I counted. One point two micrometres to twelve metres is seven. Drive's on full."
+  },
+  {
+   "t": 1917200,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_home_call",
+   "text": "[warm] Seven it is, Chief, and thank you for checking. Helm calling the last change: seven decades up in about eighty seconds. Everything we saw will flash past. [gentle] Hands on the rail. Chime the deck."
+  },
+  {
+   "t": 1935900,
+   "view": 1,
+   "sfx": "chime"
+  },
+  {
+   "t": 1937900,
+   "view": 1,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_seven_decades_up",
+   "text": "[excited] Three, two, one, rising. [softly] Seven decades, counted as one. Doc, the floor is yours."
+  },
+  {
+   "t": 1939900,
+   "view": 1,
+   "sfx": "grow"
+  },
+  {
+   "t": 1948500,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t2_doc_you_are_a_community",
+   "text": "[reflective] Watch it go past. Cell, marrow, muscle, liver, gut, mouth. [heartfelt] You are a community. Thirty-seven trillion human cells and about as many microbes, and not one of them knows your name. Every cell carries the same genome and reads a different chapter of it."
+  },
+  {
+   "t": 1986100,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t2_doc_one_family",
+   "text": "[tender] Here's what seven decades taught us, twice now. The same motor in every mitochondrion. The same shuffle in every marrow. The same phage war in every gut, from the first human who ever lived to the newest born this minute. [emphasis] Science, done honestly, by people willing to be wrong, keeps finding one machinery. One family. [softly] We are all human beings."
+  },
+  {
+   "t": 2043400,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t2_helm_full_size",
+   "text": "[warm] Twelve metres. Full size. There's the kitchen, there's the glass, there's her, wiping her mouth. [gentle] Thank you for riding the Mote. Now go look at your own hand. Then look at a stranger's. Same crew."
+  },
+  {
+   "t": 2066700,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t2_eng_drive_cold",
+   "text": "[softly] Drive's cold. Hull's fine. [chuckle] Same time next descent, Doc?"
+  },
+  {
+   "t": 2074700,
+   "view": 3
+  }
+ ],
+ "fillers": [
+  {
+   "role": "ENGINEERING",
+   "clip": "t2_fill_hull_creaks",
+   "text": "[dry] Hull's holding. She creaks when she's happy. [chuckle] Or when she's about to do something I didn't ask for."
+  },
+  {
+   "role": "NAVIGATION",
+   "clip": "t2_fill_steady_as_she_goes",
+   "text": "[warm] Steady as she goes. Nothing in here is in a hurry except us."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "t2_fill_best_day_wrong",
+   "text": "[reflective] The best day in science is the one where you find out you were wrong. It means the universe told you something you didn't already know."
+  },
+  {
+   "role": "ENGINEERING",
+   "clip": "t2_fill_drive_explained",
+   "text": "[chuckle] People ask how the scale drive works. I tell them the truth: beautifully. That's the only part I'm cleared to explain."
+  },
+  {
+   "role": "NAVIGATION",
+   "clip": "t2_fill_camouflage_holding",
+   "text": "[gentle] Camouflage is holding. The body can't see us, and honestly, it's far too busy to care."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "t2_fill_someone_measured",
+   "text": "[warm] Whenever I give you a number, remember that somebody had to measure it. Usually more than once. Usually after getting it wrong first."
+  },
+  {
+   "role": "ENGINEERING",
+   "clip": "t2_fill_nobel_coin",
+   "text": "[dry] Doc, if you say Nobel Prize one more time I'm going to start charging you a coin each. [chuckle] I'll be rich by the liver."
+  },
+  {
+   "role": "NAVIGATION",
+   "clip": "t2_fill_look_to_port",
+   "text": "[awe] Look to port for a moment. Almost nobody ever gets to see this. You do."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "t2_fill_not_because_i_say",
+   "text": "[emphasis] Nothing in here is true because I say so. It's true because anyone can check it, with the right instrument and enough patience."
+  },
+  {
+   "role": "ENGINEERING",
+   "clip": "t2_fill_no_blueprint",
+   "text": "[warm] Every machine on this tour was built without a blueprint, a factory, or an engineer. [chuckle] I try not to take it personally."
+  },
+  {
+   "role": "NAVIGATION",
+   "clip": "t2_fill_hands_on_rail",
+   "text": "[warm] Hands on the rail if you need it. The Mote wobbles a little at this size. So would you."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "t2_fill_same_parts_list",
+   "text": "[wonder] Same parts in you, same parts in me, same parts in everyone who ever lived. That's not a slogan. It's a measurement."
+  },
+  {
+   "role": "ENGINEERING",
+   "clip": "t2_fill_coffee_console",
+   "text": "[dry] Somebody left a coffee on the drive console. [chuckle] Doc. It's always Doc."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "t2_fill_first_look",
+   "text": "[excited] Whatever you're looking at right now, some human being once looked at it for the very first time and gasped."
+  }
+ ],
+ "segments": [
+  {
+   "label": "1. THE MOUTH",
+   "startMs": 0,
+   "node": 0
+  },
+  {
+   "label": "2. THE GUT",
+   "startMs": 216100,
+   "node": 1
+  },
+  {
+   "label": "3. THE PHAGE",
+   "startMs": 389900,
+   "node": 2
+  },
+  {
+   "label": "4. THE LIVER",
+   "startMs": 643800,
+   "node": 3
+  },
+  {
+   "label": "5. THE KIDNEY",
+   "startMs": 755400,
+   "node": 4
+  },
+  {
+   "label": "6. THE MUSCLE",
+   "startMs": 902300,
+   "node": 5
+  },
+  {
+   "label": "7. THE BONE MARROW",
+   "startMs": 1033300,
+   "node": 6
+  },
+  {
+   "label": "8. THE SHUFFLE",
+   "startMs": 1174700,
+   "node": 7
+  },
+  {
+   "label": "9. THE HIGHWAY",
+   "startMs": 1335300,
+   "node": 8
+  },
+  {
+   "label": "10. THE FACTORY",
+   "startMs": 1495300,
+   "node": 9
+  },
+  {
+   "label": "11. THE MOTOR",
+   "startMs": 1635800,
+   "node": 10
+  },
+  {
+   "label": "12. THE DIVISION",
+   "startMs": 1810900,
+   "node": 11
+  },
+  {
+   "label": "13. THE LOOK BACK",
+   "startMs": 1933900,
+   "node": 12
+  }
+ ]
+}
