@@ -1,0 +1,763 @@
+{
+ "title": "InnerCosmos III: Bethune",
+ "durationMs": 1741805,
+ "cues": [
+  {
+   "t": 1000,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_trim_and_hold",
+   "text": "[warm] Helm to all stations. We are trimmed and holding inside a human lung, and tonight's chapter belongs to Doc. Chief, take us down to forty microns and keep the drive quiet. Everyone else, watch the window.",
+   "sfx": "drive_engage"
+  },
+  {
+   "t": 18600,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t3_sci_alveoli_and_hollow",
+   "text": "[reflective] Those pale sacs are alveoli, thinner than soap film, where oxygen crosses into blood. Now look at the dark hollow ahead. A slow bacterium started it. The body's own defence did the killing. The dead core liquefied, drained into an airway and was coughed away, leaving the hole."
+  },
+  {
+   "t": 40514,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_cave_reading",
+   "text": "[dry] Engineering reads that as a cave with fibrous walls and nothing useful inside. I have flown through boiler damage that looked kinder. Tuberculosis is not a fast disease. Whatever lived in there was patient, and it took years."
+  },
+  {
+   "t": 58914,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_gravenhurst_ypres",
+   "text": "[gentle] The man who spent his life on that hollow was born at Gravenhurst, Ontario, in March 1890, a minister's son named Henry Norman Bethune. In 1915 he carried stretchers at Ypres, a medical student, not yet a doctor, when shrapnel opened his leg."
+  },
+  {
+   "t": 79314,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_detroit_diagnosis",
+   "text": "[warm] He qualified during the war, served as a navy surgeon, and opened a private practice in Detroit with good furniture and ambition to match. Then, in 1926, the cough turned out to be tuberculosis, in his own left upper lobe, and the ambition stopped mattering."
+  },
+  {
+   "t": 100514,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_trudeau_mural",
+   "text": "[hushed] That December he took a bed at the Trudeau Sanatorium, Saranac Lake, and was ordered to rest. He rested badly. He painted sixty feet of brown wrapping paper, nine panels of his own verse, and the last shows the angel of death holding him."
+  },
+  {
+   "t": 121314,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_rest_prescription",
+   "text": "[dry] Rest. That is the whole prescription? Lie still and hope? No offence, Doc, but if my scale drive were chewing itself hollow, I would not repair it by asking the thing politely to nap for a year."
+  },
+  {
+   "t": 139314,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t3_sci_pneumothorax",
+   "text": "[grave] Bethune agreed. He read a surgeon's book: let air into the space around a lung, and it falls away from the ribs and folds shut. His physicians thought it too dangerous. He argued them into it, autumn 1927. Topped up for years after. He walked out that December."
+  },
+  {
+   "t": 160114,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_the_choosing",
+   "text": "[reflective] Doc, the piece I keep turning over is the choosing. A bed in the mountains, a year of no work, doctors he could out-argue, money behind him. Other people coughing that same bacterium had none of those four things."
+  },
+  {
+   "t": 178914,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_rich_poor_line",
+   "text": "[grave] That is the hinge. He took a line from the sanatorium's own founder and made it a weapon. In the Canadian Medical Association Journal, July 1932: there is a rich man's tuberculosis and a poor man's tuberculosis. The rich man recovers, the poor man dies."
+  },
+  {
+   "t": 201914,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_into_the_vein",
+   "text": "[warm] Scale change, and mind your footing. We are inside a vein now, running with the current. That grey wall sliding past is endothelium. The polished edge ahead is a cannula, a needle in a soldier's arm, ninety years ago.",
+   "sfx": "shrink"
+  },
+  {
+   "t": 220681,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_rib_shears",
+   "text": "[dry] Credit where an engineer gives it. He left that sanatorium, became a thoracic surgeon in Montreal, and redrew his own tools: rib shears, a rib stripper, a retractor, made for him in Philadelphia. You can still order Bethune rib shears today."
+  },
+  {
+   "t": 240247,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_verdun_clinic",
+   "text": "[warm] He also painted, wrote verse, and gave free treatment to the poor of Montreal. And in April 1936, to his own medical society, he put it plainly: ask people not how much they have, but how best we can serve them."
+  },
+  {
+   "t": 259814,
+   "view": 0,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_before_the_halo",
+   "text": "[dry] Before the halo goes on, Doc. He drank hard, he quarrelled with colleagues, and he was not an easy man to stand beside in an operating room. The surgeon he trained under in Montreal called him an egocentric with a superiority complex. Brilliant hands. Nobody ever said easy."
+  },
+  {
+   "t": 280181,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_moscow_and_party",
+   "text": "[reflective] In 1935 he toured Soviet hospitals and came home convinced a state could organise medicine. Convinced, not proven. That November he quietly joined the Communist Party of Canada, and by the next summer his Montreal group had drafted a health plan for Quebec."
+  },
+  {
+   "t": 300547,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t3_sci_madrid_no_table",
+   "text": "[grave] He sailed that autumn and reached Madrid on the third of November, into a city under shellfire. He wanted an operating table. Nobody gave him one. So he went looking for the unsolved problem, and found it out on the roads."
+  },
+  {
+   "t": 320114,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_donors_queued",
+   "text": "[warm] The Canadian blood transfusion service, run out of a fifteen-room apartment on a street called Principe de Vergara. Donors were called in by radio and newspaper, and Madrid queued. Names taken, histories taken, blood grouped, a thousand donors enrolled inside a month."
+  },
+  {
+   "t": 341914,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_stored_flask",
+   "text": "[hushed] Look out to starboard. Stored blood: cells settled into a dark floor, plasma standing pale above them, everything blue with cold. Somebody gave that away in a room a long way from where it is going to be used."
+  },
+  {
+   "t": 360674,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_citrate_trick",
+   "text": "[dry] And here is the entire trick, which is not a small one. Clotting needs calcium. Citrate locks the calcium away, so blood that would set solid in ten minutes stays liquid for days. Keep it cold, and it waits for you."
+  },
+  {
+   "t": 380234,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_duran_jorda",
+   "text": "[candid] Now the honest part. In Barcelona a Spanish haematologist, Frederic Duran-Jorda, was already shipping stored blood to the Aragon front months before Bethune landed, with better equipment and a better method. Bethune said so himself. An innovator, then. Not the inventor."
+  },
+  {
+   "t": 399794,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t3_sci_the_wagon",
+   "text": "[warm] What Bethune had was reach. A Ford station wagon bought in London, fitted in Paris with a kerosene refrigerator and a steriliser. Bottles packed in ice, driven at night to sixty hospitals and out to the Jarama front, to men who would not survive the trip back."
+  },
+  {
+   "t": 419754,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_malaga_road",
+   "text": "[grave] February 1937. Malaga fell, and the coast road east filled with civilians walking, two hundred kilometres of it, shelled from the sea and strafed from the air. For three days his crew emptied the truck of blood and filled it with children, then drove back for more."
+  },
+  {
+   "t": 439714,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_pushed_out_of_spain",
+   "text": "[reflective] He wrote it up as The Crime on the Road Malaga to Almeria. Then Spain took the service back. The army wanted Spanish command. His own staff wrote home about the drinking, the woman he had running the place, money promised without asking. He went home to raise it."
+  },
+  {
+   "t": 461914,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_wound_approach",
+   "text": "[urgent] Hold on. We are threading a wound now, and I am flying slow. Torn muscle fibre above us, fibrin strung across the gap like wet rope, grit and cloth carried in by the metal. This is the country the rest of the chapter happens in.",
+   "sfx": "impact_soft"
+  },
+  {
+   "t": 484481,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_sailing_for_china",
+   "text": "[reflective] He sailed from Vancouver on the eighth of January, 1938, with a Canadian nurse named Jean Ewen and an American doctor who drank the unit's travelling money at sea. Hong Kong by month's end, then a plane inland to Hankou, where the doctor dropped out. Then trucks and mules toward the northwest."
+  },
+  {
+   "t": 507447,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_yanan_cave",
+   "text": "[warm] He reached Yan'an in late March and sat with Mao Zedong in a cave dwelling for hours. Mao himself wrote that they met only that once. The famous scene of that talk is a painting made decades after. One photograph exists, dated in Bethune's own hand, unseen until 2013."
+  },
+  {
+   "t": 529614,
+   "view": 0,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_reconstruction_warning",
+   "text": "[dry] So the image everyone knows is an artist's reconstruction. Fair warning for the whole story. Much of the legend traces to one 1952 biography, invented dialogue and all, by a friend from Spain and a co-author who never met him. None of it needs the help."
+  },
+  {
+   "t": 551781,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t3_sci_wutai_and_report",
+   "text": "[grave] He was offered the safe work, a rear hospital far behind the fighting, and refused it. He went to the Jin-Cha-Ji border region instead, the Wutai mountains where Shanxi meets Hebei. His report home read: thirteen million people, a hundred and fifty thousand troops, one qualified doctor. He meant the only Western-trained surgeon, and he was arguing rather than counting."
+  },
+  {
+   "t": 579147,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_the_inventory",
+   "text": "[dry] Now consider the inventory he inherited. Wounded men carried three and four days on doors and ladders. No gauze worth the name, no rubber gloves, anaesthetic rationed: spinal where it held, ether on a pad where it did not. Instruments boiled in a peasant cooking pot."
+  },
+  {
+   "t": 600114,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_the_arithmetic",
+   "text": "[reflective] The shortage behind that was real enough. He was forty-eight, with a lung deliberately collapsed eleven years before and never the same after. At Saranac Lake he had been given time and a choice. Here nobody was given either. That is the arithmetic he came to change."
+  },
+  {
+   "t": 621914,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_colour_returning",
+   "text": "[awe] Here it comes. Fresh red cells flooding a vessel that was running dry, and watch the tissue behind them. That grey is turning. Colour coming back into starved muscle is the most hopeful thing I ever see out of this window.",
+   "sfx": "heartbeat"
+  },
+  {
+   "t": 643714,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_shock_is_emptiness",
+   "text": "[warm] An adult carries about five litres of blood. Lose a third of it and the pump has nothing left to push, pressure falls, and the far tissue starves. That is shock. It is not the wound that kills, it is the emptiness, and emptiness can be filled."
+  },
+  {
+   "t": 667914,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_haemoglobin_cargo",
+   "text": "[warm] Each cell out there is a bag of haemoglobin, iron at the centre of it, picking up oxygen in the lung and letting it go where the tissue is hungriest. Lose enough of them and you can be breathing perfectly well and suffocating anyway."
+  },
+  {
+   "t": 690914,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t3_sci_no_bank_no_ice",
+   "text": "[candid] In the mountains he had no ice, no electricity and no bottles, so nothing could be stored. The bank he built there held no blood, it held people, and people had to be persuaded. He drew from a donor beside the table and ran it straight into the patient, by lamplight."
+  },
+  {
+   "t": 714714,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_his_own_blood",
+   "text": "[grave] Soldiers and villagers believed that giving blood would weaken a man for life. He was group O, so in June 1938 he lay down head to foot beside a wounded man and sent three hundred millilitres out of his own arm into the soldier's, then went back to work."
+  },
+  {
+   "t": 738114,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_donor_corps",
+   "text": "[dry] And it worked, which still amazes me. Doctors, nurses, clerks, the village headman, the head of the women's association, all putting their names on a list with the blood group beside it. A supply depot that volunteered, arrived on its own legs, and never lost power. No refrigerator could have held that front."
+  },
+  {
+   "t": 761914,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_clean_margins",
+   "text": "[warm] Different window. This is a war wound handled properly, with not one stitch in it: packed with dry gauze, held open on purpose, to be sewn shut at four or five days if it stays clean. Doc, tell them why it gapes, because that is not neglect."
+  },
+  {
+   "t": 781943,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_debridement",
+   "text": "[reflective] It is called debridement, and it is the whole game. You cut away everything dead, dirty or torn beyond saving until you reach tissue that bleeds. Dead flesh has no blood supply and no defence. It is where bacteria breed. Take it out early and the man lives."
+  },
+  {
+   "t": 804371,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_lugouqiao_kit",
+   "text": "[warm] So he designed a theatre that travelled on mules. Folding wooden panniers that opened into shelves and stood apart as trestles, with a plank across for the table. In the Chinese accounts, a door off its hinges. He named it Lugouqiao, Marco Polo Bridge, because that is what it looked like."
+  },
+  {
+   "t": 825600,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_ten_minutes",
+   "text": "[dry] I want to be clear about how good that design is. Stocked for roughly a hundred operations and five hundred dressings, standing in a temple or a farmhouse in half an hour, packed away again in fifteen minutes. He built a hospital that could run away from an army."
+  },
+  {
+   "t": 847228,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t3_sci_proximity_and_motto",
+   "text": "[grave] And he moved it forward, not back. Five li from the firing line at one battle, seven at another, close enough to hear the rifles. His case was simple: the farther the table sits from the fighting, the later the wounded arrive, and the more of them die. He put it in one sentence: go to the wounded, because the day of the doctor sitting and waiting for patients is over."
+  },
+  {
+   "t": 878457,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_hours_not_days",
+   "text": "[grave] Which matches what we have been flying through. A wound like the last one is winnable for a matter of hours, not days. Every hour on a stretcher is another hour for the dirt and the bacteria to make themselves comfortable in there."
+  },
+  {
+   "t": 898885,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_qihui_report",
+   "text": "[grave] In the spring of 1939, at a village called Qihui in central Hebei, his people worked straight through a battle. In his own report that July he wrote the line China still quotes: our unit operated on one hundred and fifteen cases in sixty-nine hours."
+  },
+  {
+   "t": 920114,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_second_day",
+   "text": "[dry] Professional opinion from a man who runs machinery: nobody's hands stay steady into the second day. And note the pronoun. He credited the unit, not himself, and nobody ever audited that count. It is still the finest shift I have heard of."
+  },
+  {
+   "t": 941914,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_marrow_arrival",
+   "text": "[awe] New chamber, and this is the busiest room in the body. Red marrow. Those giants at the sinus wall are megakaryocytes. They never divide, they copy their DNA and swell, then push arms through the wall and shed platelets into the current, working in minutes. Red cells take a week.",
+   "sfx": "grow"
+  },
+  {
+   "t": 964214,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_multiplication",
+   "text": "[reflective] Hold that picture, because it is the shape of his largest idea. The marrow does not carry oxygen. It makes the things that do. Somewhere in those mountains he worked out that one surgeon cannot save an army. One surgeon can only build more surgeons."
+  },
+  {
+   "t": 986914,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_songyankou_ward",
+   "text": "[warm] First he tried the obvious thing. He took a Dragon King temple at Songyankou village, in the Wutai hills, and converted it, a surgical ward with an operating room and a room for sterilising, and opened it with a ceremony in September 1938."
+  },
+  {
+   "t": 1008814,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_burned_within_weeks",
+   "text": "[dry] Japanese troops burned it within weeks. The gate tower and an eight-hundred-year-old pine survived; China rebuilt the ward to its original plan in 1974, and it stands there today. Most men would have grieved the building. He drew the engineering conclusion instead: anything that cannot walk away is already lost.",
+   "sfx": "spark"
+  },
+  {
+   "t": 1031114,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t3_sci_health_school",
+   "text": "[warm] So he taught instead. Short hard courses for orderlies and village boys, then a regional health school that opened in a Hebei village in September 1939. He handed over his small X-ray machine, his microscope and the medical books he had carried from Canada, and lectured through an interpreter."
+  },
+  {
+   "t": 1053414,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_manuals_drawn",
+   "text": "[warm] He wrote the textbooks himself, in plain words, with his own drawings, because he could draw: field hospitals in guerrilla war, first aid under fire, how to run a mobile service. Written for a boy with three years of schooling and a lantern, not copied out of London."
+  },
+  {
+   "t": 1077314,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_one_yuan",
+   "text": "[grave] Mao wired that he was to have a hundred yuan a month. He declined: he needed no money, he was fed and clothed. The regional commander drew five yuan; a soldier, one. He asked that his hundred buy tobacco for the wounded. That last summer he was thin, deaf in one ear, teeth and eyes failing."
+  },
+  {
+   "t": 1100529,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_ceiling_and_service",
+   "text": "[dry] Engineering note, because the story usually runs backwards. He did not found that school. He pushed Nie Rongzhen and the border region command until they founded it, and their own health department staffed it, ran it, and kept it running. Give the Canadian credit for the argument. Give the people who built the thing credit for the thing."
+  },
+  {
+   "t": 1128729,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_refused_indispensable",
+   "text": "[reflective] And there is a detail that changes how the school reads. He was preparing to sail home that autumn, to beg money and instruments out of Canada, which meant the teaching had to go on without him standing over it. Then the Japanese offensive came, and he put the trip off. He never did leave."
+  },
+  {
+   "t": 1164529,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_the_nick",
+   "text": "[hushed] Everyone quiet a moment. That breach in the window is nothing, a nick, the sort of thing you would not look at twice. But watch the edge of it. Those specks crossing into living tissue are bacteria, and they have just been let inside.",
+   "sfx": "squelch"
+  },
+  {
+   "t": 1185679,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_the_splinter",
+   "text": "[grave] Late October 1939, in a small temple outside a Hebei village, about seven li back from the fighting, with Japanese troops closing and the operation being hurried. A soldier's leg was shattered. Bethune put his bare left hand in for the bone fragments, and a splinter went through his middle finger."
+  },
+  {
+   "t": 1209629,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_there_were_none",
+   "text": "[dry] Call that reckless if you want. Rubber gloves were scarce out there, and a forward station could easily have none. He complained about that himself. What passed for sterile technique was iodine solution. He put the bare hand straight into it and went back to work."
+  },
+  {
+   "t": 1229579,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_dong_yuejian",
+   "text": "[candid] The finger was cleaned and bound, and he moved out with the column. Say this name while we are here. For most of those months his interpreter was Dong Yueqian, a Peking University English graduate of twenty-four, no physician at all, at the table turning one language into another."
+  },
+  {
+   "t": 1250329,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t3_sci_first_of_november",
+   "text": "[grave] On the first of November, at Ganhejing, a soldier came in with erysipelas, streptococcus spreading through the skin of his neck. They told Bethune not to operate with that finger. He operated anyway. The scalpel went through his glove, over the cut. Or there was no glove. Accounts differ. He knew, and kept working."
+  },
+  {
+   "t": 1274529,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_losing_the_argument",
+   "text": "[urgent] Bridge to all stations. I am not enjoying this window. The bacteria are in the bloodstream, dividing while we watch, and the white cells coming at them are outnumbered. This is a body losing an argument with its own circulation.",
+   "sfx": "alarm"
+  },
+  {
+   "t": 1293762,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_what_sepsis_is",
+   "text": "[grave] This is septicaemia. The danger is not only the bacteria. The defence goes off everywhere at once, fever, inflammation, vessels leaking and widening. Blood pressure drops, and the response begins destroying the tissue it was called to protect."
+  },
+  {
+   "t": 1312196,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_two_years_early",
+   "text": "[reflective] And the year is 1939. Penicillin was a laboratory curiosity. Florey and Chain would not treat a patient until 1941. But sulfa had been beating streptococcus since 1935. He carried a bottle from Canada and gave his last tablets to a wounded man. There was none left within reach."
+  },
+  {
+   "t": 1335504,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_watched_it_come",
+   "text": "[hushed] He would have watched it come. That is the part I cannot get past. A man who knew every stage of the thing killing him, and no ward, no drug, no way down that mountain that would have made any difference."
+  },
+  {
+   "t": 1355137,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_the_progression",
+   "text": "[grave] Headache, hoarseness, no appetite. He kept operating, thirteen more. On the fifth he cut a cross in his finger to drain it. An abscess on the inside of the left elbow, fever past thirty-nine by the eighth, glands in the armpit by the ninth, then cold hands."
+  },
+  {
+   "t": 1374771,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t3_sci_huangshikou",
+   "text": "[hushed] They carried him across the Tang River to a village called Huangshikou, into the north room of a farmhouse, and he died there at twenty past five in the morning on the twelfth of November, 1939. He was forty-nine."
+  },
+  {
+   "t": 1393604,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_last_letter",
+   "text": "[gentle] He wrote the day before. Two hundred and fifty pounds of quinine a year, and three hundred of iron, for the malaria and anaemia. Then his kit, given away by name, down to the boots and blankets. And a line read in China ever since: the last two years had been the happiest and most meaningful of his life."
+  },
+  {
+   "t": 1417404,
+   "view": 3,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_pull_back",
+   "text": "[awe] Taking us up and out. Look back once. Marrow, vein, lung, wound, all of it one body, and from this altitude it stops looking like anatomy and starts looking like a sky. Doc, bring it home.",
+   "sfx": "chime"
+  },
+  {
+   "t": 1435671,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_mao_essay",
+   "text": "[reflective] On the twenty-first of December, 1939, Mao Zedong wrote a short essay in his memory, praising a man's utter devotion to others without a thought for himself. It became one of the most widely read pieces of prose in the country, and it is still lesson thirteen in the textbook every Chinese twelve-year-old opens."
+  },
+  {
+   "t": 1461137,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "t3_sci_bai_qiuen",
+   "text": "[warm] So he has a second name that hundreds of millions know. Bai Qiu'en. A medical faculty now inside Jilin University carries it, and a hospital in Shijiazhuang, where his grave is too, in the North China martyrs' cemetery. Canada came round later, and mostly because China kept asking."
+  },
+  {
+   "t": 1483404,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_hands_in_the_evidence",
+   "text": "[gentle] He crossed the world to open the bodies of strangers whose language he only half-learned. What he found under the knife in Hebei was what he had found in Montreal, and drawn from the arms of Madrid. The same tissue, the same blood, the same need. He did not have to be told we were one family. He had his hands inside the evidence."
+  },
+  {
+   "t": 1513404,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_what_became_of_it",
+   "text": "[reflective] Still climbing, Doc, and I will keep it short. He died in 1939, and that war ran almost six more years without him. So before the log closes I want the rest of it: what happened to the teaching. They carried him over a river on a stretcher. Whatever he had put into other people's hands never had to be carried at all."
+  },
+  {
+   "t": 1544104,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "t3_sci_emblem_not_architect",
+   "text": "[candid] Before we leave him, one correction. The barefoot doctors came twenty-six years after he died: a policy turn in 1965, a model commune written up in the Party press in 1968. He did not design it. What he shared with it was an ethic. Train practical people fast, close to where they are needed. In 1978 the world's governments met at Alma-Ata and made basic care for everyone the goal."
+  },
+  {
+   "t": 1577604,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_village_arithmetic",
+   "text": "[dry] Engineering will take the numbers. Thirty-five years after he died, China had roughly a million and a half barefoot doctors in the villages, on three to six months of training each. Vaccination rounds, wells, latrines, a trained pair of hands within walking distance. Thin, and the state said so itself by seventy-nine, when it began examining them. Bethune did not build that. They put his face on it."
+  },
+  {
+   "t": 1610304,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_the_correction",
+   "text": "[candid] One honest correction before we surface. What actually lengthened human life was unglamorous and collective. Clean water, enough food, vaccines, sewers, schooling, and later antibiotics, delivered by millions of people whose names nobody wrote down. He belongs in that crowd, not above it. The reason he is worth remembering is not that he was the cause. It is that he chose the crowd."
+  },
+  {
+   "t": 1641004,
+   "view": 0,
+   "role": "ENGINEERING",
+   "clip": "t3_eng_the_long_curve",
+   "text": "[dry] Then take the arithmetic. Life expectancy in China, near thirty-five in 1949. Reconstructed, not measured. About seventy-nine now, and it did not climb smoothly. Famine drove it violently backwards around 1960. And thirty-five is mostly children dying, not adults. Worldwide, nearly a quarter of babies born in 1950 died before five. Under four in a hundred today."
+  },
+  {
+   "t": 1669304,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "t3_nav_no_parade",
+   "text": "[reflective] Helm again. Then Doc has the last word. For almost all of human history, in every society we have records for, about half of all children died before they grew up. Most of the world climbed out of that inside two lifetimes, quietly, with no single hero in it. Not his doing. But it is the argument he was making, and it turned out to be winnable."
+  },
+  {
+   "t": 1701604,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "t3_sci_circle_closes",
+   "text": "[gentle] And the circle closes on the tuberculosis he carried out of Saranac Lake. Streptomycin was isolated in 1943, not quite four years after he died, and by 1952 the hollow we opened this flight looking at was curable. What he wrote in 1932 outlived both the sanatorium and the cure: the medicine exists, and getting it to the poor man is still the unsolved half."
+  }
+ ],
+ "fillers": [
+  {
+   "role": "NAVIGATION",
+   "clip": "t3_fill_trim_check",
+   "text": "[warm] Helm here. Trim is good, the current is with us, and the window is clear. Nothing needs doing for a minute or two. Walk the observation deck if you like."
+  },
+  {
+   "role": "ENGINEERING",
+   "clip": "t3_fill_drive_hum",
+   "text": "[dry] Engineering. The scale drive is humming a little flat at this size, which is normal and which I will still complain about. If the lights dip, that is me, not the patient."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "t3_fill_birth_certificate",
+   "text": "[chuckle] A footnote while we drift. His birth certificate says the third of March. He and his family said the fourth. Biographers have been arguing about it for seventy years, which I suspect he would have enjoyed."
+  },
+  {
+   "role": "NAVIGATION",
+   "clip": "t3_fill_fingerprints",
+   "text": "[warm] Somebody has left fingerprints on the forward glass again, and at this magnification a fingerprint is a mountain range. I will pretend I did not notice whose hand it was."
+  },
+  {
+   "role": "ENGINEERING",
+   "clip": "t3_fill_mule_sums",
+   "text": "[dry] I keep doing the sums on those mules. Two animals, one operating theatre, mountain tracks, and a war behind you. I have requisition forms that weigh more than his whole surgical kit."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "t3_fill_cold_blood",
+   "text": "[reflective] Notice the cold out there. Blood cools fast in a mountain winter, and cold blood will not hand over its oxygen. Haemoglobin grips tighter as it chills. It clots badly too. Keeping a wounded man warm bought the surgeon time."
+  },
+  {
+   "role": "ENGINEERING",
+   "clip": "t3_fill_galley_coffee",
+   "text": "[dry] Chief to bridge. There is coffee in the galley, it is terrible, and it is hot. Two out of three is the best this ship has managed since we left the throat."
+  },
+  {
+   "role": "NAVIGATION",
+   "clip": "t3_fill_current_shift",
+   "text": "[warm] Small course correction. The current through here runs faster than the chart says, which is what happens when you take a chart of a living thing and expect it to hold still."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "t3_fill_kotnis",
+   "text": "[gentle] There is another grave beside his at Shijiazhuang. Dwarkanath Kotnis, an Indian doctor who came the same way and died in China in 1942, aged thirty-two. The two tombs face each other."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "t3_fill_gould_thread",
+   "text": "[reflective] The argument running under this whole voyage is Gould's. The differences we make so much of are recent and shallow, and the machinery beneath them is shared. Bethune arrived at the same place with his hands."
+  },
+  {
+   "role": "NAVIGATION",
+   "clip": "t3_fill_observation_altitude",
+   "text": "[reflective] Holding at observation altitude while the tissue settles. Good light out there. It is easy to forget that all of this scenery is somebody, and that somebody is doing it right now without thinking about it."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "t3_fill_two_more_names",
+   "text": "[warm] Two more names worth keeping, both in his will. Sha Fei, who photographed him for the army, got his camera. You Shenghua, deputy health chief, got eighteen kinds of surgical instruments."
+  },
+  {
+   "role": "ENGINEERING",
+   "clip": "t3_fill_rolling_boil",
+   "text": "[dry] Boiling instruments in a cooking pot sounds primitive until you realise it works. Twenty minutes at a rolling boil kills most of what is on that steel. Not everything. Most."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "t3_fill_art_centre",
+   "text": "[gentle] One more thing from the Montreal years. In June 1936 he turned his own apartment into an art centre for poor children of the city, with two painters helping him: Fritz Brandtner and Marian Dale Scott."
+  },
+  {
+   "role": "NAVIGATION",
+   "clip": "t3_fill_starboard_rail",
+   "text": "[gentle] Quiet stretch ahead, so I will keep out of Doc's way. If you want the best view of the next stop, take the starboard rail on the observation deck."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "t3_fill_tb_today",
+   "text": "[grave] For the record, tuberculosis has not left. It still kills over a million people a year, still mostly the poor, and it remains curable. His argument did not stop being current."
+  }
+ ],
+ "keyframes": [
+  [
+   0,
+   0
+  ],
+  [
+   190000,
+   0
+  ],
+  [
+   200000,
+   1
+  ],
+  [
+   330000,
+   1
+  ],
+  [
+   340000,
+   2
+  ],
+  [
+   450000,
+   2
+  ],
+  [
+   460000,
+   3
+  ],
+  [
+   610000,
+   3
+  ],
+  [
+   620000,
+   4
+  ],
+  [
+   750000,
+   4
+  ],
+  [
+   760000,
+   5
+  ],
+  [
+   930000,
+   5
+  ],
+  [
+   940000,
+   6
+  ],
+  [
+   1150000,
+   6
+  ],
+  [
+   1160000,
+   7
+  ],
+  [
+   1260000,
+   7
+  ],
+  [
+   1270000,
+   8
+  ],
+  [
+   1400000,
+   8
+  ],
+  [
+   1410000,
+   9
+  ],
+  [
+   1741805,
+   9
+  ]
+ ],
+ "segments": [
+  {
+   "label": "1.   THE CAVITY",
+   "startMs": 0,
+   "node": 0
+  },
+  {
+   "label": "2.   THE VEIN",
+   "startMs": 192000,
+   "node": 1
+  },
+  {
+   "label": "3.   THE BOTTLE",
+   "startMs": 332000,
+   "node": 2
+  },
+  {
+   "label": "4.   THE FRONT",
+   "startMs": 452000,
+   "node": 3
+  },
+  {
+   "label": "5.   THE TRANSFUSION",
+   "startMs": 612000,
+   "node": 4
+  },
+  {
+   "label": "6.   THE TABLE",
+   "startMs": 752000,
+   "node": 5
+  },
+  {
+   "label": "7.   THE STUDENTS",
+   "startMs": 932000,
+   "node": 6
+  },
+  {
+   "label": "8.   THE CUT",
+   "startMs": 1152000,
+   "node": 7
+  },
+  {
+   "label": "9.   THE FEVER",
+   "startMs": 1262000,
+   "node": 8
+  },
+  {
+   "label": "10.  THE MEMORY",
+   "startMs": 1402000,
+   "node": 9
+  }
+ ]
+}

@@ -23,7 +23,7 @@ class InnerCosmosView(
     context: Context,
     private val audioEngine: BodyAudioEngine
 ) : GLSurfaceView(context) {
-    private val renderer = StereoBodyRenderer(audioEngine)
+    private val renderer = StereoBodyRenderer(audioEngine, context.applicationContext)
     private var downX = 0f
     private var downY = 0f
     private var downAt = 0L

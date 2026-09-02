@@ -1,0 +1,11 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1280' height='1280' viewBox='0 0 1280 1280'>
+<defs><radialGradient id='g' cx='640' cy='640' r='760' gradientUnits='userSpaceOnUse'><stop offset='0' stop-color='#2A0F2E'/><stop offset='1' stop-color='#07030A'/></radialGradient>
+<filter id='glow' x='-20%' y='-50%' width='140%' height='200%'><feGaussianBlur stdDeviation='9' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter>
+<filter id='softglow' x='-20%' y='-50%' width='140%' height='200%'><feGaussianBlur stdDeviation='5' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter></defs>
+<rect width='1280' height='1280' fill='url(#g)'/>
+<text x='640' y='490' text-anchor='middle' font-family="Futura-Bold, Futura, 'Avenir Next', Helvetica" font-weight='700' font-size='44' fill='#FFF4E8' letter-spacing='4' filter='url(#glow)'>ONE SURGEON CANNOT SAVE AN ARMY</text>
+<text x='640' y='564' text-anchor='middle' font-family="'PingFang SC', 'Hiragino Sans GB', 'STHeiti', sans-serif" font-size='42' fill='#FFCF8C' letter-spacing='6'>一个外科医生救不了军队</text>
+<rect x='530' y='612' width='220' height='2' fill='#FFCF8C' opacity='0.45'/>
+<text x='640' y='676' text-anchor='middle' font-family="'Avenir Next', Helvetica" font-size='32' fill='#7BE6DC'>He trained orderlies and young villagers; the manuals he wrote and drew himself</text>
+<text x='640' y='724' text-anchor='middle' font-family="'PingFang SC', 'Hiragino Sans GB', 'STHeiti', sans-serif" font-size='29' fill='#7BE6DC' letter-spacing='3'>他培训卫生员和农村青年，教材自己写，插图自己画</text>
+</svg>

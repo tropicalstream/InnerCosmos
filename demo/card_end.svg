@@ -1,8 +1,13 @@
 <svg xmlns='http://www.w3.org/2000/svg' width='1280' height='1280' viewBox='0 0 1280 1280'>
 <defs><radialGradient id='g' cx='640' cy='640' r='760' gradientUnits='userSpaceOnUse'><stop offset='0' stop-color='#2A0F2E'/><stop offset='1' stop-color='#07030A'/></radialGradient>
-<filter id='glow' x='-20%' y='-50%' width='140%' height='200%'><feGaussianBlur stdDeviation='9' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter></defs>
+<filter id='glow' x='-20%' y='-50%' width='140%' height='200%'><feGaussianBlur stdDeviation='9' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter>
+<filter id='softglow' x='-20%' y='-50%' width='140%' height='200%'><feGaussianBlur stdDeviation='5' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter></defs>
 <rect width='1280' height='1280' fill='url(#g)'/>
-<text x='640' y='590' text-anchor='middle' font-family="Futura-Bold, Futura, 'Avenir Next', Helvetica" font-weight='700' font-size='96' fill='#FFF4E8' letter-spacing='10' filter='url(#glow)'>INNERCOSMOS</text>
-<text x='640' y='690' text-anchor='middle' font-family="'Avenir Next', Helvetica" font-size='34' fill='#FFCF8C'>M.S.V. Mote  ·  scale-drive expedition  ·  RayNeo X3 Pro</text>
-<text x='640' y='756' text-anchor='middle' font-family="'Avenir Next', Helvetica" font-size='26' fill='#B08A6A'>crew voices: Fish Audio s2.1-pro   ·   rendered in real 3D on the glasses</text>
+<text x='640' y='486' text-anchor='middle' font-family="Futura-Bold, Futura, 'Avenir Next', Helvetica" font-weight='700' font-size='76' fill='#FFF4E8' letter-spacing='8' filter='url(#glow)'>INNERCOSMOS</text>
+<text x='640' y='554' text-anchor='middle' font-family="'PingFang SC', 'Hiragino Sans GB', 'STHeiti', sans-serif" font-size='46' fill='#FFCF8C' letter-spacing='12'>内在宇宙</text>
+<rect x='540' y='598' width='200' height='2' fill='#FFCF8C' opacity='0.45'/>
+<text x='640' y='654' text-anchor='middle' font-family="'PingFang SC', 'Hiragino Sans GB', 'STHeiti', sans-serif" font-size='32' fill='#7BE6DC' letter-spacing='2'>I · THE DESCENT　　第一部 · 下潜</text>
+<text x='640' y='702' text-anchor='middle' font-family="'PingFang SC', 'Hiragino Sans GB', 'STHeiti', sans-serif" font-size='32' fill='#7BE6DC' letter-spacing='2'>II · THE LIVING MACHINE　　第二部 · 生命机器</text>
+<text x='640' y='776' text-anchor='middle' font-family="'PingFang SC', 'Hiragino Sans GB', 'STHeiti', sans-serif" font-size='32' fill='#FFCF8C'>RayNeo X3 Pro AR glasses · AR眼镜</text>
+<text x='640' y='826' text-anchor='middle' font-family="'Avenir Next', Helvetica" font-size='26' fill='#FFCF8C' opacity='0.7'>github.com/tropicalstream/InnerCosmos</text>
 </svg>

@@ -1,8 +1,12 @@
 <svg xmlns='http://www.w3.org/2000/svg' width='1280' height='1280' viewBox='0 0 1280 1280'>
 <defs><radialGradient id='g' cx='640' cy='640' r='760' gradientUnits='userSpaceOnUse'><stop offset='0' stop-color='#2A0F2E'/><stop offset='1' stop-color='#07030A'/></radialGradient>
-<filter id='glow' x='-20%' y='-50%' width='140%' height='200%'><feGaussianBlur stdDeviation='9' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter></defs>
+<filter id='glow' x='-20%' y='-50%' width='140%' height='200%'><feGaussianBlur stdDeviation='9' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter>
+<filter id='softglow' x='-20%' y='-50%' width='140%' height='200%'><feGaussianBlur stdDeviation='5' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter></defs>
 <rect width='1280' height='1280' fill='url(#g)'/>
-<text x='640' y='620' text-anchor='middle' font-family="'Avenir Next Demi Bold', 'Avenir Next', Helvetica" font-weight='700' font-size='58' fill='#FFF4E8' filter='url(#glow)'>One power of ten at a time</text>
-<text x='640' y='708' text-anchor='middle' font-family="'Avenir Next', Helvetica" font-size='40' fill='#FFCF8C'>twelve metres  →  twelve picometres</text>
-
+<text x='640' y='490' text-anchor='middle' font-family="Futura-Bold, Futura, 'Avenir Next', Helvetica" font-weight='700' font-size='62' fill='#FFF4E8' letter-spacing='5' filter='url(#softglow)'>TWELVE POWERS OF TEN</text>
+<text x='640' y='566' text-anchor='middle' font-family="'PingFang SC', 'Hiragino Sans GB', 'STHeiti', sans-serif" font-size='52' fill='#FFCF8C' letter-spacing='10'>十的十二次方</text>
+<rect x='540' y='616' width='200' height='2' fill='#FFCF8C' opacity='0.45'/>
+<text x='640' y='682' text-anchor='middle' font-family="'Avenir Next', Helvetica" font-size='46' fill='#FF89A8' letter-spacing='3'>12 m → 12 pm</text>
+<text x='640' y='742' text-anchor='middle' font-family="'Avenir Next', Helvetica" font-size='32' fill='#7BE6DC'>one decade smaller at every stop</text>
+<text x='640' y='786' text-anchor='middle' font-family="'PingFang SC', 'Hiragino Sans GB', 'STHeiti', sans-serif" font-size='30' fill='#7BE6DC' letter-spacing='4'>每一站，缩小十倍</text>
 </svg>

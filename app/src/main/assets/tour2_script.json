@@ -143,7 +143,7 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "t2_helm_call_first_drop",
-   "text": "[warm] Here comes the sip. Helm calling the first drop, three decades in one go: twelve metres to twelve millimetres, a thousandfold down, a fingernail. [tense] Chief, on my mark. Hands on the rail. Mark.",
+   "text": "[warm] Here comes the sip. Helm calling the first drop, three powers of ten in one go: twelve metres to twelve millimetres, a thousandfold down, a fingernail. [tense] Chief, on my mark. Hands on the rail. Mark.",
    "sfx": "drive_engage"
   },
   {
@@ -185,7 +185,7 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "t2_helm_pyloric_call",
-   "text": "[warm] Pyloric valve dead ahead, and beyond it about five metres of small intestine, seven once the muscle lets go, folded into a lunchbox. [gentle] Helm calling one decade down, Chief, twelve millimetres to one point two, so we can fly between the fingers."
+   "text": "[warm] Pyloric valve dead ahead, and beyond it about five metres of small intestine, seven once the muscle lets go, folded into a lunchbox. [gentle] Helm calling one power of ten down, Chief, twelve millimetres to one point two, so we can fly between the fingers."
   },
   {
    "t": 220100,
@@ -218,14 +218,14 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "t2_helm_colon_call",
-   "text": "[warm] Sugar and amino acids are crossing that wall into capillaries and riding the portal vein to the liver for inspection; we'll take that road ourselves later. [gentle] Course change: downstream into the colon, and the crowd down there is thick. Helm calling two decades down, Chief. One point two millimetres to twelve micrometres."
+   "text": "[warm] Sugar and amino acids are crossing that wall into capillaries and riding the portal vein to the liver for inspection; we'll take that road ourselves later. [gentle] Course change: downstream into the colon, and the crowd down there is thick. Helm calling two powers of ten down, Chief. One point two millimetres to twelve micrometres."
   },
   {
    "t": 320000,
    "view": 2,
    "role": "ENGINEERING",
    "clip": "t2_eng_microbiome_drop_count",
-   "text": "[tense] Three, two, one, dropping. [dry] Two decades that time; I counted twice. [hushed] Twelve micrometres, and... oh. Oh, there are a lot of them."
+   "text": "[tense] Three, two, one, dropping. [dry] two powers of ten that time; I counted twice. [hushed] Twelve micrometres, and... oh. Oh, there are a lot of them."
   },
   {
    "t": 322000,
@@ -244,7 +244,7 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "t2_helm_phage_call",
-   "text": "[tense] Doc, that rod ahead. Something's settling on it. [warm] Helm calling two decades down, Chief, twelve micrometres to a hundred and twenty nanometres, quick and quiet. Nobody's skipping this one."
+   "text": "[tense] Doc, that rod ahead. Something's settling on it. [warm] Helm calling two powers of ten down, Chief, twelve micrometres to a hundred and twenty nanometres, quick and quiet. Nobody's skipping this one."
   },
   {
    "t": 393900,
@@ -329,7 +329,7 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "t2_helm_portal_call",
-   "text": "[warm] Enough of the battlefield. We're riding the portal vein to the liver, and for once the Chief gets to make us bigger. Helm calling two decades up, a hundred and twenty nanometres to twelve micrometres. [gentle] Deep breath, everyone. It's about to get calm."
+   "text": "[warm] Enough of the battlefield. We're riding the portal vein to the liver, and for once the Chief gets to make us bigger. Helm calling two powers of ten up, a hundred and twenty nanometres to twelve micrometres. [gentle] Deep breath, everyone. It's about to get calm."
   },
   {
    "t": 647800,
@@ -397,7 +397,7 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "t2_helm_muscle_call",
-   "text": "[warm] Collecting duct ahead, and that's a road we won't ride to the end. [excited] Back into the blood and out to a thigh muscle, where Doc has timed a contraction to roll through while we're inside one cell longer than your forearm. Helm calling one decade down, Chief. Twelve micrometres to one point two."
+   "text": "[warm] Collecting duct ahead, and that's a road we won't ride to the end. [excited] Back into the blood and out to a thigh muscle, where Doc has timed a contraction to roll through while we're inside one cell longer than your forearm. Helm calling one power of ten down, Chief. Twelve micrometres to one point two."
   },
   {
    "t": 906300,
@@ -438,7 +438,7 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "t2_helm_marrow_call",
-   "text": "[warm] Out through the tendon and into the femur. We're heading for the marrow, the place every blood cell you own was born. [gentle] Helm calling one decade up, Chief, one point two micrometres to twelve. Let's see if that order slip got delivered."
+   "text": "[warm] Out through the tendon and into the femur. We're heading for the marrow, the place every blood cell you own was born. [gentle] Helm calling one power of ten up, Chief, one point two micrometres to twelve. Let's see if that order slip got delivered."
   },
   {
    "t": 1037300,
@@ -478,7 +478,7 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "t2_helm_vdj_call",
-   "text": "[gentle] That young B cell by the vessel wall, Doc. We're going inside it, all the way to the nucleus, to watch it write something no cell has ever written before. [tense] Helm calling three decades down in one go, Chief. Twelve micrometres to twelve nanometres. She'll grumble.",
+   "text": "[gentle] That young B cell by the vessel wall, Doc. We're going inside it, all the way to the nucleus, to watch it write something no cell has ever written before. [tense] Helm calling three powers of ten down in one go, Chief. Twelve micrometres to twelve nanometres. She'll grumble.",
    "sfx": "drive_engage"
   },
   {
@@ -526,7 +526,7 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "t2_helm_highway_call",
-   "text": "[warm] Now the part I've been looking forward to since we planned the route. Back into a liver cell, and this time it's a city, and we fly the highway. [excited] Helm calling one decade up, Chief. Twelve nanometres to a hundred and twenty."
+   "text": "[warm] Now the part I've been looking forward to since we planned the route. Back into a liver cell, and this time it's a city, and we fly the highway. [excited] Helm calling one power of ten up, Chief. Twelve nanometres to a hundred and twenty."
   },
   {
    "t": 1339300,
@@ -573,7 +573,7 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "t2_helm_city_tour",
-   "text": "[warm] Rough ER to port, sheets crusted with ribosomes. Golgi ahead, stacked like pancakes. Mitochondria everywhere, humming. [gentle] Billions of protein molecules in this one cell, and every one was built somewhere. Helm calling a pancreas next, Chief, one decade down. Doc wants to show you the line."
+   "text": "[warm] Rough ER to port, sheets crusted with ribosomes. Golgi ahead, stacked like pancakes. Mitochondria everywhere, humming. [gentle] Billions of protein molecules in this one cell, and every one was built somewhere. Helm calling a pancreas next, Chief, one power of ten down. Doc wants to show you the line."
   },
   {
    "t": 1499300,
@@ -613,7 +613,7 @@
    "view": 1,
    "role": "NAVIGATION",
    "clip": "t2_helm_exocytosis",
-   "text": "[gentle] Blood sugar's rising upstairs. Watch the granule fuse with the wall. [awe] Exocytosis. There goes insulin, into the blood, to tell muscle, fat and liver: take the sugar in. [warm] Chief, the deep one now. Heart muscle, a mitochondrion. Helm calling one decade, in three stages. Take her to the floor."
+   "text": "[gentle] Blood sugar's rising upstairs. Watch the granule fuse with the wall. [awe] Exocytosis. There goes insulin, into the blood, to tell muscle, fat and liver: take the sugar in. [warm] Chief, the deep one now. Heart muscle, a mitochondrion. Helm calling one power of ten, in three stages. Take her to the floor."
   },
   {
    "t": 1633800,
@@ -681,7 +681,7 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "t2_helm_climb_call",
-   "text": "[warm] That's the floor of the whole trip, crew. Time to climb. One more stop on the way up: a cell in the gut lining, the same lining we swallowed into, about to split in two. [excited] Helm calling three decades up, Chief. One point two nanometres to one point two micrometres."
+   "text": "[warm] That's the floor of the whole trip, crew. Time to climb. One more stop on the way up: a cell in the gut lining, the same lining we swallowed into, about to split in two. [excited] Helm calling three powers of ten up, Chief. One point two nanometres to one point two micrometres."
   },
   {
    "t": 1814900,
@@ -714,14 +714,14 @@
    "view": 1,
    "role": "ENGINEERING",
    "clip": "t2_eng_seven_i_counted",
-   "text": "[chuckle] And there's two. Three hundred billion times a day, somewhere in you, same genome in each, reading different pages. [reflective] Helm, that's the ladder done. Take us home: six decades... no. Seven. I counted. One point two micrometres to twelve metres is seven. Drive's on full."
+   "text": "[chuckle] And there's two. Three hundred billion times a day, somewhere in you, same genome in each, reading different pages. [reflective] Helm, that's the ladder done. Take us home: six powers of ten... no. Seven. I counted. One point two micrometres to twelve metres is seven. Drive's on full."
   },
   {
    "t": 1917200,
    "view": 0,
    "role": "NAVIGATION",
    "clip": "t2_helm_home_call",
-   "text": "[warm] Seven it is, Chief, and thank you for checking. Helm calling the last change: seven decades up in about eighty seconds. Everything we saw will flash past. [gentle] Hands on the rail. Chime the deck."
+   "text": "[warm] Seven it is, Chief, and thank you for checking. Helm calling the last change: seven powers of ten up in about eighty seconds. Everything we saw will flash past. [gentle] Hands on the rail. Chime the deck."
   },
   {
    "t": 1935900,
@@ -733,7 +733,7 @@
    "view": 1,
    "role": "ENGINEERING",
    "clip": "t2_eng_seven_decades_up",
-   "text": "[excited] Three, two, one, rising. [softly] Seven decades, counted as one. Doc, the floor is yours."
+   "text": "[excited] Three, two, one, rising. [softly] seven powers of ten, counted as one. Doc, the floor is yours."
   },
   {
    "t": 1939900,
@@ -752,7 +752,7 @@
    "view": 3,
    "role": "SCIENCE",
    "clip": "t2_doc_one_family",
-   "text": "[tender] Here's what seven decades taught us, twice now. The same motor in every mitochondrion. The same shuffle in every marrow. The same phage war in every gut, from the first human who ever lived to the newest born this minute. [emphasis] Science, done honestly, by people willing to be wrong, keeps finding one machinery. One family. [softly] We are all human beings."
+   "text": "[tender] Here's what seven powers of ten taught us, twice now. The same motor in every mitochondrion. The same shuffle in every marrow. The same phage war in every gut, from the first human who ever lived to the newest born this minute. [emphasis] Science, done honestly, by people willing to be wrong, keeps finding one machinery. One family. [softly] We are all human beings."
   },
   {
    "t": 2043400,

@@ -3,7 +3,8 @@ package com.rayneo.innercosmos
 /** The procedural landmark drawn at a stop. */
 enum class Scene {
     THRESHOLD, AIRWAY, ALVEOLUS, BLOOD, HEART, SENTINEL, NEURON, MEMBRANE, MITOCHONDRION, NUCLEUS, RIBOSOME, ATOM, LOOKBACK,
-    MOUTH, GUT, PHAGE, LIVER, KIDNEY, MUSCLE, MARROW, VDJ, HIGHWAY, FACTORY, MOTOR, DIVISION
+    MOUTH, GUT, PHAGE, LIVER, KIDNEY, MUSCLE, MARROW, VDJ, HIGHWAY, FACTORY, MOTOR, DIVISION,
+    CAVITY, DONOR, STORED, WOUND, SUTURE, SEPSIS
 }
 
 /** Ambience family of a stop: the synthesized sound bed and which particles drift past. */
@@ -32,7 +33,7 @@ class TourMap(
 ) {
     /** Rail progress beyond which the visible airflow is gone: 0.7 past the last AIR stop (or -1 if none). */
     val airEnd: Float = nodes.indexOfLast { it.amb == Amb.AIR }.let { if (it < 0) -1f else it + 0.7f }
-    val durationLabel: String get() = if (id == 1) "33 MIN" else "35 MIN"
+    val durationLabel: String get() = when (id) { 1 -> "33 MIN"; 2 -> "35 MIN"; else -> "28 MIN" }
 }
 
 object Tours {
@@ -91,6 +92,33 @@ object Tours {
         armStops = floatArrayOf(0.9f, 1.91f, 2.17f, 5.05f, 8.05f, 9.08f, 10.05f)   // villi, phage landing and lysis, sarcomere, kinesin, factory, ATP synthase
     )
 
-    val ALL = listOf(DESCENT, MACHINE)
+    /**
+     * Chapter III — BETHUNE: the same ship, but the body is the stage for a life. Henry Norman
+     * Bethune (1890-1939): the Montreal surgeon whose own tuberculosis turned him into a
+     * humanitarian, who built one of the first mobile blood-transfusion services in Spain, and who
+     * spent his last twenty months operating for, and training, the Eighth Route Army in China,
+     * where he is known as Bai Qiu'en. Ten stops, each a place in the body his work touched.
+     */
+    val BETHUNE = TourMap(
+        id = 3, title = "BETHUNE", subtitle = "ONE SURGEON  \u00b7  10 STOPS", hudTitle = "INNERCOSMOS III \u00b7 BETHUNE", scriptAsset = "tour3_script.json",
+        nodes = listOf(
+            TourNode("THE CAVITY", 0.0f, 0.0f, 0f, 4.0f, rgb(0.90f, 0.72f, 0.70f), 1.2e-4, Scene.CAVITY, Amb.AIR, 44f, 52f, "LUNG \u00b7 CAVITY", "120 \u00b5m"),
+            TourNode("THE VEIN", 2.4f, 0.3f, -16f, 2.2f, rgb(0.58f, 0.10f, 0.16f), 1.2e-5, Scene.DONOR, Amb.BLOOD, 22f, 66f, "DONOR'S VEIN", "12 \u00b5m"),
+            TourNode("THE BOTTLE", -2.2f, -0.2f, -32f, 3.0f, rgb(0.34f, 0.16f, 0.26f), 1.2e-5, Scene.STORED, Amb.CYTO, 14f, 80f, "STORED BLOOD", "12 \u00b5m"),
+            TourNode("THE FRONT", 2.0f, 0.4f, -48f, 2.8f, rgb(0.70f, 0.20f, 0.18f), 1.2e-5, Scene.WOUND, Amb.BLOOD, 40f, 105f, "THE WOUND", "12 \u00b5m"),
+            TourNode("THE TRANSFUSION", -2.6f, 0.0f, -64f, 2.0f, rgb(0.62f, 0.08f, 0.10f), 1.2e-5, Scene.BLOOD, Amb.BLOOD, 24f, 70f, "TRANSFUSION", "12 \u00b5m"),
+            TourNode("THE TABLE", 2.4f, -0.3f, -80f, 3.2f, rgb(0.78f, 0.34f, 0.32f), 1.2e-4, Scene.SUTURE, Amb.BLOOD, 50f, 60f, "THE TABLE", "120 \u00b5m"),
+            TourNode("THE STUDENTS", -2.0f, 0.3f, -96f, 3.2f, rgb(0.90f, 0.82f, 0.70f), 1.2e-5, Scene.MARROW, Amb.CYTO, 39f, 118f, "BONE MARROW", "12 \u00b5m"),
+            TourNode("THE CUT", 2.2f, 0.2f, -112f, 2.6f, rgb(0.82f, 0.40f, 0.38f), 1.2e-5, Scene.WOUND, Amb.CYTO, 19f, 76f, "A CUT FINGER", "12 \u00b5m"),
+            TourNode("THE FEVER", -2.4f, -0.2f, -128f, 2.4f, rgb(0.66f, 0.10f, 0.14f), 1.2e-6, Scene.SEPSIS, Amb.BLOOD, 54f, 50f, "BLOODSTREAM", "1.2 \u00b5m"),
+            TourNode("THE MEMORY", 0.0f, 0.2f, -146f, 9.0f, rgb(0.38f, 0.22f, 0.36f), 12.0, Scene.LOOKBACK, Amb.LOOKBACK, 50f, 60f, "WHOLE BODY", "1.2 \u00b5m \u2192 12 m")
+        ),
+        // One decade down into the bacteria at the fever, and the long climb home over the last leg.
+        lengthKeys = floatArrayOf(0f, 0.9f, 1.1f, 4.9f, 5.1f, 5.9f, 6.1f, 7.9f, 8.1f, 8.6f, 9f),
+        lengthM = doubleArrayOf(1.2e-4, 1.2e-4, 1.2e-5, 1.2e-5, 1.2e-4, 1.2e-4, 1.2e-5, 1.2e-5, 1.2e-6, 1.2e-6, 12.0),
+        armStops = floatArrayOf(3.05f, 5.05f, 7.05f)      // the wound, the sutures, the cut
+    )
+
+    val ALL = listOf(DESCENT, MACHINE, BETHUNE)
     fun byId(id: Int): TourMap = ALL.firstOrNull { it.id == id } ?: DESCENT
 }
