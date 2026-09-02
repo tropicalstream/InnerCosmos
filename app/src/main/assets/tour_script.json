@@ -1,0 +1,921 @@
+{
+ "title": "InnerCosmos",
+ "durationMs": 1980000,
+ "keyframes": [
+  [
+   0,
+   0
+  ],
+  [
+   127500,
+   0
+  ],
+  [
+   130500,
+   0.5
+  ],
+  [
+   196800,
+   0.5
+  ],
+  [
+   205800,
+   1
+  ],
+  [
+   334000,
+   1
+  ],
+  [
+   343000,
+   2
+  ],
+  [
+   472500,
+   2
+  ],
+  [
+   481500,
+   3
+  ],
+  [
+   609400,
+   3
+  ],
+  [
+   618400,
+   4
+  ],
+  [
+   724200,
+   4
+  ],
+  [
+   733200,
+   5
+  ],
+  [
+   871100,
+   5
+  ],
+  [
+   880100,
+   6
+  ],
+  [
+   1014000,
+   6
+  ],
+  [
+   1017000,
+   6.5
+  ],
+  [
+   1063500,
+   6.5
+  ],
+  [
+   1072500,
+   7
+  ],
+  [
+   1179700,
+   7
+  ],
+  [
+   1188700,
+   8
+  ],
+  [
+   1304500,
+   8
+  ],
+  [
+   1313500,
+   9
+  ],
+  [
+   1515500,
+   9
+  ],
+  [
+   1524500,
+   10
+  ],
+  [
+   1663500,
+   10
+  ],
+  [
+   1672500,
+   11
+  ],
+  [
+   1805000,
+   11
+  ],
+  [
+   1832000,
+   11.33
+  ],
+  [
+   1859000,
+   11.67
+  ],
+  [
+   1885000,
+   12
+  ],
+  [
+   1980000,
+   12
+  ]
+ ],
+ "cues": [
+  {
+   "t": 4000,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "nav_welcome_aboard",
+   "text": "[warm] Welcome aboard the M.S.V. Mote, twelve metres of submersible with a little magic in her belly. I'm your Pilot. Doc handles the science, the Engineer handles the ship, and you, friend, handle the wonder. [gentle] Eyes forward. That face in the scale bay is our whole world for the next half hour."
+  },
+  {
+   "t": 27000,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_face_at_one_to_one",
+   "text": "[wonder] Look at that face. Every human face, this close, is the same landscape: pores, fine hairs, and an outer layer of skin, the epidermis, about as thick as a sheet of paper. [gentle] That colour is melanin, made by melanocytes at the bottom of that layer and handed up into the cells above. Remember that sheet of paper."
+  },
+  {
+   "t": 52000,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "eng_scale_drive_confession",
+   "text": "[dry] Here's my confession. The scale drive is the one thing aboard I can't explain, because nobody can. It's the magic. Everything else is real, measured, and argued over by people glad to be wrong. [tense] Spooling her up; she takes a minute to wind, Doc, so talk fast. [chuckle] Remind me later to show you a turbine that shames my drive."
+  },
+  {
+   "t": 66000,
+   "sfx": "drive_engage"
+  },
+  {
+   "t": 78000,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_melanocyte_count",
+   "text": "[emphasis] Every person on Earth has roughly the same number of melanocytes in any patch of skin. What differs is how much melanin those cells make, which kind, and how it's packaged in the skin cells above them, set by a handful of genes, SLC24A5, MC1R and a few others, each nudging the shade a little."
+  },
+  {
+   "t": 102000,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_melanin_sunscreen_balance",
+   "text": "[reflective] Melanin is sunscreen. It guards the folate in your blood from ultraviolet, but too much blocks the light your skin needs to make vitamin D. Skin colour is that balance, tuned to the sun where your ancestors lived over tens of thousands of years, the lightest shades quite recently. [gentle] That is all it tells you about anyone."
+  },
+  {
+   "t": 127000,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "eng_first_drop_countdown",
+   "text": "[tense] She's singing. [urgent] Three. Two. One. Drop! [tense] Twelve metres, one point two, twelve centimetres, twelve millimetres. [chuckle] Still with us? Good."
+  },
+  {
+   "t": 128300,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 129100,
+   "sfx": "shrink"
+  },
+  {
+   "t": 129900,
+   "sfx": "shrink"
+  },
+  {
+   "t": 139000,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "nav_nostril_cave",
+   "text": "[awe] And there it is. What was a nose is now a cave mouth wide as a highway tunnel, and that forest swaying inside is nasal hair. [warm] We're twelve millimetres long now, about a fingernail, and we're going in on the next breath. Hold on. It's about to get windy."
+  },
+  {
+   "t": 161000,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "sci_nose_breath_facts",
+   "text": "[wonder] Feel that pull? An adult breathes twelve to twenty times a minute, and every nose breath comes through here first; mouth breathing skips it. The nose warms the air, wets it, then swerves it round these ridges, the turbinates. Anything over ten micrometres can't take the corner and sticks in the mucus. [gentle] We're a thousand times bigger, so we fly the gaps on purpose."
+  },
+  {
+   "t": 195000,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "eng_drop_to_airway",
+   "text": "[tense] Three, two, one, drop. [dry] One power of ten, twelve millimetres down to one point two. Mucus on the hull, lovely, I'll be scraping that off for a week. Mind the hairs, Pilot, and steer for whichever passage isn't coughing."
+  },
+  {
+   "t": 197000,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 219200,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "nav_epiglottis_trapdoor",
+   "text": "[warm] Airway approach. That flap ahead is the epiglottis. When you swallow, the larynx lifts and tips it down over the entrance below, and the vocal folds slam shut underneath; food gets steered round the sides. It's open; we're through, past the vocal folds, into the trachea: twelve centimetres of tunnel, two across, hooped with sixteen to twenty C-shaped cartilage rings. [chuckle] Doc, don't make her laugh."
+  },
+  {
+   "t": 248500,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_mucociliary_escalator",
+   "text": "[excited] See that shimmer on the walls? Billions of cilia, two hundred or so on every cell, beating ten to twenty times a second, all in the same direction: up. They carry a blanket of mucus toward the throat at about a centimetre a minute, dust and all. [warm] You swallow it without ever knowing. Biologists call it the mucociliary escalator, and I love that name."
+  },
+  {
+   "t": 277800,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "eng_escalator_grumble",
+   "text": "[dry] Escalator's running the wrong way for us, Doc. I'm burning thrust just to hold station against a hairbrush. [chuckle] Best conveyor I've ever seen, and nobody's filed a maintenance ticket in a lifetime. Pilot, pick a bronchus. Left or right, I don't care, but pick one before this thing coughs us into next week."
+  },
+  {
+   "t": 305500,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "sci_branching_twenty_three",
+   "text": "[awe] Right bronchus, the Pilot's pick, and watch it fork. And fork again. Counting from the trachea it's about twenty-three splits to the deepest sacs, ending in three to five hundred million alveoli. [emphasis] Spread it flat: fifty to a hundred square metres of gas-exchange surface, depending who's counting. Call it a badminton court, folded into your chest."
+  },
+  {
+   "t": 333600,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "eng_drop_to_alveolus",
+   "text": "[tense] Three, two, one, drop. [dry] One power of ten: a hundred and twenty micrometres, about the width of a coarse hair. This bronchiole's tighter than my budget. Sacs ahead, Pilot. Find us a pretty one."
+  },
+  {
+   "t": 335600,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 352800,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "nav_inside_the_bubble",
+   "text": "[hushed] Easy now. We're inside a single alveolus. One of hundreds of millions. It's one pocket in a foam, open at the mouth, sharing every wall with the sacs next door, and inside those shared walls runs a sheet of capillaries so dense it's more blood than tissue. Look through the wall: red cells going by. [warm] I'm cutting the engines. Let's just float."
+  },
+  {
+   "t": 381100,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "sci_alveolus_barrier",
+   "text": "[softly] This sac is about two to three hundred micrometres across. The wall between the air and the blood is less than a micrometre thick. [wonder] Oxygen doesn't get pumped through. It just diffuses, high to low, in well under a second, and carbon dioxide drifts the other way. No valves, no gates. Only physics, patiently doing its job."
+  },
+  {
+   "t": 414100,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "sci_surfactant_glisten",
+   "text": "[gentle] See that glisten on the inside of the bubble? Surfactant. It lowers surface tension so the sac doesn't collapse when you breathe out. Premature babies sometimes don't have enough, and doctors learned to give it to them. [heartfelt] That's what honest measurement buys you: a thin film, understood, and a child breathing."
+  },
+  {
+   "t": 443900,
+   "view": 1,
+   "role": "ENGINEERING",
+   "clip": "eng_red_cell_stopwatch",
+   "text": "[dry] I've been timing the red cells through the capillary behind that wall. Three quarters of a second each, give or take, and every one leaves all but full, about ninety-seven percent loaded, as full as the air allows. [chuckle] Fastest fuel stop in the universe, and no queue. Pilot, we're going through that wall next. I'm not saying it'll be tight. I'm saying breathe out."
+  },
+  {
+   "t": 472000,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "eng_drop_to_blood",
+   "text": "[tense] Three, two, one, drop. [dry] One power of ten: twelve micrometres, wider than a red cell, wider than this capillary. So are they; they fold. So do we, don't ask how. Five litres of blood, tens of thousands of kilometres of plumbing, and we're through the wall. Told you to breathe out."
+  },
+  {
+   "t": 474000,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 498000,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "nav_capillary_single_file",
+   "text": "[excited] We're in the blood! Squeezed out of a capillary into a venule, ten to thirty micrometres across, and behind us the red cells are going single file through a five-micrometre bore, folding to fit. [warm] Biconcave discs, seven or eight micrometres wide. At twelve micrometres we're bigger than any red cell in this pipe, riding on toward a pulmonary vein and the heart."
+  },
+  {
+   "t": 526000,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_red_cell_numbers",
+   "text": "[wonder] Each of those discs has no nucleus, just a bag of haemoglobin, about two hundred and seventy million molecules of it, each one carrying up to four oxygens. They live about a hundred and twenty days. [awe] You have some twenty-five trillion of them, and your bone marrow builds two to three million new ones every second."
+  },
+  {
+   "t": 551000,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_blood_has_no_race",
+   "text": "[gentle] Look at these cells and tell me what race this person is. You can't. A lab could match the DNA in the white cells to a person, but no red cell carries a race. [emphasis] Blood groups, A, B, AB, O, Rh positive or negative, turn up on every continent and cut across every so-called race, just at different frequencies. A transfusion matches antigens, not ancestry."
+  },
+  {
+   "t": 579500,
+   "view": 1,
+   "role": "ENGINEERING",
+   "clip": "eng_segregated_blood_banks",
+   "text": "[dry] Not so long ago, American blood banks kept donations sorted by the donor's race. Separate shelves. [grave] No measurement ever backed that, and the Red Cross dropped it in nineteen fifty. Blood services still ask particular communities to donate, but that's hunting rare antigens: matching molecules, not sorting people. [chuckle] The cells never noticed. Only the people did."
+  },
+  {
+   "t": 610900,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "nav_vein_widening_heart",
+   "text": "[warm] Vein's widening out, and I'm starting to feel something through the deck. A thump. Every second, a little less. [awe] That's the heart, five litres a minute, and we're not shrinking for this one. I've flown a lot of people, and I've never met one whose heart sounded foreign. Hold the rail.",
+   "sfx": "heartbeat"
+  },
+  {
+   "t": 621900,
+   "sfx": "heartbeat"
+  },
+  {
+   "t": 637800,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_left_atrium_mitral",
+   "text": "[hushed] Left atrium. That wall coming down ahead of us is the mitral valve, two flaps. [excited] When it and its twin on the right side snap shut together, that's the lub. The dub is the aortic valve next door and its twin, closing at the end of the beat. A heartbeat is only valves slamming. Here it comes. Brace."
+  },
+  {
+   "t": 661800,
+   "sfx": "heartbeat"
+  },
+  {
+   "t": 664000,
+   "view": 1,
+   "role": "ENGINEERING",
+   "clip": "eng_ventricle_cathedral",
+   "text": "[awe] Would you look at this. The left ventricle, a cathedral made of muscle, and the whole thing's about to squeeze. [urgent] Pilot, when it goes, don't fight it, ride it. There! Aortic valve's open, we're launched, and that's near a metre a second. [chuckle] Doc, how hard does this thing push?"
+  },
+  {
+   "t": 674100,
+   "sfx": "heartbeat"
+  },
+  {
+   "t": 691500,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "sci_aorta_heart_numbers",
+   "text": "[emphasis] Hard enough to do it a hundred thousand times a day, two to three billion in a lifetime. Out here in the aorta, pressure one-twenty over eighty, and the flow comes in surges: a metre a second at each beat's peak, then coasting almost to a stall before the next. [wonder] A knot of cells, the SA node, sets every beat. Your own built-in conductor."
+  },
+  {
+   "t": 693500,
+   "sfx": "heartbeat"
+  },
+  {
+   "t": 715600,
+   "sfx": "heartbeat"
+  },
+  {
+   "t": 725700,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "nav_sentinel_contact",
+   "text": "[warm] Approaching a quieter vessel, off the main flow. Nice and easy. [tense] Wait. Doc, that big pale cell to starboard, rolling along the vessel wall. It just stopped and started crawling toward us. Is it supposed to do that?"
+  },
+  {
+   "t": 737700,
+   "sfx": "klaxon"
+  },
+  {
+   "t": 743800,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_neutrophil_identify",
+   "text": "[urgent] That's a neutrophil. Most common white cell in your blood, half to two thirds of them, roughly ten to fifteen micrometres across, bigger than a red cell, lives a few hours to a few days and spends all of it hunting. [tense] It reads the surface of anything it touches. Self, or not self. And we, my friends, are not self."
+  },
+  {
+   "t": 765300,
+   "sfx": "alarm"
+  },
+  {
+   "t": 770800,
+   "view": 1,
+   "role": "ENGINEERING",
+   "clip": "eng_pseudopods_camouflage",
+   "text": "[urgent] Pseudopods! It's reaching for the hull! Pilot, hard to port. [tense] Deploying the self-marker coat. It's a glycocalyx mimic, paints us in the body's own sugars. Second piece of magic aboard, I know. Doc, don't look at me like that. Coat's at sixty percent. Seventy. Come on, girl."
+  },
+  {
+   "t": 791300,
+   "sfx": "impact_soft"
+  },
+  {
+   "t": 794600,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "nav_glancing_blow",
+   "text": "[urgent] Glancing hit on the stern! We're still here. Coat's holding. She's tasting us, tasting us... [warm] and she's letting go. She's letting go. Turning away. [chuckle] Engineer, you beautiful grump, I owe you a drink the size of this ship."
+  },
+  {
+   "t": 816700,
+   "view": 3,
+   "role": "ENGINEERING",
+   "clip": "eng_decided_we_were_family",
+   "text": "[chuckle] It sniffed us and decided we were family. Somebody write that down; that's the nicest thing anything in here has done for us. [dry] Coat holds. Ship's fine. [softly] I'm fine."
+  },
+  {
+   "t": 836700,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "sci_antibodies_macrophage",
+   "text": "[reflective] Look what drifts past now we wear the right colours. Those tiny Y shapes are antibodies, ten nanometres, each built to grip one stranger. That slow cell, twenty micrometres, is a monocyte; once it climbs out into tissue it becomes a macrophage and eats whatever the antibodies tag, whole. [wonder] This army asks one question of everything: are you me? It never asks where you're from."
+  },
+  {
+   "t": 870600,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "eng_drop_to_neuron",
+   "text": "[dry] Three, two, one, drop. One power of ten: one point two micrometres, about the size of a small bacterium. [chuckle] Heart rate's back to normal. Mine, I mean. Coat's coming off, it drinks power and the drive's thirsty. Good lie while it lasted. [dry] Only dishonest reading on this whole tour, and Doc's still sore about it."
+  },
+  {
+   "t": 872600,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 903000,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "nav_blood_brain_barrier",
+   "text": "[warm] Approaching the blood-brain barrier. See how the cells lining this capillary are stitched together, no gaps, like a zipper? Tight junctions. Most of what's dissolved in the blood stops right here. Only what the brain orders in gets through: oxygen, glucose, a few small fat-soluble molecules. [hushed] We're going to thread the needle, and on the other side is the cortex. We're going into the mind."
+  },
+  {
+   "t": 931500,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_neuron_soma_tree",
+   "text": "[awe] And there she is. A neuron. That body ahead is the soma, and those branches are dendrites, a tree grown to listen. Eighty-six billion of these in one head, give or take. [wonder] Right now it's resting at about minus seventy millivolts, a tiny charged battery, waiting for enough whispers to add up to a shout."
+  },
+  {
+   "t": 959000,
+   "view": 1,
+   "role": "ENGINEERING",
+   "clip": "eng_axon_overtaken",
+   "text": "[tense] Big pyramidal cell, thick axon, one of the few we'd fit down, and something's coming up behind us. Fast. [excited] There it goes! Right past us, that flash along the wall, sodium pouring in, that's the shout, an action potential, an electrical wave, and it's not slowing down. Pilot, we can't catch that. Nothing on this boat catches that."
+  },
+  {
+   "t": 964000,
+   "sfx": "spark"
+  },
+  {
+   "t": 965500,
+   "sfx": "spark"
+  },
+  {
+   "t": 985000,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_myelin_saltatory",
+   "text": "[excited] Over a hundred metres a second in the fastest fibres. Here's the trick. See the fat white sleeves on the axon? Myelin. Under the sleeves the current races along passively, no work needed; it only stops to recharge at the bare gaps, the nodes. So the spike seems to leap, node to node. [wonder] Saltatory conduction, from the Latin for jumping. Your thoughts travel by hopscotch."
+  },
+  {
+   "t": 993000,
+   "sfx": "spark"
+  },
+  {
+   "t": 1013500,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "eng_drop_to_synapse",
+   "text": "[tense] Three, two, one, drop. [dry] One power of ten: a hundred and twenty nanometres. About the size of a virus, and I'm not thrilled about the company. Small enough to see the end of this wire, and the end of a wire is where things get interesting."
+  },
+  {
+   "t": 1015500,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 1035000,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_vesicles_burst",
+   "text": "[excited] The axon ends in a bulb, and there, across a gap twenty to forty nanometres wide, vesicles fuse and spill open! Forty nanometres each, pouring neurotransmitter across the cleft onto receptors, and the next cell decides whether to shout too. [reverent] A hundred trillion of these junctions. Every memory you have is somewhere in that rain."
+  },
+  {
+   "t": 1043000,
+   "sfx": "squelch"
+  },
+  {
+   "t": 1047500,
+   "sfx": "spark"
+  },
+  {
+   "t": 1065000,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "nav_membrane_wall",
+   "text": "[awe] Coming up on the far cell's membrane, and would you look at it. A shimmering wall of little heads, and studded all through it, big knobbly proteins poking out: Doc's receptors. Plenty of channels, none anywhere near our size, and the whole surface flows like oil on water. [warm] Doc says the wall is going to swallow us anyway. I'm choosing to trust her."
+  },
+  {
+   "t": 1092500,
+   "view": 1,
+   "role": "ENGINEERING",
+   "clip": "eng_wrong_out_loud",
+   "text": "[dry] No drop here. At a hundred and twenty nanometres that wall's fifteen ships thick... [chuckle] no, wait, other way round. Wall's seven or eight nanometres; we're fifteen times thicker than it. My mistake, said aloud and corrected. That's the rule down here, the only one that matters. [dry] For the record: that cleft was a third our width at most. We watched from a safe distance."
+  },
+  {
+   "t": 1121000,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_fluid_mosaic_pump",
+   "text": "[wonder] Those heads love water; the tails underneath hate it. Two layers, tails in, heads out, and nearly every cell on Earth is wrapped in one. The fluid mosaic; cholesterol tunes the mix so it neither freezes solid when cold nor turns runny when warm. [emphasis] That tower is the sodium-potassium pump, three sodium out, two potassium in, eating a big slice of a neuron's energy budget."
+  },
+  {
+   "t": 1150900,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_endocytosis_inside",
+   "text": "[hushed] The wall's folding around us. That's endocytosis. The membrane dimples, wraps us in a bubble of itself, and pinches off. We're inside the cell now, in a vesicle. [excited] Push through the wall, and we're in cytoplasm. Thick as jam, busy as a market, and somewhere out there a power station is waiting for us."
+  },
+  {
+   "t": 1151900,
+   "sfx": "squelch"
+  },
+  {
+   "t": 1164400,
+   "sfx": "squelch"
+  },
+  {
+   "t": 1181200,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "nav_mitochondrion_approach",
+   "text": "[warm] Mitochondrion dead ahead, a micrometre across and a few long. Its outer skin is riddled with porin channels, and we're taking one, then squeezing the inner membrane, [chuckle] don't ask how. [awe] Look at those folds, the cristae, like the bellows of an accordion. And those little spinning things studding every fold: that's the turbine the Engineer promised us back in the scale bay."
+  },
+  {
+   "t": 1208500,
+   "view": 1,
+   "role": "ENGINEERING",
+   "clip": "eng_atp_synthase_love",
+   "text": "[excited] ATP synthase. Look at her go! A turbine ten nanometres across, spinning about a hundred times a second, and every turn presses out about three molecules of ATP. [heartfelt] Best engine ever built, and nobody built it. I've spent my life on the scale drive, and that thing makes me feel like an amateur. Look at it. Just look at it."
+  },
+  {
+   "t": 1239000,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_proton_gradient",
+   "text": "[wonder] What spins it is a waterfall. The electron transport chain, the other complexes, takes electrons from your lunch and pumps protons out of this chamber into the gap between the two membranes, and they flood back in through the turbine. [emphasis] All told, your body makes and spends tens of kilograms of ATP a day, about your weight on an active one. Made, spent, made again."
+  },
+  {
+   "t": 1269000,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "sci_endosymbiosis_mother",
+   "text": "[reflective] This power station has its own DNA, a small loop of sixteen thousand five hundred and sixty-nine base pairs, and you got every copy from your mother. A mitochondrion was once a free-living bacterium, taken in by an ancestor cell one and a half to two billion years ago, and never digested. [tender] Every breath you take is finishing that meal."
+  },
+  {
+   "t": 1304000,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "eng_drop_to_nucleus",
+   "text": "[tense] Three, two, one, drop. [dry] One power of ten: twelve nanometres, the last step this drive was ever rated for. Doc's been grinning since the turbines, which means the next stop is the one she came for. Pilot, find us a pore."
+  },
+  {
+   "t": 1306000,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 1328400,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "nav_nuclear_pore",
+   "text": "[awe] Nuclear pore complex, straight ahead. A hundred and twenty nanometres across, a gate with a gatekeeper, and it's checking our papers. [warm] We're through. This is the nucleus. The library. Nearly all the instructions for how this person is built are written in the fibres around you. Doc, the bridge is yours."
+  },
+  {
+   "t": 1354100,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_chromatin_beads",
+   "text": "[hushed] Those ropes are chromatin. Look closer: beads on a string. Each bead is a histone core with about a hundred and forty-seven base pairs of DNA wrapped around it, and the string itself is the double helix, two nanometres wide, one turn every ten bases. [wonder] Unwind it all and each of your cells holds two metres of it."
+  },
+  {
+   "t": 1383800,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_polymerase_transcribing",
+   "text": "[excited] And that machine crawling the helix is RNA polymerase, reading a gene, spooling out a messenger copy at twenty to seventy letters a second. Three point two billion letters in the book, two copies per cell, twenty thousand protein-coding genes. [emphasis] When its cousin, DNA polymerase, copies the book before a cell divides, proofreading plus a mismatch-repair crew bring errors down to one in a billion."
+  },
+  {
+   "t": 1415000,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_ninety_nine_point_nine",
+   "text": "[gentle] Any two people alive, compared letter by letter along a thread like that one, match about ninety-nine point nine percent. Of that tenth of a percent, roughly eighty-five to ninety-five percent varies between individuals inside any one population; only a few percent between continents. [emphasis] Two people from one village differ almost as much as two from opposite sides of the planet. Almost."
+  },
+  {
+   "t": 1448900,
+   "view": 1,
+   "role": "ENGINEERING",
+   "clip": "eng_one_young_species",
+   "text": "[dry] Doc told me something I can't shake. All of us come out of Africa, two or three hundred thousand years back, from a web of connected populations, not one tribe, and Africa still holds most of our variety. Wild chimpanzees carry more genetic variety than all eight billion of us. [chuckle] We're a young species. We never split into kinds. We just got good at pretending."
+  },
+  {
+   "t": 1481300,
+   "view": 0,
+   "role": "SCIENCE",
+   "clip": "sci_gould_one_family",
+   "text": "[reverent] People once measured skulls to rank humankind. Stephen Jay Gould argued the ranking was decided before the calipers came out. [gentle] Look at that helix. The same two metres of thread ran through every skull they measured, and it never agreed with them. [heartfelt] Our equality isn't a wish. It's how our history turned out. It didn't have to. It did."
+  },
+  {
+   "t": 1517000,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "nav_follow_the_messenger",
+   "text": "[warm] Doc, that was worth the trip. Helm's mine again. See that strand of messenger RNA leaving through the pore we came in by? [excited] We're going to follow it, out into the cytoplasm, and find out where a gene becomes a thing. Same size, no drop. Just a chase."
+  },
+  {
+   "t": 1542700,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_ribosome_docking",
+   "text": "[awe] There it is, the ribosome, twenty-five to thirty nanometres, two lumps of RNA and protein clamped on the message like hands on a rope. Watch: transfer RNAs dock, one after another, each reading three letters, each dragging in one amino acid. [wonder] Five or six a second, in a human cell. That chain growing out of the top is a protein being born."
+  },
+  {
+   "t": 1574000,
+   "view": 1,
+   "role": "ENGINEERING",
+   "clip": "eng_ribosome_ribozyme",
+   "text": "[dry] Here's the bit that gets me. The business end of that machine isn't protein at all. It's RNA doing the chemistry, a ribozyme. [chuckle] Millions of these in one cell, ten million in a busy one, twenty kinds of amino acid, and no foreman. Nobody's in charge and it still ships on time. I've worked in shipyards that couldn't say that."
+  },
+  {
+   "t": 1602500,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "sci_protein_folding",
+   "text": "[gentle] And it's already folding as it comes out. It snaps into shape in microseconds to seconds, sometimes with chaperone proteins keeping it from tangling, and a string of beads becomes a shape, and the shape is the function. [reflective] Haemoglobin's chains, a pump, the collagen in a valve. Every protein we've ridden past today was built like this, from the same twenty-odd building blocks, in everyone."
+  },
+  {
+   "t": 1635600,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "eng_three_stage_warning",
+   "text": "[grave] Pilot, Doc. Before the next one, I want it said plain. Three powers of ten in a single drop, down to twelve picometres, inside one carbon atom in one letter of that messenger strand. I've never pushed the drive that far. Nobody has. [tense] If she holds, we'll see something no eye has ever seen. If she doesn't, well. Engaging."
+  },
+  {
+   "t": 1657600,
+   "sfx": "drive_engage"
+  },
+  {
+   "t": 1662600,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "eng_three_stage_countdown",
+   "text": "[urgent] Drive's screaming. Three. Two. One. Drop, drop, drop!"
+  },
+  {
+   "t": 1665000,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 1665300,
+   "sfx": "shrink"
+  },
+  {
+   "t": 1665600,
+   "sfx": "shrink"
+  },
+  {
+   "t": 1674100,
+   "view": 0,
+   "role": "NAVIGATION",
+   "clip": "nav_inside_the_atom",
+   "text": "[hushed] She held. Engineer, she held. [awe] We're inside a carbon atom. One atom in one letter of that messenger, a copy of one gene. And there's nothing here. A haze all around us, and in the middle, only a few ship-lengths off, one point of light, smaller than anything we can resolve. I've never seen anything so empty. I've never seen anything so full."
+  },
+  {
+   "t": 1703700,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_atom_stadium_marble",
+   "text": "[reverent] The atom is about a seventh of a nanometre across. The nucleus, that point, is roughly twenty-five thousand times smaller across than the atom itself. [wonder] If this atom were a stadium, the nucleus would be a marble at the centre spot, and everything you ever touched was mostly this. Emptiness, holding hands."
+  },
+  {
+   "t": 1727000,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_electron_cloud_honest",
+   "text": "[gentle] And that haze is not a swarm of little balls in orbit. That picture is wrong, and I'd rather give you the honest one. Electrons here are a cloud of probability, a shape that says where you'd likely find one if you looked. [softly] We measured, and the universe answered strangely. Science kept the strange answer."
+  },
+  {
+   "t": 1751500,
+   "view": 3,
+   "role": "ENGINEERING",
+   "clip": "eng_hauling_starlight",
+   "text": "[softly] Drive's steady. Never seen a gauge sit this quiet. [reflective] That nucleus was made in a dying star, three helium nuclei fused in a red giant's heart. The hydrogen atoms in this letter, next door to it, are older than any star. Seven octillion atoms in one body, Doc says, and every one of them borrowed. [chuckle] I'm hauling starlight and I didn't even charge extra."
+  },
+  {
+   "t": 1777500,
+   "sfx": "chime"
+  },
+  {
+   "t": 1781500,
+   "view": 2,
+   "role": "ENGINEERING",
+   "clip": "eng_drive_reverse",
+   "text": "[warm] I could stay here all day, but she's running hot and she's got one more trick, and it's the fun one. Hold on, everyone. We're going home, every power of ten we dropped, all twelve, in about eighty seconds. [chuckle] Don't blink, and don't tell my insurer. Reversing the drive, on my mark. Mark."
+  },
+  {
+   "t": 1805000,
+   "view": 1,
+   "sfx": "drive_engage"
+  },
+  {
+   "t": 1807000,
+   "view": 1,
+   "role": "NAVIGATION",
+   "clip": "nav_expansion_first_half",
+   "text": "[excited] Here we go! Atom, gone. Helix, gone. There's the pore, there's the power station, there's the membrane flying past. [awe] Synapse, axon, neuron, and we're through the barrier. Every stop, backwards, at a run, the ship growing like a held breath, and I could fly this same route through anyone alive."
+  },
+  {
+   "t": 1830000,
+   "view": 1,
+   "role": "SCIENCE",
+   "clip": "sci_expansion_middle",
+   "text": "[wonder] There's our neutrophil, still looking for us. The heart, every valve we rode through slamming shut behind us. [awe] The red cells, the sac, that wall thinner than a thought, and we're back in the air."
+  },
+  {
+   "t": 1835000,
+   "sfx": "heartbeat"
+  },
+  {
+   "t": 1872000,
+   "view": 1,
+   "role": "ENGINEERING",
+   "clip": "eng_expansion_arrival",
+   "text": "[chuckle] The bronchi, the trachea, the cave, the forest of hairs, and there's the face, the whole face, coming back to us. [warm] Daylight. Twelve metres. All stop. She brought us home. Told you she would. [dry] Never doubted her for a second."
+  },
+  {
+   "t": 1894000,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "sci_finale_thirty_seven_trillion",
+   "text": "[reverent] Look at her. Some thirty-seven trillion cells, far more than the stars in our galaxy, and about three hundred billion of them replaced every day. Most of the cells in that body are younger than the person wearing it. [wonder] You are not a thing. You are a process, a standing wave, nearly all your weight on loan from dead stars, passing through."
+  },
+  {
+   "t": 1923000,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "sci_finale_one_family",
+   "text": "[heartfelt] And everything you saw today, the same sacs and red cells, neurons and turbines, and a genome that matches yours at nine hundred and ninety-nine letters in every thousand, is inside every human being who has ever lived. Every stranger. Every enemy. [emphasis] The differences we have gone to war over are a sheet of paper thick. Science, done honestly, keeps finding one species. One family."
+  },
+  {
+   "t": 1952000,
+   "view": 3,
+   "role": "SCIENCE",
+   "clip": "sci_finale_we_are_all_human",
+   "text": "[tender] So take care of this body. It is the only one you have ever had, and it is a universe. [softly] And when you meet a stranger, remember what you saw out these windows, and what the measurements say, and what honest people are willing to be wrong about. [reverent] We are all human beings. Thank you for riding with us."
+  },
+  {
+   "t": 1977000,
+   "sfx": "chime"
+  }
+ ],
+ "fillers": [
+  {
+   "role": "ENGINEERING",
+   "clip": "fill_eng_rumour_with_decimals",
+   "text": "[dry] Every gauge in my room got calibrated against something I could see and count. A number nobody can check is just a rumour with decimals."
+  },
+  {
+   "role": "NAVIGATION",
+   "clip": "fill_nav_smooth_water",
+   "text": "[warm] Smooth water for a moment. Take a look out any window you like. There's no wrong direction in here."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "fill_sci_measure_twice",
+   "text": "[gentle] Nearly every number I give you today has error bars. That's not a weakness, that's the whole point. When we measure something, honest science tells you how sure we are."
+  },
+  {
+   "role": "ENGINEERING",
+   "clip": "fill_eng_ship_talks",
+   "text": "[chuckle] She talks to me, you know. Little creaks in the hull. Right now she's saying she'd like a bigger engine and a smaller Engineer."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "fill_sci_wrong_gladly",
+   "text": "[reflective] I have been wrong in print more than once. Each time it stung for a day, and then I knew something I hadn't known before. Fair trade."
+  },
+  {
+   "role": "NAVIGATION",
+   "clip": "fill_nav_hold_station",
+   "text": "[warm] Holding station. Stretch if you need to, and keep breathing, your brainstem insists. The body around us is doing the same: every breath stretches the lungs, every heartbeat stretches the artery walls."
+  },
+  {
+   "role": "ENGINEERING",
+   "clip": "fill_eng_crumb",
+   "text": "[dry] I'd offer you snacks, but the galley on this boat is a drawer with one biscuit in it, and the Pilot's been eyeing that biscuit since we left the dock."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "fill_sci_no_flag",
+   "text": "[warm] Nothing in here belongs to a tribe, a nation or a flag. It's all just us, working."
+  },
+  {
+   "role": "NAVIGATION",
+   "clip": "fill_nav_pilot_pride",
+   "text": "[chuckle] Thirty years piloting and I still get goosebumps in here. Don't tell the Engineer. He thinks I'm made of granite."
+  },
+  {
+   "role": "ENGINEERING",
+   "clip": "fill_eng_shrink_sickness",
+   "text": "[dry] If the drops are getting to you, look at the horizon. [chuckle] There isn't one, but the looking helps."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "fill_sci_ask_how_we_know",
+   "text": "[gentle] Whenever someone tells you a fact about people, ask how they know. If the answer is authority, lean back; if it's measurement, lean in."
+  },
+  {
+   "role": "NAVIGATION",
+   "clip": "fill_nav_crew_family",
+   "text": "[warm] Three of us on this crew, from three different corners of the world, and I've never once had to check which. If one of us needed blood, the only question would be the letter on the bag, never the passport. Same nerves, same bad jokes."
+  },
+  {
+   "role": "ENGINEERING",
+   "clip": "fill_eng_tolerances",
+   "text": "[dry] The molecular machines in here are built to tolerances I couldn't hit with a laser and a month. And they built themselves. Show-offs."
+  },
+  {
+   "role": "SCIENCE",
+   "clip": "fill_sci_joy_of_finding_out",
+   "text": "[excited] The best moment in science isn't being right. It's the second before you know, when the instrument's warming up and any answer is still possible."
+  }
+ ],
+ "segments": [
+  {
+   "label": "1. THE THRESHOLD",
+   "startMs": 0,
+   "node": 0
+  },
+  {
+   "label": "2. THE AIRWAY",
+   "startMs": 214200,
+   "node": 1
+  },
+  {
+   "label": "3. THE ALVEOLUS",
+   "startMs": 347800,
+   "node": 2
+  },
+  {
+   "label": "4. THE BLOODSTREAM",
+   "startMs": 493000,
+   "node": 3
+  },
+  {
+   "label": "5. THE HEART",
+   "startMs": 605900,
+   "node": 4
+  },
+  {
+   "label": "6. THE SENTINEL",
+   "startMs": 720700,
+   "node": 5
+  },
+  {
+   "label": "7. THE NEURON",
+   "startMs": 898000,
+   "node": 6
+  },
+  {
+   "label": "8. THE MEMBRANE",
+   "startMs": 1060000,
+   "node": 7
+  },
+  {
+   "label": "9. THE MITOCHONDRION",
+   "startMs": 1176200,
+   "node": 8
+  },
+  {
+   "label": "10. THE NUCLEUS",
+   "startMs": 1323400,
+   "node": 9
+  },
+  {
+   "label": "11. THE RIBOSOME",
+   "startMs": 1512000,
+   "node": 10
+  },
+  {
+   "label": "12. THE ATOM",
+   "startMs": 1669100,
+   "node": 11
+  },
+  {
+   "label": "13. THE LOOK BACK",
+   "startMs": 1777500,
+   "node": 12
+  }
+ ]
+}

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  InnerCosmos launcher icon: a single living cell (rose membrane, teal cytoplasm,
+  violet nucleus, two mitochondria) with the M.S.V. Mote diving inward, trailing
+  a wake of shrinking dots — one dot per power of ten.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- outer glow halo -->
+    <path android:pathData="M54,54m-36,0a36,36 0,1 1,72 0a36,36 0,1 1,-72 0">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="54" android:centerY="54" android:gradientRadius="36">
+                <item android:offset="0" android:color="#00FF5C7A" />
+                <item android:offset="0.82" android:color="#00FF5C7A" />
+                <item android:offset="0.9" android:color="#55FF5C7A" />
+                <item android:offset="1" android:color="#00FF5C7A" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- cytoplasm -->
+    <path android:pathData="M54,54m-31,0a31,31 0,1 1,62 0a31,31 0,1 1,-62 0">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="50" android:centerY="50" android:gradientRadius="34">
+                <item android:offset="0" android:color="#4A1E5A66" />
+                <item android:offset="0.7" android:color="#8A16404A" />
+                <item android:offset="1" android:color="#C0102B36" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- membrane + the two inner scale rings -->
+    <path android:strokeColor="#FF5C7A" android:strokeWidth="2.8" android:fillColor="#00000000"
+        android:pathData="M54,54m-31,0a31,31 0,1 1,62 0a31,31 0,1 1,-62 0" />
+    <path android:strokeColor="#66FF8FA3" android:strokeWidth="1.1" android:fillColor="#00000000"
+        android:pathData="M54,54m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0" />
+    <path android:strokeColor="#40FFB3C1" android:strokeWidth="0.8" android:fillColor="#00000000"
+        android:pathData="M54,54m-13.5,0a13.5,13.5 0,1 1,27 0a13.5,13.5 0,1 1,-27 0" />
+
+    <!-- nucleus (violet) with nucleolus -->
+    <path android:pathData="M60,51m-9.5,0a9.5,9.5 0,1 1,19 0a9.5,9.5 0,1 1,-19 0">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="57" android:centerY="48" android:gradientRadius="12">
+                <item android:offset="0" android:color="#B9A6FF" />
+                <item android:offset="1" android:color="#6E4BE6" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:fillColor="#4A2FBF" android:pathData="M63.5,48m-3.2,0a3.2,3.2 0,1 1,6.4 0a3.2,3.2 0,1 1,-6.4 0" />
+
+    <!-- mitochondria (teal capsules) -->
+    <path android:fillColor="#2AD4C4"
+        android:pathData="M37.5,66.5 l9.5,-5.2 a2.7,2.7 0,0 1,2.6 4.7 l-9.5,5.2 a2.7,2.7 0,0 1,-2.6 -4.7z" />
+    <path android:fillColor="#1FB5A7"
+        android:pathData="M59,70.5 l8.5,2.4 a2.4,2.4 0,0 1,-1.3 4.6 l-8.5,-2.4 a2.4,2.4 0,0 1,1.3 -4.6z" />
+
+    <!-- the Mote: a pale teardrop diving toward the nucleus, amber bow lamp -->
+    <path android:fillColor="#FFF4E8"
+        android:pathData="M34,36.5 C39,33.5 45.5,35 49,39.5 C46.5,42.5 41,44 36,42 C33,40.5 32.2,38 34,36.5z" />
+    <path android:fillColor="#C9B9FF" android:pathData="M39,41.5 L42.5,45.5 L44.5,41.5 z" />
+    <path android:fillColor="#FFC46B" android:pathData="M49,39.5m-1.9,0a1.9,1.9 0,1 1,3.8 0a1.9,1.9 0,1 1,-3.8 0" />
+
+    <!-- wake of shrinking dots: one per power of ten, curving in along the membrane
+         (all inside the 72dp launcher mask) -->
+    <path android:fillColor="#E6FFC46B" android:pathData="M28.5,36.5m-2.3,0a2.3,2.3 0,1 1,4.6 0a2.3,2.3 0,1 1,-4.6 0" />
+    <path android:fillColor="#B3FFC46B" android:pathData="M25,39.5m-1.7,0a1.7,1.7 0,1 1,3.4 0a1.7,1.7 0,1 1,-3.4 0" />
+    <path android:fillColor="#80FFC46B" android:pathData="M22.8,43.5m-1.2,0a1.2,1.2 0,1 1,2.4 0a1.2,1.2 0,1 1,-2.4 0" />
+    <path android:fillColor="#4DFFC46B" android:pathData="M21.8,48m-0.8,0a0.8,0.8 0,1 1,1.6 0a0.8,0.8 0,1 1,-1.6 0" />
+</vector>

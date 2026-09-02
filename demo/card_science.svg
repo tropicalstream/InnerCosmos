@@ -1,0 +1,8 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1280' height='1280' viewBox='0 0 1280 1280'>
+<defs><radialGradient id='g' cx='640' cy='640' r='760' gradientUnits='userSpaceOnUse'><stop offset='0' stop-color='#2A0F2E'/><stop offset='1' stop-color='#07030A'/></radialGradient>
+<filter id='glow' x='-20%' y='-50%' width='140%' height='200%'><feGaussianBlur stdDeviation='9' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter></defs>
+<rect width='1280' height='1280' fill='url(#g)'/>
+<text x='640' y='620' text-anchor='middle' font-family="'Avenir Next Demi Bold', 'Avenir Next', Helvetica" font-weight='700' font-size='52' fill='#FFF4E8' filter='url(#glow)'>Every number real. Every claim checked.</text>
+<text x='640' y='708' text-anchor='middle' font-family="'Avenir Next', Helvetica" font-size='40' fill='#FFCF8C'>built on the foundations of science</text>
+
+</svg>
