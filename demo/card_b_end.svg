@@ -1,0 +1,11 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1280' height='1280' viewBox='0 0 1280 1280'>
+<defs><radialGradient id='g' cx='640' cy='640' r='760' gradientUnits='userSpaceOnUse'><stop offset='0' stop-color='#2A0F2E'/><stop offset='1' stop-color='#07030A'/></radialGradient>
+<filter id='glow' x='-20%' y='-50%' width='140%' height='200%'><feGaussianBlur stdDeviation='9' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter>
+<filter id='softglow' x='-20%' y='-50%' width='140%' height='200%'><feGaussianBlur stdDeviation='5' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter></defs>
+<rect width='1280' height='1280' fill='url(#g)'/>
+<text x='640' y='490' text-anchor='middle' font-family="Futura-Bold, Futura, 'Avenir Next', Helvetica" font-weight='700' font-size='68' fill='#FFF4E8' letter-spacing='4' filter='url(#glow)'>INNERCOSMOS III</text>
+<text x='640' y='564' text-anchor='middle' font-family="'PingFang SC', 'Hiragino Sans GB', 'STHeiti', sans-serif" font-size='46' fill='#FFCF8C' letter-spacing='6'>内在宇宙 · 第三部</text>
+<rect x='530' y='612' width='220' height='2' fill='#FFCF8C' opacity='0.45'/>
+<text x='640' y='676' text-anchor='middle' font-family="'Avenir Next', Helvetica" font-size='32' fill='#7BE6DC'>NORMAN BETHUNE · in stereo 3D on RayNeo X3 Pro AR glasses</text>
+<text x='640' y='724' text-anchor='middle' font-family="'PingFang SC', 'Hiragino Sans GB', 'STHeiti', sans-serif" font-size='29' fill='#7BE6DC' letter-spacing='3'>白求恩 · RayNeo X3 Pro AR眼镜 · 3D立体呈现</text>
+</svg>

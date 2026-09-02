@@ -41,7 +41,7 @@
 > **DOC:** [warm] Doc here, your Physiologist. One rule for this trip, the rule that built every fact you'll hear: we believe what we can measure, not whoever says it loudest. Doubt isn't the enemy in here; it's the tool. [wonder] And that swallow coming? Dozens of muscles, a valve, a travelling wave. None of it taught. Ready?
 
 **00:56** · look: *BRIDGE (helm)* · SFX: `drive_engage`
-> **HELM:** [warm] Here comes the sip. Helm calling the first drop, three decades in one go: twelve metres to twelve millimetres, a thousandfold down, a fingernail. [tense] Chief, on my mark. Hands on the rail. Mark.
+> **HELM:** [warm] Here comes the sip. Helm calling the first drop, three powers of ten in one go: twelve metres to twelve millimetres, a thousandfold down, a fingernail. [tense] Chief, on my mark. Hands on the rail. Mark.
 
 **01:11** · look: *SCALE DRIVE CORE*
 > **ENGINEERING:** [tense] Three, two, one, dropping. [awe] Twelve millimetres, and that shadow going past is a single tooth. [dry] Drive's warm, camouflage is holding, and I polished the hull this morning. Don't scuff it.
@@ -58,7 +58,7 @@
 > **DOC:** [grave] Eight to ten seconds down the pipe, and here's the stomach. The fluid sits around pH one and a half to three and a half, acid enough to strip unprotected tissue, and pepsin works in it, chopping proteins to pieces. [wonder] The wall survives under a blanket of mucus and bicarbonate that holds its own surface near neutral, and it repaints itself every few days behind that shield.
 
 **03:22** · look: *BRIDGE (helm)*
-> **HELM:** [warm] Pyloric valve dead ahead, and beyond it about five metres of small intestine, seven once the muscle lets go, folded into a lunchbox. [gentle] Helm calling one decade down, Chief, twelve millimetres to one point two, so we can fly between the fingers.
+> **HELM:** [warm] Pyloric valve dead ahead, and beyond it about five metres of small intestine, seven once the muscle lets go, folded into a lunchbox. [gentle] Helm calling one power of ten down, Chief, twelve millimetres to one point two, so we can fly between the fingers.
 
 **03:40** · look: *SCALE DRIVE CORE*
 > **ENGINEERING:** [tense] Three, two, one, dropping. [awe] One point two millimetres, and the wall's all fingers, each as long as we are. [chuckle] She handles better small. Always has.
@@ -75,10 +75,10 @@
 > **DOC:** [wonder] Every villus is coated in cells, and every cell is fringed with microvilli. Fringe on fringe on fringe. Your textbook may say all that surface would carpet a tennis court. [dry] In 2014 two Swedish researchers redid the arithmetic from real measurements of villi and microvilli: about thirty square metres. A studio apartment. [warm] Smaller, and true. I'll take true every time.
 
 **04:56** · look: *BRIDGE (helm)*
-> **HELM:** [warm] Sugar and amino acids are crossing that wall into capillaries and riding the portal vein to the liver for inspection; we'll take that road ourselves later. [gentle] Course change: downstream into the colon, and the crowd down there is thick. Helm calling two decades down, Chief. One point two millimetres to twelve micrometres.
+> **HELM:** [warm] Sugar and amino acids are crossing that wall into capillaries and riding the portal vein to the liver for inspection; we'll take that road ourselves later. [gentle] Course change: downstream into the colon, and the crowd down there is thick. Helm calling two powers of ten down, Chief. One point two millimetres to twelve micrometres.
 
 **05:20** · look: *SCALE DRIVE CORE*
-> **ENGINEERING:** [tense] Three, two, one, dropping. [dry] Two decades that time; I counted twice. [hushed] Twelve micrometres, and... oh. Oh, there are a lot of them.
+> **ENGINEERING:** [tense] Three, two, one, dropping. [dry] two powers of ten that time; I counted twice. [hushed] Twelve micrometres, and... oh. Oh, there are a lot of them.
 
 **05:22** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 
@@ -86,7 +86,7 @@
 > **DOC:** [awe] Bacteria. Roughly thirty-eight trillion of them, about as many as your own cells, mostly right here. That's a 2016 estimate; it retired a ten-to-one figure, a rough nineteen-seventies guess nobody rechecked for forty years. They make vitamin K, B vitamins, food for your gut wall. [reflective] A crowd like this rides in every human gut on Earth. Different meals, different species, same families, same jobs. One household.
 
 **06:19** · look: *BRIDGE (helm)*
-> **HELM:** [tense] Doc, that rod ahead. Something's settling on it. [warm] Helm calling two decades down, Chief, twelve micrometres to a hundred and twenty nanometres, quick and quiet. Nobody's skipping this one.
+> **HELM:** [tense] Doc, that rod ahead. Something's settling on it. [warm] Helm calling two powers of ten down, Chief, twelve micrometres to a hundred and twenty nanometres, quick and quiet. Nobody's skipping this one.
 
 **06:33** · look: *SCALE DRIVE CORE*
 > **ENGINEERING:** [tense] Three, two, one, dropping. [hushed] One hundred and twenty nanometres. That rod's a battleship now, and we're a rowing boat. Look up.
@@ -124,7 +124,7 @@
 > **ENGINEERING:** [reflective] Here's what gets me. Every gut on the planet runs the same trades, fights the same war. A rice farmer, a banker, a kid in Nairobi, a grandmother in Oslo, our volunteer upstairs. [warm] Different species, different strains, phages near enough personal. Different crews. Identical job descriptions. [chuckle] Doc, that's your line and I stole it.
 
 **10:27** · look: *BRIDGE (helm)*
-> **HELM:** [warm] Enough of the battlefield. We're riding the portal vein to the liver, and for once the Chief gets to make us bigger. Helm calling two decades up, a hundred and twenty nanometres to twelve micrometres. [gentle] Deep breath, everyone. It's about to get calm.
+> **HELM:** [warm] Enough of the battlefield. We're riding the portal vein to the liver, and for once the Chief gets to make us bigger. Helm calling two powers of ten up, a hundred and twenty nanometres to twelve micrometres. [gentle] Deep breath, everyone. It's about to get calm.
 
 **10:47** · look: *SCALE DRIVE CORE*
 > **ENGINEERING:** [warm] Three, two, one, rising. [chuckle] Twelve micrometres. Back to being a cell among cells, and she likes this direction better. I can hear myself think.
@@ -159,7 +159,7 @@
 > **DOC:** [warm] Down the loop now, this long hairpin, and the fluid's getting saltier around us. That's the loop of Henle, concentrating. [excited] And the kidney talks. It sends out renin, which helps set your blood pressure, and erythropoietin, EPO, a hormone that tells the bone marrow: make more red cells. Remember that order slip. We'll watch it delivered.
 
 **14:42** · look: *BRIDGE (helm)*
-> **HELM:** [warm] Collecting duct ahead, and that's a road we won't ride to the end. [excited] Back into the blood and out to a thigh muscle, where Doc has timed a contraction to roll through while we're inside one cell longer than your forearm. Helm calling one decade down, Chief. Twelve micrometres to one point two.
+> **HELM:** [warm] Collecting duct ahead, and that's a road we won't ride to the end. [excited] Back into the blood and out to a thigh muscle, where Doc has timed a contraction to roll through while we're inside one cell longer than your forearm. Helm calling one power of ten down, Chief. Twelve micrometres to one point two.
 
 **15:06** · look: *SCALE DRIVE CORE*
 > **ENGINEERING:** [tense] Three, two, one, dropping. [awe] One point two micrometres. Look at the stripes: ranks of them, a barcode running to the horizon. [dry] Each stripe's a sarcomere, Doc tells me. I'd have called it a piston row.
@@ -179,7 +179,7 @@
 > **DOC:** [reverent] Six hundred skeletal muscles in you, and then there's the heart, a different kind of muscle entirely, doing this same stroke since before you were born, without one break. [gentle] Every heartbeat is molecules walking along ropes. Feel your pulse. That's the sound of it.
 
 **16:57** · look: *BRIDGE (helm)*
-> **HELM:** [warm] Out through the tendon and into the femur. We're heading for the marrow, the place every blood cell you own was born. [gentle] Helm calling one decade up, Chief, one point two micrometres to twelve. Let's see if that order slip got delivered.
+> **HELM:** [warm] Out through the tendon and into the femur. We're heading for the marrow, the place every blood cell you own was born. [gentle] Helm calling one power of ten up, Chief, one point two micrometres to twelve. Let's see if that order slip got delivered.
 
 **17:17** · look: *SCALE DRIVE CORE*
 > **ENGINEERING:** [warm] Three, two, one, rising. [awe] Twelve micrometres, and welcome to the factory that made your blood. [chuckle] And look at the size of that one to starboard, shedding bits of itself on purpose. Megakaryocyte. The bits are platelets, the plugs that stop you bleeding. Your body plugs its leaks with confetti.
@@ -199,7 +199,7 @@
 > **DOC:** [warm] This is also where B cells are born and educated, the cells that will make your antibodies. Their cousins, the T cells, go to school in the thymus. [reflective] A marrow transplant works by handing a patient a brand-new version of this room. A stranger's stem cells, making a survivor's blood.
 
 **19:17** · look: *BRIDGE (helm)* · SFX: `drive_engage`
-> **HELM:** [gentle] That young B cell by the vessel wall, Doc. We're going inside it, all the way to the nucleus, to watch it write something no cell has ever written before. [tense] Helm calling three decades down in one go, Chief. Twelve micrometres to twelve nanometres. She'll grumble.
+> **HELM:** [gentle] That young B cell by the vessel wall, Doc. We're going inside it, all the way to the nucleus, to watch it write something no cell has ever written before. [tense] Helm calling three powers of ten down in one go, Chief. Twelve micrometres to twelve nanometres. She'll grumble.
 
 **19:38** · look: *SCALE DRIVE CORE*
 > **ENGINEERING:** [tense] Three, two, one, dropping. [hushed] Twelve nanometres. We're in DNA's own room, and that thread thicker than our hull is a chromosome. [dry] Something's cutting it. On purpose, Doc says.
@@ -222,7 +222,7 @@
 > **DOC:** [gentle] And no, Chief, the bin doesn't care. Any antibody that reacts against your own molecules, the cell that made it is deleted, right here. That's tolerance. [heartfelt] This lottery runs identically in every human being alive. Same segments, same enzymes, same odds. The immune system reads molecules. It has never once read ancestry, and it never will.
 
 **21:59** · look: *BRIDGE (helm)*
-> **HELM:** [warm] Now the part I've been looking forward to since we planned the route. Back into a liver cell, and this time it's a city, and we fly the highway. [excited] Helm calling one decade up, Chief. Twelve nanometres to a hundred and twenty.
+> **HELM:** [warm] Now the part I've been looking forward to since we planned the route. Back into a liver cell, and this time it's a city, and we fly the highway. [excited] Helm calling one power of ten up, Chief. Twelve nanometres to a hundred and twenty.
 
 **22:19** · look: *SCALE DRIVE CORE*
 > **ENGINEERING:** [warm] Three, two, one, rising. [chuckle] One hundred and twenty nanometres, and would you look at the traffic.
@@ -245,7 +245,7 @@
 > **DOC:** [awe] The one walking the other way is dynein, hauling back toward the centre. In a nerve cell this track can run a metre, spine to toe, and the cargo is passed motor to motor the whole way, a relay. [dry] Those acid sacs are lysosomes, sixty enzymes each, the recycling plant. Christian de Duve found them by patient centrifuging. Nobel, 1974.
 
 **24:38** · look: *BRIDGE (helm)*
-> **HELM:** [warm] Rough ER to port, sheets crusted with ribosomes. Golgi ahead, stacked like pancakes. Mitochondria everywhere, humming. [gentle] Billions of protein molecules in this one cell, and every one was built somewhere. Helm calling a pancreas next, Chief, one decade down. Doc wants to show you the line.
+> **HELM:** [warm] Rough ER to port, sheets crusted with ribosomes. Golgi ahead, stacked like pancakes. Mitochondria everywhere, humming. [gentle] Billions of protein molecules in this one cell, and every one was built somewhere. Helm calling a pancreas next, Chief, one power of ten down. Doc wants to show you the line.
 
 **24:59** · look: *SCALE DRIVE CORE*
 > **ENGINEERING:** [tense] Three, two, one, dropping. [hushed] Twelve nanometres, a beta cell, and the line's running. [dry] An assembly line nobody designed, never once shut down for maintenance. I'd give a lot for that uptime.
@@ -265,7 +265,7 @@
 > **DOC:** [warm] The product is insulin. Fifty-one amino acids, made long, trimmed twice, the last cut inside the granule the Golgi packed it in. Banting and Best pulled it from dog pancreas in 1921, and diabetes stopped being a death sentence. [reflective] In 1955 Sanger read its sequence, the first protein ever spelled out letter by letter. Measurement, then medicine. That order matters.
 
 **26:44** · look: *EXTERNAL (chase, the Mote)*
-> **HELM:** [gentle] Blood sugar's rising upstairs. Watch the granule fuse with the wall. [awe] Exocytosis. There goes insulin, into the blood, to tell muscle, fat and liver: take the sugar in. [warm] Chief, the deep one now. Heart muscle, a mitochondrion. Helm calling one decade, in three stages. Take her to the floor.
+> **HELM:** [gentle] Blood sugar's rising upstairs. Watch the granule fuse with the wall. [awe] Exocytosis. There goes insulin, into the blood, to tell muscle, fat and liver: take the sugar in. [warm] Chief, the deep one now. Heart muscle, a mitochondrion. Helm calling one power of ten, in three stages. Take her to the floor.
 
 **27:13** · look: *SCALE DRIVE CORE* · SFX: `drive_engage`
 
@@ -296,7 +296,7 @@
 > **DOC:** [reflective] Boyer reasoned it must rotate, from the chemistry alone. Walker solved its structure. Nobel, 1997. But that same year Noji's team did the thing that ends arguments. [awe] They fixed a glowing filament to a single motor and watched it turn under a microscope, always the same direction. Nobody needed anyone's word after that. They could look.
 
 **29:52** · look: *BRIDGE (helm)*
-> **HELM:** [warm] That's the floor of the whole trip, crew. Time to climb. One more stop on the way up: a cell in the gut lining, the same lining we swallowed into, about to split in two. [excited] Helm calling three decades up, Chief. One point two nanometres to one point two micrometres.
+> **HELM:** [warm] That's the floor of the whole trip, crew. Time to climb. One more stop on the way up: a cell in the gut lining, the same lining we swallowed into, about to split in two. [excited] Helm calling three powers of ten up, Chief. One point two nanometres to one point two micrometres.
 
 **30:14** · look: *SCALE DRIVE CORE*
 > **ENGINEERING:** [warm] Three, two, one, rising. [awe] One point two micrometres, and she's happy about it. [chuckle] Look at those X's lining up. Forty-six of them, like a parade waiting for the band.
@@ -313,15 +313,15 @@
 > **DOC:** [grave] Checkpoints guard every step. A protein called p53 halts damaged cells before they divide. When those brakes fail, division without brakes has a name: cancer. [warm] The control genes were found by Hartwell and Nurse in yeast and by Hunt in sea urchin eggs, Nobel 2001, because a yeast, an urchin and you run the very same cycle.
 
 **31:34** · look: *EXTERNAL (chase, the Mote)*
-> **ENGINEERING:** [chuckle] And there's two. Three hundred billion times a day, somewhere in you, same genome in each, reading different pages. [reflective] Helm, that's the ladder done. Take us home: six decades... no. Seven. I counted. One point two micrometres to twelve metres is seven. Drive's on full.
+> **ENGINEERING:** [chuckle] And there's two. Three hundred billion times a day, somewhere in you, same genome in each, reading different pages. [reflective] Helm, that's the ladder done. Take us home: six powers of ten... no. Seven. I counted. One point two micrometres to twelve metres is seven. Drive's on full.
 
 **31:57** · look: *BRIDGE (helm)*
-> **HELM:** [warm] Seven it is, Chief, and thank you for checking. Helm calling the last change: seven decades up in about eighty seconds. Everything we saw will flash past. [gentle] Hands on the rail. Chime the deck.
+> **HELM:** [warm] Seven it is, Chief, and thank you for checking. Helm calling the last change: seven powers of ten up in about eighty seconds. Everything we saw will flash past. [gentle] Hands on the rail. Chime the deck.
 
 **32:15** · look: *EXTERNAL (chase, the Mote)* · SFX: `chime`
 
 **32:17** · look: *EXTERNAL (chase, the Mote)*
-> **ENGINEERING:** [excited] Three, two, one, rising. [softly] Seven decades, counted as one. Doc, the floor is yours.
+> **ENGINEERING:** [excited] Three, two, one, rising. [softly] seven powers of ten, counted as one. Doc, the floor is yours.
 
 **32:19** · look: *EXTERNAL (chase, the Mote)* · SFX: `grow`
 
@@ -329,7 +329,7 @@
 > **DOC:** [reflective] Watch it go past. Cell, marrow, muscle, liver, gut, mouth. [heartfelt] You are a community. Thirty-seven trillion human cells and about as many microbes, and not one of them knows your name. Every cell carries the same genome and reads a different chapter of it.
 
 **33:06** · look: *OBSERVATION DECK*
-> **DOC:** [tender] Here's what seven decades taught us, twice now. The same motor in every mitochondrion. The same shuffle in every marrow. The same phage war in every gut, from the first human who ever lived to the newest born this minute. [emphasis] Science, done honestly, by people willing to be wrong, keeps finding one machinery. One family. [softly] We are all human beings.
+> **DOC:** [tender] Here's what seven powers of ten taught us, twice now. The same motor in every mitochondrion. The same shuffle in every marrow. The same phage war in every gut, from the first human who ever lived to the newest born this minute. [emphasis] Science, done honestly, by people willing to be wrong, keeps finding one machinery. One family. [softly] We are all human beings.
 
 
 ### 13. The Look Back

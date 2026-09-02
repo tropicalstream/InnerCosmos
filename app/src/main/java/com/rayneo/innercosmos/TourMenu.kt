@@ -45,11 +45,11 @@ class TourMenu(context: Context) : TextView(context) {
         val sb = StringBuilder("◄  CHOOSE A TOUR  ►\n")
             .append("SWIPE: CHOOSE   TAP: BOARD THE MOTE\n\n")
         Tours.ALL.forEachIndexed { i, t ->
-            val numeral = if (t.id == 1) "I. " else "II."
+            val numeral = when (t.id) { 1 -> "I.  "; 2 -> "II. "; else -> "III." }
             val line = String.format("%-4s%-20s %-30s %s", numeral, t.title.take(20), t.subtitle.take(30), t.durationLabel)
             sb.append(if (i == index) "▶ $line" else "  $line").append('\n')
         }
-        sb.append("\nEITHER RIDE CAN BE STARTED AT ANY STOP")
+        sb.append("\nANY OF THEM CAN BE STARTED AT ANY STOP")
         text = sb.toString()
     }
 

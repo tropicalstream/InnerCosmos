@@ -10,6 +10,7 @@ across both lenses, with a talking three‑person crew:
   microbiome and its phages, the liver, the kidney, muscle, bone marrow, V(D)J
   recombination, kinesin on its microtubule highway, the protein factory, a single ATP
   synthase and mitosis — climbing back *up* the ladder several times along the way.
+- **III. Bethune** (24 min) — a life, told through the tissues it touched. Ten stops.
 
 The sister project of **SpaceX3Tour** (Earth to Pluto). Same hardware, same engine,
 same crew idea, same Fish Audio voices; the cosmos is now the one inside you.
@@ -62,6 +63,40 @@ tour changes. Tour II adds a **grow** cue (the mirror image of a shrink: the wor
 contracts about the Mote and the hull swells under teal streaks) and a **lysis** cue
 (the phage stop's infected host bursts in sync with the sound), plus gut, muscle and
 motor ambiences.
+
+## 🩺 Chapter III — Bethune (10 stops, a life in the tissues)
+
+Henry Norman Bethune (1890–1939): the Montreal thoracic surgeon whose own tuberculosis
+turned him into a humanitarian, who built one of the first mobile blood‑transfusion
+services during the Spanish Civil War, and who spent the last twenty months of his life
+operating for — and, more lastingly, *training* — the Eighth Route Army in China, where
+he is known as **白求恩, Bai Qiu'en**. The body is the stage: every stop is a place his
+work touched.
+
+| # | Stop | Where you are | The life |
+| --- | --- | --- | --- |
+| 1 | **The Cavity** | a tuberculous lung | 1926: he has TB, demands an artificial pneumothorax, and lives. The poor around him do not. The turn. |
+| 2 | **The Vein** | a donor's vein, a cannula | Madrid 1936: the Servicio Canadiense de Transfusión de Sangre |
+| 3 | **The Bottle** | stored blood, settled and cold | citrate, refrigeration, and a truck that took blood to the wounded instead of the other way round |
+| 4 | **The Front** | a wound torn through the wall | China 1938: the Jin‑Cha‑Ji border region, wounds already days old |
+| 5 | **The Transfusion** | fresh cells reaching starved tissue | a blood service built where none existed; he gave his own |
+| 6 | **The Table** | tissue drawn closed | the mobile operating theatre on two mules; the eight‑hour rule |
+| 7 | **The Students** | marrow making new cells | the training school and the textbooks he wrote and drew himself — the contribution that outlived him |
+| 8 | **The Cut** | a nicked finger | operating without gloves, October 1939 |
+| 9 | **The Fever** | bacteria multiplying in the blood | septicaemia, a year before penicillin was a usable medicine |
+| 10 | **The Memory** | the body as a cosmos of cells | what he left, and why the whole project ends where it does |
+
+He crossed the world to open the bodies of strangers whose language he could not speak,
+and found inside them exactly what he had found in Montreal and Madrid. Chapter III is
+where the project's theme stops being a claim and becomes a biography.
+
+**The two pictures.** Chapter III hangs two real artworks in the passage — a painting of
+the Yan'an meeting at *The Front*, and a scroll portrait at *The Memory* — in a lit frame,
+fading in as the ship approaches like any other landmark. They are the only bitmaps in an
+otherwise entirely procedural app, and the loader is deliberately forgiving: delete
+`app/src/main/assets/plates/` and the chapter runs without them. See the README in that
+folder for provenance; their copyright is not cleared, so credit, replace or remove them
+before distributing the app or this repository more widely.
 
 ### The spine of the ride
 The script is built on the **foundations of science** — evidence over authority,
@@ -126,7 +161,7 @@ ribosome, and whenever the script fires a spark, squelch or impact cue.
 ### Demo / adb control (for recording and testing)
 ```bash
 adb shell am broadcast -a com.rayneo.innercosmos.CONTROL --ez board true    # leave the title card
-adb shell am broadcast -a com.rayneo.innercosmos.CONTROL --ei tour 2        # load tour 1 or 2 (opens its depth menu)
+adb shell am broadcast -a com.rayneo.innercosmos.CONTROL --ei tour 3        # load chapter 1, 2 or 3 (opens its depth menu)
 adb shell am broadcast -a com.rayneo.innercosmos.CONTROL --ei segment 4     # jump to stop 5 (0-based index)
 adb shell am broadcast -a com.rayneo.innercosmos.CONTROL --ei view 1        # camera 0..3
 adb shell am broadcast -a com.rayneo.innercosmos.CONTROL --ez menu true     # pause + depth menu
