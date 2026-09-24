@@ -12,6 +12,13 @@ across both lenses, with a talking three‑person crew:
   synthase and mitosis — climbing back *up* the ladder several times along the way.
 - **III. Bethune** (24 min) — a life, told through the tissues it touched. Ten stops.
 
+## Screenshots
+
+<p>
+  <img src="images/title.png" width="45%" alt="InnerCosmos title screen, the M.S.V. Mote entering the airway">
+  <img src="images/ride.png" width="45%" alt="Bridge view of the Mote inside the airway with the pilot's caption and body map">
+</p>
+
 The sister project of **SpaceX3Tour** (Earth to Pluto). Same hardware, same engine,
 same crew idea, same Fish Audio voices; the cosmos is now the one inside you.
 
