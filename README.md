@@ -9,6 +9,10 @@ InnerCosmos is a pair of stereoscopic rides through the human body for RayNeo X3
   <img src="images/ride.png" width="45%" alt="Bridge view of the Mote inside the airway with the pilot's caption and body map">
 </p>
 
+## Demo
+
+[![InnerCosmos trailer](https://i.ytimg.com/vi/eUnjU63ngfc/hqdefault.jpg)](https://youtu.be/eUnjU63ngfc)
+
 ## Controls
 
 - Tap the right-arm touchpad to board, choose a tour, and select a starting depth
