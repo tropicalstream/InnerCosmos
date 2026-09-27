@@ -2998,10 +2998,14 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
     // ---- organs (opaque), in their true places
     part(0f, 0.922f, 0.005f, 0.046f, 0.038f, 0.052f, COL_ORG_BRAIN, COL_LAMP, 1f, 0.8f)                   // brain
     seg(0f, 0.83f, 0.01f, 0f, 0.76f, 0.01f, 0.010f, COL_BONE, COL_LAMP, 0.9f)                              // trachea
-    for (sgn in SIGNS) {                                                                                     // lungs: base ~0.64, apex above the clavicle ~0.84
-        part(sgn * 0.052f, 0.715f, 0f, 0.050f, 0.075f, 0.046f, COL_ORG_LUNG, COL_LAMP, 0.95f, 0.5f)
-        part(sgn * 0.046f, 0.800f, -0.004f, 0.033f, 0.045f, 0.032f, COL_ORG_LUNG, COL_LAMP, 0.95f, 0.5f)   // apex
-    }
+    // Lungs either side of the mediastinum: the right (her -x) is the larger, three-lobed lung; the
+    // left is narrower with a cardiac notch where the heart sits. Bases on the diaphragm (~0.645),
+    // apices rising above the clavicles (~0.84).
+    part(-0.068f, 0.718f, -0.004f, 0.046f, 0.074f, 0.046f, COL_ORG_LUNG, COL_LAMP, 0.95f, 0.5f)            // right lung
+    part(-0.060f, 0.800f, -0.008f, 0.032f, 0.045f, 0.032f, COL_ORG_LUNG, COL_LAMP, 0.95f, 0.5f)            //   apex
+    part(0.074f, 0.725f, -0.006f, 0.040f, 0.068f, 0.044f, COL_ORG_LUNG, COL_LAMP, 0.95f, 0.5f)             // left lung (notched)
+    part(0.064f, 0.800f, -0.008f, 0.030f, 0.045f, 0.031f, COL_ORG_LUNG, COL_LAMP, 0.95f, 0.5f)             //   apex
+    part(0f, 0.643f, 0f, 0.112f, 0.016f, 0.068f, COL_DIAPHRAGM, COL_LAMP, 0.8f)                           // diaphragm
     part(0.018f, 0.690f, 0.028f, 0.030f, 0.034f, 0.026f, COL_ORG_HEART, COL_LAMP, 1f, 0f, 0.25f)          // heart, apex to her left
     seg(0.005f, 0.70f, -0.018f, 0.005f, 0.48f, -0.022f, 0.009f, COL_ORG_HEART, COL_LAMP, 1f, 0.15f)       // descending aorta
     seg(-0.012f, 0.70f, -0.012f, -0.012f, 0.48f, -0.016f, 0.010f, COL_VEIN_BLUE, COL_LAMP, 1f)            // inferior vena cava
@@ -3017,7 +3021,9 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
         val y = 0.785f - k * (if (quality == 0) 0.028f else 0.049f)
         val w = 0.105f + 0.012f * sin(k * 0.55f + 0.4f)                                                      // widest at the 7th rib
         // Ring in the horizontal plane: local z = up, local y = toward the viewer; the arc's gap faces front.
-        drawBasis(wx(0f, -0.004f), wy(y), wz(0f, -0.004f), 0f, 1f, 0f, tx, 0f, tz, w * H, 0.068f * H, 0.012f * H,
+        // Ribs slope down toward the front: tilt each ring's plane forward by ~22 degrees.
+        val c22 = 0.927f; val s22 = 0.375f
+        drawBasis(wx(0f, -0.004f), wy(y), wz(0f, -0.004f), tx * s22, c22, tz * s22, tx, 0f, tz, w * H, 0.068f * H, 0.012f * H,
             ribArc, COL_BONE, COL_LAMP, 0.75f * alpha, 0f, 0f)
     }
     drawBasis(wx(0f, 0f), wy(0.50f), wz(0f, 0f), 0f, 1f, 0f, tx, 0f, tz, 0.11f * H, 0.07f * H, 0.014f * H,
@@ -3058,7 +3064,14 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
 
     // ---- the skin: one smooth translucent shell (head, neck, trunk, limbs)
     val sk = COL_SKIN_SHELL; val rim = COL_SKIN_RIM
-    part(0f, 0.928f, 0f, 0.056f, 0.068f, 0.064f, sk, rim, 0.3f, glow = 0.35f)                                            // head
+    part(0f, 0.928f, 0f, 0.056f, 0.068f, 0.064f, sk, rim, 0.3f, glow = 0.35f)
+    // A face: eyes (sclera + iris), the nose and the lips, so she reads as a person, not a mannequin.
+    for (sgn in SIGNS) {
+        part(sgn * 0.021f, 0.938f, 0.052f, 0.009f, 0.006f, 0.006f, COL_SCLERA, COL_LAMP, 0.9f, 0f, 0.3f)
+        part(sgn * 0.021f, 0.938f, 0.057f, 0.0045f, 0.0045f, 0.003f, COL_IRIS, COL_LAMP, 1f, 0f, 0.2f)
+    }
+    part(0f, 0.922f, 0.062f, 0.008f, 0.013f, 0.009f, sk, rim, 0.6f, glow = 0.35f)                          // nose
+    part(0f, 0.902f, 0.056f, 0.015f, 0.0045f, 0.006f, COL_LIPS, COL_LAMP, 0.9f, 0f, 0.3f)                  // lips                                            // head
     seg(0f, 0.845f, 0f, 0f, 0.878f, 0f, 0.028f, sk, rim, 0.3f, glow = 0.35f)                                              // neck
     seg(0f, 0.53f, 0f, 0f, 0.78f, 0f, 0.075f, sk, rim, 0.26f, glow = 0.35f)                                               // trunk core
     part(0f, 0.735f, 0f, 0.115f, 0.095f, 0.072f, sk, rim, 0.24f, glow = 0.35f)                                            // chest and shoulders
