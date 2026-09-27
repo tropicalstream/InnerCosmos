@@ -69,9 +69,9 @@ internal const val T2_OES_R = 1.9f
 internal fun t2MachineDropY(p: Float): Float {
     if (p <= 0f || p >= 1f) return 0f
     fun sm(a: Float, b: Float, x: Float): Float { val t = ((x - a) / (b - a)).coerceIn(0f, 1f); return t * t * (3f - 2f * t) }
-    return -T2_DIVE * sm(0.24f, 0.29f, p) * (1f - sm(0.42f, 0.66f, p))
+    return -T2_DIVE * sm(0.284f, 0.326f, p) * (1f - sm(0.42f, 0.66f, p))
 }
-internal const val T2_DIVE = 5f
+internal const val T2_DIVE = 4.6f
 
 // ------------------------------------------------------------------------------------ palette
 internal val T2_ENAMEL = floatArrayOf(0.97f, 0.95f, 0.88f, 1f)
@@ -869,9 +869,7 @@ private fun T2Geo.crown(base: T2V, e1: T2V, e2: T2V, e3: T2V, tt: T2Tooth) {
     }
 }
 
-/** The rail's height below the mouth stop's frame at [z] units past it (the swallow's dive). */
-private fun t2DiveY(z: Float): Float = -T2_DIVE * t2sm((z - 11.3f) / 3.2f)
-private const val T2_UES_Z = 14.4f
+private const val T2_UES_Z = 13.8f
 private const val T2_PH_RX = 2.85f
 private const val T2_PH_RY = 3.2f
 private const val T2_PH_CY = -0.3f
@@ -955,7 +953,7 @@ private fun StereoBodyRenderer.t2MouthMesh(i: Int): TriMesh = t2Get("mouth$i") {
     //      running down from the free edge of the soft palate to the side of the tongue, the
     //      palatine tonsil in the fossa between them.
     g.surf(10, 40, T2_PHARYNX) { v, u ->
-        val z = 7.6f + 4.8f * v; val a = u * 2f * T2PI
+        val z = 7.6f + 4.7f * v; val a = u * 2f * T2PI
         t2v(cos(a) * T2_PH_RX, T2_PH_CY + sin(a) * T2_PH_RY, z)
     }
     for (sd in SIGNS) {
@@ -964,30 +962,25 @@ private fun StereoBodyRenderer.t2MouthMesh(i: Int): TriMesh = t2Get("mouth$i") {
         for (pl in listOf(front, back)) g.foldAlong(pl, t2v(0f, T2_PH_CY, 0f), 0.25f, 0.2f, T2_SOFT_PALATE)
         g.ell(t2v(sd * (t2PharynxX(0.15f) - 0.15f), 0.15f, 9.2f), t2v(0.45f, 0f, 0f), t2v(0f, 1.0f, 0f), t2v(0f, 0f, 0.6f), T2_TONSIL)
     }
-    // ---- the posterior pharyngeal wall closes the oropharynx behind the uvula; below it the
-    //      laryngopharynx runs down behind the larynx, the piriform recesses either side of it, to
-    //      the upper oesophageal sphincter: a transverse slit 4 cm below, at the level of the cricoid
-    val holeY = t2DiveY(12.4f); val holeW = 2.2f; val holeH = 1.5f
-    g.surf(8, 48, T2_PHARYNX) { v, u ->
-        val a = u * 2f * T2PI
-        val ex = cos(a) * holeW; val ey = holeY + sin(a) * holeH
-        val ox = cos(a) * (T2_PH_RX + 0.2f); val oy = T2_PH_CY + sin(a) * (T2_PH_RY + 0.2f)
-        t2v(ex + (ox - ex) * v, ey + (oy - ey) * v, 12.4f - 0.35f * v * v)
-    }
-    g.surf(16, 32, T2_PHARYNX) { v, u ->      // the laryngopharynx: a flattening funnel to the slit
-        val z = 12.4f + (T2_UES_Z - 12.4f) * v; val a = u * 2f * T2PI
-        val w = holeW + (1.2f - holeW) * t2sm(v); val h = holeH + (0.55f - holeH) * t2sm(v)
-        t2v(cos(a) * w, t2DiveY(z) + sin(a) * h, z)
+    // ---- behind the larynx the oropharynx narrows down and back into the laryngopharynx: its
+    //      posterior wall faces us behind the uvula and slopes down to the upper oesophageal
+    //      sphincter, a transverse slit about 4 cm below the mouth, behind the cricoid; the
+    //      swallow goes over the epiglottis and down behind the larynx into it.
+    val off0 = FloatArray(2); t2RailOffset(i, T2_UES_Z, off0); val slitY = off0[1]
+    g.surf(18, 40, T2_PHARYNX) { v, u ->
+        val sv = t2sm(v); val z = 12.3f + (T2_UES_Z - 12.3f) * v; val a = u * 2f * T2PI
+        val w = T2_PH_RX + (1.3f - T2_PH_RX) * sv; val h = T2_PH_RY + (0.9f - T2_PH_RY) * sv
+        t2v(cos(a) * w, T2_PH_CY + (slitY - T2_PH_CY) * sv + sin(a) * h, z)
     }
     for (sd in SIGNS) {   // piriform recesses: gutters either side of the larynx, down to the slit
-        val pts = (0..10).map { q -> val t = q / 10f; t2v(sd * (1.35f - 0.7f * t), -2.4f - 2.6f * t, 10.6f + (T2_UES_Z - 0.6f - 10.6f) * t) }
+        val pts = (0..10).map { q -> val t = q / 10f; t2v(sd * (1.35f - 0.55f * t), -2.4f + (slitY + 0.3f + 2.4f) * t, 10.6f + (T2_UES_Z - 0.4f - 10.6f) * t) }
         g.foldAlong(pts, t2v(0f, -1f, 0f), 0.35f, -0.25f, T2_VALLECULA)
     }
     run {   // the upper oesophageal sphincter (cricopharyngeus), a slit-shaped rim
-        val c = t2v(0f, t2DiveY(T2_UES_Z), T2_UES_Z)
+        val c = t2v(0f, slitY, T2_UES_Z)
         g.surf(28, 8, T2_OES_MUSCLE) { u, v ->
             val a = u * 2f * T2PI; val b = v * 2f * T2PI
-            t2v(c.x + cos(a) * (1.2f + 0.2f * cos(b)), c.y + sin(a) * (0.55f + 0.2f * cos(b)), c.z + 0.2f * sin(b))
+            t2v(c.x + cos(a) * (1.3f + 0.2f * cos(b)), c.y + sin(a) * (0.9f + 0.2f * cos(b)), c.z + 0.2f * sin(b))
         }
     }
     // ---- the tongue filling the floor of the mouth inside the lower arch: a convex dorsum with a
@@ -1292,9 +1285,10 @@ private fun StereoBodyRenderer.t2PylorusIris(open: Float): TriMesh = t2Get("pyl$
  */
 private fun StereoBodyRenderer.t2Constriction(depth: Float, folds: Int, col: FloatArray): TriMesh = t2Get("constr$depth.$folds") {
     val g = T2Geo()
-    g.surf(14, 56, col) { u, v ->
-        val z = (u * 2f - 1f) * 1.5f; val a = v * 2f * T2PI
-        val squeeze = (1f - depth) * exp(-(z / 0.7f).pow(2))
+    // fading out at both ends into the wall it belongs to
+    g.surf(16, 56, col, 1f, { k -> val t = k / 16f; floatArrayOf(col[0], col[1], col[2], t2sm(min(t, 1f - t) / 0.3f)) }) { u, v ->
+        val z = (u * 2f - 1f) * 1.8f; val a = v * 2f * T2PI
+        val squeeze = (1f - depth) * exp(-(z / 0.75f).pow(2))
         val r = (1f - squeeze) * (1f - 0.12f * squeeze * (0.5f + 0.5f * cos(folds * a)))
         t2v(cos(a) * r * 0.99f, sin(a) * r * 0.99f, z)
     }
@@ -1357,7 +1351,7 @@ internal fun StereoBodyRenderer.drawStomach(n: TourNode, i: Int, seconds: Float)
         val shipArc = t2ArcAtP(i, routeProgress)
         val zRing = shipArc - 2.2f
         if (zRing > t2UesZ1(i) + 2f && zRing < st.zEntry - 5f) {
-            t2Model(t2Frame(i, zRing), 0f, 0f); Matrix.scaleM(model, 0, 1.6f, 1.6f, 1f); t2Draw(t2Constriction(0.4f, 7, T2_OES_LINING))
+            t2Model(t2Frame(i, zRing), 0f, 0f); Matrix.scaleM(model, 0, 1.6f, 1.6f, 1f); t2Draw(t2Constriction(0.4f, 7, T2_OES_LINING), true)
         }
         if (routeProgress > 0.45f) {
             val m = t2StomachMeshes(i)
@@ -1374,7 +1368,7 @@ internal fun StereoBodyRenderer.drawStomach(n: TourNode, i: Int, seconds: Float)
                 val wp = t2W(f0, c.x, c.y, c.z).copyOf()
                 t2ModelBasis(wp[0], wp[1], wp[2], f0[6] * tg.x + f0[9] * tg.y + f0[3] * tg.z, f0[7] * tg.x + f0[10] * tg.y + f0[4] * tg.z, f0[8] * tg.x + f0[11] * tg.y + f0[5] * tg.z,
                     f0[6] * nn.x + f0[9] * nn.y + f0[3] * nn.z, f0[7] * nn.x + f0[10] * nn.y + f0[4] * nn.z, f0[8] * nn.x + f0[11] * nn.y + f0[5] * nn.z, r * 1.05f, r * 1.05f, 1.3f)
-                t2Draw(t2Constriction(0.75f, 14, T2_GASTRIC))
+                t2Draw(t2Constriction(0.75f, 14, T2_GASTRIC), true)
             }
             // the pylorus: open (radius 0.5), closing to a pinhole as the wave arrives
             val open = when { arrive > 0.66f -> 0.1f; arrive > 0.33f -> 0.3f; else -> 0.5f }
@@ -2417,10 +2411,10 @@ private fun t2Fibrils(): List<FloatArray> {
     return out
 }
 
-/** Thick-filament positions of a detailed myofibril: a hexagonal lattice, 3 shells (37 filaments) at spacing [d]. */
+/** Thick-filament positions of a detailed myofibril: a hexagonal lattice, 2 shells (19 filaments) at spacing [d]. */
 private fun t2ThickLattice(d: Float): List<FloatArray> {
     val out = ArrayList<FloatArray>()
-    for (q in -3..3) for (r in -3..3) { if (abs(q + r) > 3) continue; out.add(floatArrayOf(d * (q + r * 0.5f), d * r * sqrt(3f) * 0.5f)) }
+    for (q in -2..2) for (r in -2..2) { if (abs(q + r) > 2) continue; out.add(floatArrayOf(d * (q + r * 0.5f), d * r * sqrt(3f) * 0.5f)) }
     return out
 }
 
@@ -2444,18 +2438,18 @@ private fun t2ThinLattice(d: Float, maxR: Float): List<FloatArray> {
 private fun StereoBodyRenderer.t2MuscleMeshes(): Array<ColorVboMesh> = t2Get("muscle") {
     val th = T2Geo(); val zu = T2Geo(); val sr = T2Geo(); val zg = T2Geo()
     val heads = Array(12) { T2Geo() }; val act = ArrayList<Float>()
-    val zAx = t2v(0f, 0f, 1f); val d = 0.3f
+    val zAx = t2v(0f, 0f, 1f); val d = 0.4f
     val headOn = t2mix(T2_MYOSIN_HEAD, T2_ENAMEL, 0.25f)
     for (fb in t2Fibrils()) {
         if (fb[2] < 0.5f) continue
         val cx = fb[0]; val cy = fb[1]
         for ((pi, p) in t2ThickLattice(d).withIndex()) {
             val x = cx + p[0]; val y = cy + p[1]
-            th.tube(t2v(x, y, -T2_THICK_HALF), t2v(x, y, T2_THICK_HALF), 0.04f, 0.04f, T2_MYOSIN, 1f, 5, false)
+            th.tube(t2v(x, y, -T2_THICK_HALF), t2v(x, y, T2_THICK_HALF), 0.04f, 0.04f, T2_MYOSIN, 1f, 4, false)
             // myosin heads in crowns on both halves (a bare zone at the M line), each reaching for
             // one of the six thin filaments round its thick filament
-            for (sgn in SIGNS) for (c in 0 until 6) {
-                val z = sgn * (0.2f + c * 0.14f)
+            for (sgn in SIGNS) for (c in 0 until 4) {
+                val z = sgn * (0.2f + c * 0.2f)
                 for (h in 0 until 2) {
                     val a = T2PI / 6f + ((c * 2 + h * 3 + pi) % 6) * T2PI / 3f
                     val dx = cos(a); val dy = sin(a)
@@ -2480,8 +2474,8 @@ private fun StereoBodyRenderer.t2MuscleMeshes(): Array<ColorVboMesh> = t2Get("mu
         val thinA = t2ThinLattice(d, 0.92f)
         val thinB = thinA.map { q -> val r = sqrt(q[0] * q[0] + q[1] * q[1]); val a = atan2(q[1], q[0]) + 0.26f; floatArrayOf(cos(a) * r, sin(a) * r) }
             .filter { it[0] * it[0] + it[1] * it[1] < 0.95f * 0.95f }
-        for (q in thinA) zu.tube(t2v(cx + q[0], cy + q[1], 0.04f), t2v(cx + q[0], cy + q[1], T2_THIN_LEN), 0.018f, 0.018f, T2_ACTIN, 1f, 3, false)
-        for (q in thinB) zu.tube(t2v(cx + q[0], cy + q[1], -T2_THIN_LEN), t2v(cx + q[0], cy + q[1], -0.04f), 0.018f, 0.018f, T2_ACTIN, 1f, 3, false)
+        for (q in thinA) zu.tube(t2v(cx + q[0], cy + q[1], 0.04f), t2v(cx + q[0], cy + q[1], T2_THIN_LEN), 0.02f, 0.02f, T2_ACTIN, 1f, 3, false)
+        for (q in thinB) zu.tube(t2v(cx + q[0], cy + q[1], -T2_THIN_LEN), t2v(cx + q[0], cy + q[1], -0.04f), 0.02f, 0.02f, T2_ACTIN, 1f, 3, false)
         for (a in thinA) for (b in thinB) {
             val dd = (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1])
             if (dd < 0.2f * 0.2f) act.addAll(listOf(cx + a[0], cy + a[1], 0.04f, 0.98f, 0.9f, 0.5f, 0.5f, cx + b[0], cy + b[1], -0.04f, 0.98f, 0.9f, 0.5f, 0.5f))
@@ -2524,7 +2518,7 @@ private fun StereoBodyRenderer.t2Bands(i: Int, L: Float, zRef: Float, seconds: F
     t2BandL = L; t2BandT = seconds
     val d = t2BandTris.data; var v = 0
     val fibs = t2Fibrils().filter { it[2] < 0.5f }
-    val sides = 12; val r = 0.9f
+    val sides = 10; val r = 0.9f
     val fa = FloatArray(13); val fb = FloatArray(13)
     fun seg(z0: Float, z1: Float, c: FloatArray) {
         val a0 = max(z0, -9f); val a1 = min(z1, 17f); if (a1 <= a0) return
@@ -2779,7 +2773,7 @@ private fun StereoBodyRenderer.t2MarrowMeshes(i: Int): Array<ColorVboMesh> = t2G
         if (bad) continue
         placedP.add(p); placedR.add(r)
         when {
-            kind < 0.15f -> { glass.ball(p, r, T2_BLAST_CYTO, 0.55f, 6, 9); g.ball(p, r * 0.78f, T2_BLAST_NUC, 1f, 6, 9) }
+            kind < 0.15f -> { glass.ball(p, r, T2_BLAST_CYTO, 0.5f, 6, 9); g.ball(p, r * 0.68f, T2_BLAST_NUC, 1f, 6, 9) }
             kind < 0.5f -> {
                 glass.ball(p, r, T2_MYELO_CYTO, 0.55f, 6, 9)
                 val nrm = t2v(rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f).unit()
@@ -2791,7 +2785,7 @@ private fun StereoBodyRenderer.t2MarrowMeshes(i: Int): Array<ColorVboMesh> = t2G
                 glass.ball(p, r, t2mix(T2_NORMO_EARLY, T2_NORMO_LATE, ripe), if (ripe < 0.5f) 0.45f else 0.6f, 6, 9)
                 g.ball(p, r * 0.4f, T2_NORMO_NUC, 1f, 5, 7)
             }
-            kind < 0.95f -> { glass.ball(p, r, T2_LYMPH_CYTO, 0.35f, 6, 9); g.ball(p, r * 0.85f, T2_LYMPH_NUC2, 1f, 6, 9) }
+            kind < 0.95f -> { glass.ball(p, r, T2_LYMPH_CYTO, 0.45f, 6, 9); g.ball(p, r * 0.74f, T2_LYMPH_NUC2, 1f, 6, 9) }
             else -> g.redCell(p, t2v(rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f), r, COL_RBC_DEOXY)
         }
     }
@@ -3634,7 +3628,7 @@ internal fun StereoBodyRenderer.drawFactory(n: TourNode, i: Int, seconds: Float)
 private const val T2_MEM_TOP = -3.0f
 private const val T2_MEM_BOT = -8.0f
 private const val T2_AXX = -3.2f
-private const val T2_AXZ = 14.0f
+private const val T2_AXZ = 19.0f
 private const val T2_SUBA = -2.356f     // subunit a's angle round the ring (+x toward +z): front, away from the lane
 
 private fun StereoBodyRenderer.t2MotorMeshes(i: Int): Array<ColorVboMesh> = t2Get("motor$i") {
@@ -3807,11 +3801,11 @@ internal fun StereoBodyRenderer.drawMotor(n: TourNode, i: Int, seconds: Float) {
 // separate (anaphase B); nuclear envelopes re-form round the decondensing sets and an actomyosin
 // ring pinches the cell in two, leaving a midbody (a 36 s cycle).
 
-private const val T2_SPX = 8.5f
+private const val T2_SPX = 7.5f
 private const val T2_SPY = 0f         // spindle axis: parallel to the rail, 8.5 to starboard at eye level
-private const val T2_PLATE_Z = 9.0f
+private const val T2_PLATE_Z = 16.0f
 private const val T2_CELL_R = 7.5f      // the rounded mitotic cell, 12 µm
-private const val T2_APICAL = 6f       // apical surface of the starboard crypt wall (x) where the cell sits
+private const val T2_APICAL = 5f       // apical surface of the starboard crypt wall (x) where the cell sits
 private const val T2_CRYPT_R = 14f      // the crypt lumen: a tube of this radius round the rail's line
 
 private class T2Chromo(val cx: Float, val cy: Float, val wx: Float, val wy: Float, val lp: Float, val lq: Float, val sx: Float, val sy: Float, val sz: Float)
@@ -3881,7 +3875,7 @@ private fun StereoBodyRenderer.t2Epithelium(i: Int): Array<ColorVboMesh> = t2Get
     for (row in -4..6) for (c in 0 until cols) {
         val ac = (c - cols / 2) * 1.5f * rh; val zc = T2_PLATE_Z + row * sqrt(3f) * rh + (if (c % 2 != 0) sqrt(3f) * rh * 0.5f else 0f)
         val bottom = P(ac, zc, R); val dc = (bottom - t2v(T2_SPX, T2_SPY, T2_PLATE_Z)).len()
-        if (dc < T2_CELL_R + 0.3f || zc < -14f || zc > 34f) continue
+        if (dc < T2_CELL_R + 0.3f || zc < -14f || zc > 42f) continue
         val isPaneth = paneth < 3 && row == -2 && abs(c - cols / 2) <= 1
         if (isPaneth) paneth++
         val shrinkA = if (isPaneth) 2.5f / (2f * rh) else 0.96f; val shrinkB = if (isPaneth) 4.5f / (2f * rh) else 0.96f
