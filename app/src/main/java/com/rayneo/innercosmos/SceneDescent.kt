@@ -3413,15 +3413,16 @@ internal fun StereoBodyRenderer.drawNucleus(n: TourNode, i: Int, seconds: Float)
     // FG-repeat strands filling the channel, pushed aside where the craft is
     val d = t1Dyn.data
     var v = 0
-    val fg = floatArrayOf(0.88f, 0.88f, 1f, 0.85f)
-    for (k in 0 until 30) {
-        val a0 = TAU * k / 30f; val al0 = -2.4f + 4.8f * t1Hash(k)
+    val fg = floatArrayOf(0.84f, 0.84f, 1f, 0.5f)
+    // a meshwork of short, writhing unstructured chains anchored on the channel wall
+    for (k in 0 until 36) {
+        val a0 = TAU * k / 36f; val al0 = -1.6f + 3.2f * t1Hash(k)
         var px = 0f; var py = 0f; var pz = 0f
-        for (m in 0..5) {
-            val t = m / 5f
-            val r = 3.0f - 2.4f * t + 0.3f * sin(seconds * 1.3f + k + m)
-            val a = a0 + 0.9f * t * (if (k % 2 == 0) 1f else -1f)
-            val al = al0 + 0.8f * sin(t * 3f + k)
+        for (m in 0..8) {
+            val t = m / 8f
+            val r = 3.0f - 1.6f * t + 0.25f * sin(seconds * 1.7f + k * 1.3f + m * 1.9f)
+            val a = a0 + 0.6f * t * (if (k % 2 == 0) 1f else -1f) + 0.12f * sin(m * 2.3f + k)
+            val al = al0 + 0.35f * sin(t * 6f + k) + 0.1f * sin(seconds * 2.1f + m)
             var rr = r
             val dsh = al - sA
             if (abs(dsh) < 1.4f) rr = max(rr, 1.3f * (1f - abs(dsh) / 1.4f) + rr * abs(dsh) / 1.4f)
@@ -3432,7 +3433,7 @@ internal fun StereoBodyRenderer.drawNucleus(n: TourNode, i: Int, seconds: Float)
             px = wx; py = wy; pz = wz
         }
     }
-    t1DynDraw(v, GLES20.GL_LINES, 2.5f, 1f, depthWrite = false)
+    t1DynDraw(v, GLES20.GL_LINES, 1.5f, 1f, depthWrite = false)
     // chromatin, the gene and its polymerase (node frame)
     val f9 = frameAt(i.toFloat())
     val o9 = t1ShipOff(f9); val s9 = o9[0]; val u9 = o9[1]
@@ -3769,7 +3770,11 @@ internal fun StereoBodyRenderer.drawAtom(n: TourNode, i: Int, seconds: Float) {
     val f = frameAt(i.toFloat())
     val off = t1ShipOff(f)
     val a0 = 6.9f; val s0 = off[0] + 0.5f; val u0 = off[1] + 0.3f        // ~9 units (six ship-lengths) ahead as the craft arrives
-    // additive, and not hidden by the passage wall (there is no wall here: black is empty space)
+    // There is no wall at an atom: forget the (black, invisible) passage's depth so nothing drifting
+    // beyond it is hidden. Both eyes' viewports share the depth buffer; this eye's scene so far holds
+    // only the wall, and the other eye is either finished or not yet begun.
+    if (rp > 10.5f) GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT)
+    // additive
     GLES20.glDepthMask(false); GLES20.glDisable(GLES20.GL_DEPTH_TEST)
     GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE)
     val tick = floor(seconds / 0.12f).toInt()
