@@ -1938,14 +1938,14 @@ internal fun StereoBodyRenderer.drawHeart(n: TourNode, i: Int, seconds: Float) {
     t1DynDraw(v, GLES20.GL_LINES, 2.2f)
     if (leafA > 0.02f) {
         v = 0
-        val ec = floatArrayOf(0.72f, 0.46f, 0.42f, 1f)
+        val ec = floatArrayOf(0.62f, 0.32f, 0.30f, 1f)
         for (leaf in 0..1) for (m in 0 until 24) for (hh in 0..1) {        // free edges
             t1MvLeaf(leaf == 0, 1f, (m + hh) / 24f, oM, h, kk, q); wp(q[0], q[1], q[2] - 0.04f, ec, 1f)
         }
         for (vv in floatArrayOf(0.333f, 0.667f)) for (m in 0 until 8) for (hh in 0..1) {   // folds between P1, P2 and P3
             t1MvLeaf(false, 0.6f * (m + hh) / 8f + 0.08f, vv, oM, h, kk, q); wp(q[0], q[1], q[2] - 0.045f, ec, 1f)
         }
-        t1DynDraw(v, GLES20.GL_LINES, 2.5f, leafA)
+        t1DynDraw(v, GLES20.GL_LINES, 3.5f, leafA)
     }
     // ---- the left ventricle: trabeculated walls narrowing to the apex, a smooth outflow region under
     // the aortic valve; the papillary muscles rise from the wall. Drawn in a little in systole.
@@ -2864,9 +2864,10 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
             val cnt = max(1, (TAU * r / 0.055f).toInt())
             for (j in 0 until cnt) {
                 if (v + 2 >= 12000) break
-                val a = TAU * (j + 0.5f * (k % 2)) / cnt
+                val a = TAU * (j + t1Hash(k * 977 + j)) / cnt
+                val jr = (t1Hash(k * 131 + j * 7) - 0.5f) * 0.04f
                 for (sg in SIGNS) {
-                    val rr = r + m.nr[k] * T1_LEAF * sg; val zz = m.pz[k] + m.nz[k] * T1_LEAF * sg
+                    val rr = r + jr + m.nr[k] * T1_LEAF * sg; val zz = m.pz[k] + m.nz[k] * T1_LEAF * sg
                     v = t1Put(dd, v, cos(a) * rr, sin(a) * rr, -zz, hc, 0.95f)
                 }
             }
@@ -3196,7 +3197,7 @@ internal fun StereoBodyRenderer.drawMitochondrion(n: TourNode, i: Int, seconds: 
 // strands parted over ~14 bp (the transcription bubble), the RNA paired with the template strand for
 // 8 bp before it leaves through the exit channel and trails behind.
 
-private const val T1_NPC_P = 8.90f
+private const val T1_NPC_P = 8.975f
 
 private class T1Nucleus(val envA: ParamMesh, val envB: ParamMesh, val heads: PointMesh, val npc: T1Batch, val cyto: LineMesh, val basket: LineMesh,
                         val histones: T1Batch, val h1: T1Batch, val dna: T1Batch)
@@ -3286,8 +3287,8 @@ private fun t1BuildNucleus(): T1Nucleus {
         val a = TAU * k / 8f + 0.2f
         for (m in 0 until 14) for (h in 0..1) {             // cytoplasmic filaments, curling out
             val t = (m + h) / 14f
-            val r = 5.0f + 0.9f * sin(t * 5f + k); val aa = a + 0.35f * sin(t * 4f)
-            add(cyto, cos(aa) * r, sin(aa) * r, 3.6f + 5.5f * t, fc)
+            val r = 5.0f + 0.6f * sin(t * 5f + k); val aa = a + 0.25f * sin(t * 4f)
+            add(cyto, cos(aa) * r, sin(aa) * r, 3.6f + 3.0f * t, fc)
         }
         for (m in 0 until 10) for (h in 0..1) {             // basket filaments converging on the distal ring
             val t = (m + h) / 10f
@@ -3727,13 +3728,13 @@ private fun t1BuildAtom(set: Int): PointMesh {
         }
     }
     // the carbon (Clementi-Raimondi: 1s 5.673, 2p 1.568 per bohr)
-    cloud(0f, 0f, 0f, 5.673f, 1500, 1.568f, 4000, true, cC, 0.3f, 0.25f)
+    cloud(0f, 0f, 0f, 5.673f, 1500, 1.568f, 3200, true, cC, 0.3f, 0.2f)
     // sigma-bond density along each bond, peaking between the nuclei
     val bl = floatArrayOf(140f, 135f, 108f)
     for (k in 0..2) {
         val d = bl[k] / 8f
         var placed = 0
-        while (placed < 500) {
+        while (placed < 900) {
             val t = rnd.nextFloat()
             if (rnd.nextFloat() > 0.35f + 0.65f * sin(PI_F * t)) continue
             dir(u)

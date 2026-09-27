@@ -61,7 +61,7 @@ object Tours {
             TourNode("THE MITOCHONDRION", -2.4f, -0.2f, -128f, 20.0f, rgb(0.10f, 0.22f, 0.24f), 4.0e-8, Scene.MITOCHONDRION, Amb.CYTO, 50f, 12f, "MITOCHONDRION", "40 nm"),
             TourNode("THE NUCLEUS", 2.0f, 0.3f, -144f, 8.0f, rgb(0.26f, 0.22f, 0.55f), 1.2e-8, Scene.NUCLEUS, Amb.CYTO, 50f, 12f, "CELL NUCLEUS", "12 nm"),
             TourNode("THE RIBOSOME", -2.2f, 0.0f, -160f, 7.0f, rgb(0.20f, 0.48f, 0.50f), 1.2e-8, Scene.RIBOSOME, Amb.CYTO, 50f, 12f, "RIBOSOME", "12 nm"),
-            TourNode("THE ATOM", 1.6f, -0.2f, -176f, 16.0f, rgb(0.0f, 0.0f, 0.0f), 1.2e-11, Scene.ATOM, Amb.ATOM, 50f, 12f, "CARBON ATOM", "12 pm"),
+            TourNode("THE ATOM", 1.6f, -0.2f, -176f, 40.0f, rgb(0.0f, 0.0f, 0.0f), 1.2e-11, Scene.ATOM, Amb.ATOM, 50f, 12f, "CARBON ATOM", "12 pm"),
             TourNode("THE LOOK BACK", 0.0f, 0.2f, -194f, 9.0f, rgb(0.38f, 0.22f, 0.36f), 12.0, Scene.LOOKBACK, Amb.LOOKBACK, 50f, 60f, "WHOLE BODY", "12 pm → 12 m")
         ),
         // Mote length vs rail progress, stepping where the script's shrink / grow cues land: 12 m ->
