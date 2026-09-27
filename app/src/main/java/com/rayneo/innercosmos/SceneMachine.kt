@@ -919,7 +919,7 @@ private val T2_CORE = arrayOf(
 private fun t2CoreSlot(ang: Float, z: Float): Boolean {
     for (c in T2_CORE) {
         var d = abs(ang - c[0]) % (2f * T2PI); if (d > T2PI) d = 2f * T2PI - d
-        if (d < 0.27f && abs(z - c[1]) < 0.55f) return true
+        if (d < 0.34f && abs(z - c[1]) < 0.75f) return true
     }
     return false
 }
@@ -1000,14 +1000,14 @@ internal fun StereoBodyRenderer.drawGut(n: TourNode, i: Int, seconds: Float) {
         val tx = -fr[6] * sa + fr[9] * ca; val ty = -fr[7] * sa + fr[10] * ca; val tz = -fr[8] * sa + fr[11] * ca
         var ax = ix + tx * sw + fr[3] * sl; var ay = iy + ty * sw + fr[4] * sl; var az = iz + tz * sw + fr[5] * sl
         val al = sqrt(ax * ax + ay * ay + az * az); ax /= al; ay /= al; az /= al
-        val h = 1.1f + 0.12f * (k % 3)
+        val h = 1.45f + 0.1f * (k % 2)
         // the lacteal (lymph, pale) up the core; the capillary loop just under the surface
-        drawStrut(bx + ax * 0.05f, by + ay * 0.05f, bz + az * 0.05f, bx + ax * h * 0.84f, by + ay * h * 0.84f, bz + az * h * 0.84f, 0.05f, T2_LACTEAL, T2_LACTEAL, 0.9f)
+        drawStrut(bx + ax * 0.05f, by + ay * 0.05f, bz + az * 0.05f, bx + ax * h * 0.84f, by + ay * h * 0.84f, bz + az * h * 0.84f, 0.06f, T2_LACTEAL, T2_LACTEAL, 1.2f)
         var px = 0f; var py = 0f; var pz = 0f
         for (q in 0..36) {
             val t = q / 36f; val up = if (t < 0.5f) t * 2f else (1f - t) * 2f
             val a = t * 6f * T2PI + (if (t < 0.5f) 0f else T2PI)
-            val rr = 0.085f
+            val rr = 0.11f
             val hx = bx + ax * (h * 0.88f * up + 0.04f) + (tx * cos(a) + (ay * tz - az * ty) * sin(a)) * rr
             val hy = by + ay * (h * 0.88f * up + 0.04f) + (ty * cos(a) + (az * tx - ax * tz) * sin(a)) * rr
             val hz = bz + az * (h * 0.88f * up + 0.04f) + (tz * cos(a) + (ax * ty - ay * tx) * sin(a)) * rr
@@ -1015,7 +1015,7 @@ internal fun StereoBodyRenderer.drawGut(n: TourNode, i: Int, seconds: Float) {
             px = hx; py = hy; pz = hz
         }
         t2Q[0] = bx; t2Q[1] = by; t2Q[2] = bz
-        t2Basis(t2Q, ax, ay, az, tx, ty, tz, 0.16f, 0.12f, h, vm, T2_VILLUS_GLASS, T2_LACTEAL, 0.45f, 0.25f)
+        t2Basis(t2Q, ax, ay, az, tx, ty, tz, 0.17f, 0.13f, h, vm, T2_VILLUS_GLASS, T2_LACTEAL, 0.5f, 0.3f)
     }
     // mucus strands drifting over the villus tips
     for (m in 0 until 4) {
@@ -1033,7 +1033,7 @@ internal fun StereoBodyRenderer.drawGut(n: TourNode, i: Int, seconds: Float) {
     // chyme: irregular lumps of partly digested food carried down the lumen
     for (k in 0 until (if (quality == 0) 10 else 5)) {
         val z = ((seconds * 0.45f + k * 1.37f) % 14f) - 4f
-        val a = k * 2.1f + 0.4f; val r = 1.1f + 0.35f * sin(k * 1.7f)
+        val a = k * 2.1f + 0.4f; val r = 1.55f + 0.25f * sin(k * 1.7f)
         val fr = t2Frame(i, z)
         val s = 0.1f + 0.06f * ((k * 7) % 3)
         t2Blob(fr, cos(a) * r, sin(a) * r, s * 1.3f, s * 0.8f, s, T2_CHYME, T2_CHYME, 1f, 0.05f)
@@ -1180,13 +1180,13 @@ internal fun StereoBodyRenderer.drawPhage(n: TourNode, i: Int, seconds: Float) {
         val dx = f0[3]; val dy = f0[4]; val dz = f0[5]; val ux = f0[9]; val uy = f0[10]; val uz = f0[11]
         val cap = t2Capsule()
         // ---- host A overhead: cytoplasm and a translucent outer membrane 20 nm out
-        val hc = t2W(f0, 0f, 9.6f, 3f).copyOf()
+        val hc = t2W(f0, 0f, 8.9f, 3f).copyOf()
         t2Basis(hc, dx, dy, dz, ux, uy, uz, 12f, 12f, 12f, cap, T2_ECOLI, T2_ECOLI_OM, 1f, 0.05f)
         if (own) {   // flagella: long left-handed helices trailing from the body, turning (slowed ~200x)
             val fl = t2Flagellum()
             for ((k, s) in arrayOf(floatArrayOf(2.6f, 9f), floatArrayOf(3.5f, 12f), floatArrayOf(1.9f, 5f), floatArrayOf(4.3f, 7f), floatArrayOf(3.14f, 14.3f)).withIndex()) {
                 val phi = s[0]; val zo = s[1]
-                val lx = sin(phi) * 5.9f; val ly = 9.6f - cos(phi) * 5.9f
+                val lx = sin(phi) * 5.9f; val ly = 8.9f - cos(phi) * 5.9f
                 val o = t2W(f0, lx, ly, zo).copyOf()
                 val ax = sin(phi) * 0.3f; val ay = -cos(phi) * 0.3f
                 var zx = f0[6] * ax + f0[9] * ay + dx; var zy = f0[7] * ax + f0[10] * ay + dy; var zz = f0[8] * ax + f0[11] * ay + dz
@@ -1204,7 +1204,7 @@ internal fun StereoBodyRenderer.drawPhage(n: TourNode, i: Int, seconds: Float) {
         t2LinesBegin()
         val P = FloatArray(3); val N = FloatArray(3); val E = FloatArray(3)
         fun site(phi: Float, z: Float, rad: Float = 6.25f) {
-            val w = t2W(f0, sin(phi) * rad, 9.6f - cos(phi) * rad, z); P[0] = w[0]; P[1] = w[1]; P[2] = w[2]
+            val w = t2W(f0, sin(phi) * rad, 8.9f - cos(phi) * rad, z); P[0] = w[0]; P[1] = w[1]; P[2] = w[2]
             val lx = sin(phi); val ly = -cos(phi)
             N[0] = f0[6] * lx + f0[9] * ly; N[1] = f0[7] * lx + f0[10] * ly; N[2] = f0[8] * lx + f0[11] * ly
             E[0] = dx; E[1] = dy; E[2] = dz
