@@ -2372,7 +2372,7 @@ internal fun StereoBodyRenderer.drawHighway(n: TourNode, i: Int, seconds: Float)
 // plasma membrane and releasing hexamers that fall apart into monomers.
 
 /** The factory is laid out from the pore; this shifts it all 3 units ahead so the pore is framed from the stop. */
-private const val T2_FZ = 3f
+private const val T2_FZ = 6.5f
 
 private fun StereoBodyRenderer.t2FactoryMeshes(i: Int): Array<ColorVboMesh> = t2Get("factory$i") {
     val g = T2Geo(); val glass = T2Geo(); val heads = ArrayList<Float>(); val fg = ArrayList<Float>(); val rnd = java.util.Random(83L)
