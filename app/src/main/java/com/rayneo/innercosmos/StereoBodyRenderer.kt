@@ -783,11 +783,12 @@ class StereoBodyRenderer(
 
     /**
      * How much of the fine drift a stop shows (1 = all). Some stops have no business with free
-     * specks: stored blood sits still in its bottle, and a vein's plasma is clear at this scale.
+     * specks: stored blood sits still in its bottle, a vein's plasma is clear at this scale, and an
+     * open wound under the lamp has nothing floating over it.
      */
     internal fun fineDriftAt(stop: Int): Float = when {
-        map.id == 3 && stop == 1 -> 0.25f
-        map.id == 3 && stop == 2 -> 0f
+        map.id == 3 && stop in intArrayOf(1, 2, 5) -> 0f   // the vein, the bottle, the wound on the table
+        map.id == 3 && stop == 0 -> 0.3f                   // the cavity: a little dust in the air
         else -> 1f
     }
 
