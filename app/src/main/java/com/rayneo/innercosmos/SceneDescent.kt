@@ -2647,7 +2647,7 @@ internal fun StereoBodyRenderer.drawNucleus(n: TourNode, i: Int, seconds: Float)
 
 private const val T1_RIBO_A = 1.5f
 private const val T1_RIBO_S = -1.9f
-private const val T1_RIBO_U = 0.2f
+private const val T1_RIBO_U = -0.5f
 
 private class T1Ribo(val large: T1Batch, val small: T1Batch, val prot: T1Batch, val mrna: LineMesh)
 
@@ -2723,8 +2723,8 @@ internal fun StereoBodyRenderer.drawRibosome(n: TourNode, i: Int, seconds: Float
     val q = FloatArray(9)
     fun trna(x: Float, da: Float, ds: Float, du: Float, alpha: Float) {
         t1TrnaAt(x, q)
-        t1Rod(f, q[2] + da, so + q[0] + ds, uo + q[1] + du, q[5] + da, so + q[3] + ds, uo + q[4] + du, 0.1f, T1_TRNA, T1_WHITE, alpha, 0.2f)
-        t1Rod(f, q[5] + da, so + q[3] + ds, uo + q[4] + du, q[8] + da, so + q[6] + ds, uo + q[7] + du, 0.1f, T1_TRNA, T1_WHITE, alpha, 0.2f)
+        t1Rod(f, q[2] + da, so + q[0] + ds, uo + q[1] + du, q[5] + da, so + q[3] + ds, uo + q[4] + du, 0.13f, T1_TRNA, T1_WHITE, alpha, 0.5f)
+        t1Rod(f, q[5] + da, so + q[3] + ds, uo + q[4] + du, q[8] + da, so + q[6] + ds, uo + q[7] + du, 0.13f, T1_TRNA, T1_WHITE, alpha, 0.5f)
     }
     val tIn = t1Smooth(0f, 0.3f, ph)
     val move = t1Smooth(0.45f, 0.75f, ph)
@@ -2767,8 +2767,8 @@ internal fun StereoBodyRenderer.drawRibosome(n: TourNode, i: Int, seconds: Float
         t1Lit(rb.small, f, da, so, uo, T1_RRNA_S, T1_WHITE, 1f, 0.2f)
     }
     GLES20.glDepthMask(false)
-    t1Lit(rb.large, f, 0f, so, uo, T1_RRNA_L, T1_WHITE, 0.72f, 0.2f)
-    t1Lit(rb.small, f, 0f, so, uo, T1_RRNA_S, T1_WHITE, 0.72f, 0.2f)
+    t1Lit(rb.large, f, 0f, so, uo, T1_RRNA_L, T1_WHITE, 0.5f, 0.2f)
+    t1Lit(rb.small, f, 0f, so, uo, T1_RRNA_S, T1_WHITE, 0.5f, 0.2f)
     GLES20.glDepthMask(true)
 }
 
