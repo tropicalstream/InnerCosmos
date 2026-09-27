@@ -1540,7 +1540,7 @@ private fun StereoBodyRenderer.storedMesh(b: Float, um: Float, part: Int): T3Mes
                         4 -> mb.sectionedCell(c, f.u, r, 0.8f, 0.6f, 8, 16)
                         15 -> for (q in 0 until 3) {
                             val t = pr.nextFloat() * 6.28f
-                            val pc = f.at(ss + cos(t) * (r + 0.25f), BUFFY_TOP + 0.02f) + f.d * (sin(t) * (r + 0.25f))
+                            val pc = f.at(ss + cos(t) * (r + 0.25f), BUFFY_TOP - 0.27f) + f.d * (sin(t) * (r + 0.25f))
                             val tip = (f.u + V3(pr.nextFloat() - 0.5f, 0f, pr.nextFloat() - 0.5f) * 0.4f).unit()
                             mb.ellipsoidAxes(pc, tip, 0.05f, perp(tip), 0.16f, 0.15f, 5, 14)
                         }
@@ -1558,8 +1558,9 @@ private fun StereoBodyRenderer.storedMesh(b: Float, um: Float, part: Int): T3Mes
         }
         13 -> {
             // the buffy coat's pale crust, 0.25 thick, laid over the red bed ahead of the craft
-            mb.gridFd(40, 6, { u, v -> wAt(b, BUFFY_A0 + (24f - BUFFY_A0) * u, -3.6f + (glassSide + 3.6f) * v, BUFFY_TOP) }) { u, _, _ -> rfv(b, BUFFY_A0 + (24f - BUFFY_A0) * u).u }
-            mb.gridFd(1, 6, { u, v -> wAt(b, BUFFY_A0 + 0.1f * sin(v * 17f), -3.6f + (glassSide + 3.6f) * v, BUFFY_TOP - 0.25f * u) }) { _, _, _ -> -rfv(b, BUFFY_A0).d }
+            val top = BUFFY_TOP - 0.3f
+            mb.gridFd(40, 6, { u, v -> wAt(b, BUFFY_A0 + (24f - BUFFY_A0) * u, -3.6f + (glassSide + 3.6f) * v, top) }) { u, _, _ -> rfv(b, BUFFY_A0 + (24f - BUFFY_A0) * u).u }
+            mb.gridFd(1, 6, { u, v -> wAt(b, BUFFY_A0 + 0.1f * sin(v * 17f), -3.6f + (glassSide + 3.6f) * v, top - 0.25f * u) }) { _, _, _ -> -rfv(b, BUFFY_A0).d }
         }
         14 -> mb.gridFd(8, 2, { u, v -> wAt(b, -8f + 42f * u, glassSide + 0.35f, -3.4f + 7.4f * v) }) { u, _, _ -> -rfv(b, -8f + 42f * u).s }
         5 -> {
@@ -2740,7 +2741,7 @@ internal fun StereoBodyRenderer.drawCut(n: TourNode, i: Int, seconds: Float) {
             k < 5 -> {
                 val t = ((seconds / 14f + k * 0.19f) % 1f)
                 val a = 0.4f + k * 1.3f
-                val up = 7.5f - t * 12f
+                val up = 9f - t * 11f
                 val f = rfv(b, a + 0.3f * sin(t * 3f + k))
                 val p = f.at(sg * (cutHalf(up) - 0.35f), up)
                 val tumble = 0.6f + 0.3f * sin(seconds * 0.3f + k)
@@ -2770,15 +2771,17 @@ internal fun StereoBodyRenderer.drawCut(n: TourNode, i: Int, seconds: Float) {
 
 // Thick (palmar) skin of the finger, heights in units (8 µm), the craft at 0 in the spinous layer:
 // deep rete ridges and tall papillae, ~105 µm of living epidermis, the lucidum, ~190 µm of corneum.
-private const val CUT_SURFACE = 30f
-private const val CUT_CORNEUM_BASE = 6.3f
-private const val CUT_LUCIDUM_BASE = 5.9f
-private const val CUT_GRANULAR_BASE = 5.0f
-private const val CUT_FLOOR = -11f
+// (the whole section sits 3 units higher than the spinous-level hold of round 4, so the pilot's eye
+// is at the dermal papillae, where the bacteria get in)
+private const val CUT_SURFACE = 33f
+private const val CUT_CORNEUM_BASE = 9.3f
+private const val CUT_LUCIDUM_BASE = 8.9f
+private const val CUT_GRANULAR_BASE = 8.0f
+private const val CUT_FLOOR = -8f
 /** Half-width of the cleft at height [up]: a clean wedge, wider at the surface (32-56 µm). */
 private fun cutHalf(up: Float) = 2.0f + 1.5f * (up - CUT_FLOOR) / (CUT_SURFACE - CUT_FLOOR)
 /** The dermo-epidermal junction: deep rete ridges and tall dermal papillae (period 64 µm). */
-private fun cutJunction(a: Float) = -6.0f + 2.4f * sin(a * 2f * PI.toFloat() / 8f)
+private fun cutJunction(a: Float) = -3.0f + 2.4f * sin(a * 2f * PI.toFloat() / 8f)
 /** Where the papillae peak (and their capillary loops rise). */
 private val PAPILLAE = floatArrayOf(-6f, 2f, 10f, 18f)
 
@@ -2804,13 +2807,13 @@ private fun StereoBodyRenderer.cutMesh(b: Float, um: Float, part: Int): T3Mesh {
     // of those on the cut face crushed by the splinter.
     val sp = kerR * 2.1f; val pitch = sp * sqrt(3f) / 2f
     fun cellHash(sg: Float, row: Int, col: Int, k: Int): Float { val h = sin((row * 127.1f + col * 311.7f + sg * 74.7f + k * 19.3f)) * 43758.547f; return h - floor(h) }
-    fun aspectAt(up: Float) = (1f - 0.2f * ((up + 6f) / (CUT_GRANULAR_BASE + 6f)).coerceIn(0f, 1f))
+    fun aspectAt(up: Float) = (1f - 0.2f * ((up + 3f) / (CUT_GRANULAR_BASE + 3f)).coerceIn(0f, 1f))
     fun cellR(sg: Float, row: Int, col: Int) = (sp / 2f / cos(30f * DEG)) * 0.93f * (0.93f + 0.1f * cellHash(sg, row, col, 1))
     fun crushed(sg: Float, row: Int, col: Int) = cellHash(sg, row, col, 2) < 0.2f
     fun spinous(visit: (Float, Float, Float, Int, Int) -> Unit) {
         for (sg in floatArrayOf(-1f, 1f)) {
             var row = 0
-            var up = -8.6f
+            var up = -5.6f
             while (up < CUT_GRANULAR_BASE - pitch * 0.5f) {
                 var a = a0 + (if (row % 2 == 0) 0f else sp / 2f); var col = 0
                 while (a < a1) { if (up > cutJunction(a) + 1.45f) visit(sg, a, up, row, col); a += sp; col++ }
