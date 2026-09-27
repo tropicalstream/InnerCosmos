@@ -198,6 +198,9 @@ internal val T2_CHROMATID = floatArrayOf(0.62f, 0.4f, 0.92f, 1f)
 internal val T2_SPINDLE = floatArrayOf(0.8f, 0.96f, 0.9f, 1f)
 internal val T2_CENTROSOME = floatArrayOf(1f, 0.85f, 0.5f, 1f)
 internal val T2_ACTOMYOSIN = floatArrayOf(0.95f, 0.72f, 0.66f, 1f)
+internal val T2_EPI_NUC = floatArrayOf(0.45f, 0.32f, 0.7f, 1f)
+internal val T2_PANETH = floatArrayOf(0.9f, 0.62f, 0.62f, 1f)
+internal val T2_PANETH_GRAN = floatArrayOf(1f, 0.55f, 0.35f, 1f)
 internal val T2_EPITHELIUM_TOP = floatArrayOf(0.96f, 0.78f, 0.76f, 1f)
 internal val T2_EPITHELIUM = floatArrayOf(0.92f, 0.7f, 0.7f, 1f)
 
@@ -3166,7 +3169,7 @@ private fun StereoBodyRenderer.t2MotorMeshes(i: Int): Array<ColorVboMesh> = t2Ge
     stat.ellAxis(t2v(sax, -5.5f, saz), t2v(0f, 1f, 0f), 1.3f, 3.5f, 2.3f, T2_SUB_A, 1f, 9, 12, t2v(cos(T2_SUBA), 0f, sin(T2_SUBA)))
     val dA = t2v(cos(T2_SUBA), 0f, sin(T2_SUBA))
     val stalk = listOf(t2v(ax, -2f, az) + dA * 4.4f, t2v(ax, 3f, az) + dA * 6.3f, t2v(ax, 8f, az) + dA * 6.7f, t2v(ax, 12.6f, az) + dA * 5.4f, t2v(ax, 14.2f, az) + dA * 2.4f)
-    stat.path(stalk, { 0.45f }, T2_STATOR, 1f, 8, true)
+    stat.path(stalk, { 0.3f }, T2_STATOR, 1f, 8, true)
     stat.ball(t2v(ax, 6.2f, az) + dA * 6.6f, 0.95f, T2_STATOR, 1f, 6, 9)
     stat.ball(t2v(ax, 14.4f, az), 1.6f, T2_STATOR, 1f, 8, 12)
     // the two half-channels in subunit a, at the a/c interface: entry from below, exit to above
@@ -3178,6 +3181,24 @@ private fun StereoBodyRenderer.t2MotorMeshes(i: Int): Array<ColorVboMesh> = t2Ge
     val tA = tails.toFloatArray(); for (k in 0 until tA.size / 7) rigid(tA, k * 7)
     val fA = far.toFloatArray(); for (k in 0 until fA.size / 7) rigid(fA, k * 7)
     arrayOf(TriMesh(mem.baked(rigid)), TriMesh(stat.baked(rigid)), TriMesh(rot.baked()), LineMesh(tA), PointMesh(fA), TriMesh(glass.baked(rigid)), TriMesh(win.baked(rigid)))
+}
+
+/** ADP (adenine, ribose, two phosphates) and, separately, inorganic phosphate. */
+private fun StereoBodyRenderer.t2AdpMesh(): TriMesh = t2Get("adp") {
+    val g = T2Geo()
+    g.ball(t2v(-0.75f, 0.1f, 0f), 0.3f, T2_ADENINE, 1f, 5, 7); g.ball(t2v(-0.35f, 0.25f, 0f), 0.26f, T2_ADENINE, 1f, 5, 7)
+    g.ball(t2v(0.05f, -0.1f, 0f), 0.26f, T2_LIPID_TAIL, 1f, 5, 7)
+    for (k in 0 until 2) g.ball(t2v(0.4f + k * 0.34f, -0.15f + 0.08f * (k % 2), 0f), 0.2f, T2_PHOSPHATE, 1f, 5, 7)
+    TriMesh(g.baked())
+}
+private fun StereoBodyRenderer.t2PiMesh(): TriMesh = t2Get("pi") { val g = T2Geo(); g.ball(t2v(0f, 0f, 0f), 0.2f, T2_PHOSPHATE, 1f, 5, 7); TriMesh(g.baked()) }
+
+/** The proton gradient: a crowd in the intermembrane space below, a sparse few in the matrix above. */
+private fun StereoBodyRenderer.t2ProtonCloud(i: Int): TriMesh = t2Get("hcloud$i") {
+    val g = T2Geo(); val rnd = java.util.Random(211L)
+    repeat(40) { val a = rnd.nextFloat() * 2f * T2PI; val r = 1.5f + 8f * sqrt(rnd.nextFloat()); g.ball(t2v(T2_AXX + cos(a) * r, -9.5f - 3.5f * rnd.nextFloat(), T2_AXZ + sin(a) * r), 0.2f, T2_PROTON, 0.8f, 4, 6) }
+    repeat(6) { val a = rnd.nextFloat() * 2f * T2PI; val r = 4f + 5f * rnd.nextFloat(); g.ball(t2v(T2_AXX + cos(a) * r, 6f * rnd.nextFloat(), T2_AXZ + sin(a) * r), 0.2f, T2_PROTON, 0.8f, 4, 6) }
+    TriMesh(g.baked(t2Bend(i, 0f, 0f)))
 }
 
 private fun StereoBodyRenderer.t2AtpMesh(): TriMesh = t2Get("atp") {
@@ -3211,6 +3232,11 @@ internal fun StereoBodyRenderer.drawMotor(n: TourNode, i: Int, seconds: Float) {
             val p = t2W(f0, T2_AXX + cos(a) * (3.4f + 0.3f * open), 8.0f - 0.2f * open, T2_AXZ + sin(a) * (3.4f + 0.3f * open)).copyOf()
             val glow = if (state == 0) 0.6f * (1f - t2sm(rel / 0.35f)) else 0.05f
             t2Basis(p, f0[3], f0[4], f0[5], f0[9], f0[10], f0[11], 2.6f * sc, 4.6f * sc, 2.6f * sc, sphere, T2_BETA, T2_ALPHA, 1f, glow)
+            if (state == 1 && rel < 0.4f) {     // ADP and Pi arriving from the matrix into the open site
+                val u = t2sm(rel / 0.3f); val d = 3.4f + 1.6f + 4f * (1f - u)
+                t2Model(f0, T2_AXX + cos(a) * d, 7.0f + 2f * (1f - u), T2_AXZ + sin(a) * d, a); t2Draw(t2AdpMesh())
+                t2Model(f0, T2_AXX + cos(a + 0.25f) * (d + 0.3f), 7.4f + 2.5f * (1f - u), T2_AXZ + sin(a + 0.25f) * (d + 0.3f)); t2Draw(t2PiMesh())
+            }
             if (state == 0 && rel < 0.95f) {    // the ATP just released drifts out into the matrix
                 val d = 3.4f + 3.0f + rel * 6f
                 t2Model(f0, T2_AXX + cos(a) * d, 5.5f + rel * 3f, T2_AXZ + sin(a) * d, rel * 4f)
@@ -3253,6 +3279,7 @@ internal fun StereoBodyRenderer.drawMotor(n: TourNode, i: Int, seconds: Float) {
         }
         t2DrawWorld(m[5], true)
         t2DrawWorld(m[6], true)
+        t2Model(f0, 0.4f * sin(seconds * 0.2f), 0.2f * sin(seconds * 0.27f), 0.4f * cos(seconds * 0.17f)); t2Draw(t2ProtonCloud(i), true)
     }
 }
 
@@ -3266,10 +3293,11 @@ internal fun StereoBodyRenderer.drawMotor(n: TourNode, i: Int, seconds: Float) {
 // ring pinches the cell in two, leaving a midbody (a 36 s cycle).
 
 private const val T2_SPX = 0f
-private const val T2_SPY = -2.0f       // spindle axis (parallel to the rail, below it)
+private const val T2_SPY = -4.5f       // spindle axis (parallel to the rail, 4.5 below it)
 private const val T2_PLATE_Z = 9.0f
 private const val T2_CELL_R = 7.5f      // the rounded mitotic cell, 12 µm
-private const val T2_APICAL = -3.2f     // apical surface of the epithelium (the lumen is above)
+private const val T2_APICAL = -5.7f     // apical surface at the crypt floor under the cell
+private const val T2_CRYPT_R = 14f      // the crypt lumen: a tube of this radius round the rail's line
 
 private class T2Chromo(val cx: Float, val cy: Float, val wx: Float, val wy: Float, val lp: Float, val lq: Float, val sx: Float, val sy: Float, val sz: Float)
 
@@ -3279,16 +3307,17 @@ private val t2Chromos: List<T2Chromo> by lazy {
         val big = k < 8; val mid = k in 8 until 22
         val lp = if (big) 1.8f + rnd.nextFloat() * 0.4f else if (mid) 1.2f + rnd.nextFloat() * 0.3f else 0.55f + rnd.nextFloat() * 0.35f
         val lq = if (big) 2.6f + rnd.nextFloat() * 0.4f else if (mid) 1.8f + rnd.nextFloat() * 0.5f else 1.0f + rnd.nextFloat() * 0.5f
+        // a filled rosette: the smallest chromosomes near the centre of the plate, the big ones round the rim
         val ang = (k * 2.39996f) % (2f * T2PI)
-        var rad = 3.0f + ((k * 0.61803f) % 1f) * 2.4f
-        val q = (rnd.nextFloat() - 0.5f) * 1.1f
+        var rad = if (k >= 34) 0.4f + (k - 34) / 11f * 1.6f else 2.3f + ((k * 0.61803f) % 1f) * 2.6f
+        val q = (rnd.nextFloat() - 0.5f) * 0.8f + T2PI * 0.5f     // arms pointing outward
         val tx = -sin(ang); val ty = cos(ang); val rx = cos(ang); val ry = sin(ang)
         val wx = tx * cos(q) + rx * sin(q); val wy = ty * cos(q) + ry * sin(q)
         // keep the arm tips inside the cell
         val cx0 = cos(ang) * rad; val cy0 = sin(ang) * rad
         val tip = max(sqrt((cx0 + wx * lq).pow(2) + (cy0 + wy * lq).pow(2)), sqrt((cx0 - wx * lp).pow(2) + (cy0 - wy * lp).pow(2)))
         if (tip > 6.6f) rad -= (tip - 6.6f)
-        out.add(T2Chromo(cos(ang) * max(2.9f, rad), sin(ang) * max(2.9f, rad), wx, wy, lp, lq, (rnd.nextFloat() - 0.5f) * 4f, (rnd.nextFloat() - 0.5f) * 4f, (rnd.nextFloat() - 0.5f) * 6f))
+        out.add(T2Chromo(cos(ang) * max(0.3f, rad), sin(ang) * max(0.3f, rad), wx, wy, lp, lq, (rnd.nextFloat() - 0.5f) * 4f, (rnd.nextFloat() - 0.5f) * 4f, (rnd.nextFloat() - 0.5f) * 6f))
     }
     out
 }
@@ -3322,23 +3351,41 @@ private fun t2Arm(n0: Int, cx: Float, cy: Float, cz: Float, dx: Float, dy: Float
     return v
 }
 
+/**
+ * The crypt: columnar epithelium lining a tube of radius 14 (22 µm across) round the rail, apical
+ * faces inward with short, sparse microvilli, nuclei in the basal third; three Paneth cells with
+ * their apical secretory granules further along; a gap where the dividing cell has rounded up.
+ */
 private fun StereoBodyRenderer.t2Epithelium(i: Int): Array<ColorVboMesh> = t2Get("epith$i") {
     val g = T2Geo(); val brush = ArrayList<Float>(); val rnd = java.util.Random(151L)
-    val rh = 3.6f; val apical = T2_APICAL; val basal = -30f
-    for (r in -5..6) for (c in -5..5) {
-        val x = c * 1.5f * rh; val z = T2_PLATE_Z + r * sqrt(3f) * rh + (if (c % 2 != 0) sqrt(3f) * rh * 0.5f else 0f)
-        val d = sqrt(x * x + (z - T2_PLATE_Z) * (z - T2_PLATE_Z))
-        if (d < 8.6f || d > 30f) continue
-        val corners = (0 until 6).map { k -> val a = k * T2PI / 3f; t2v(x + cos(a) * rh * 0.96f, 0f, z + sin(a) * rh * 0.96f) }
+    val R = T2_CRYPT_R; val ay = T2_APICAL + R     // tube axis (x = 0, y = ay)
+    val H = 26f
+    val cols = 16; val rh = 2f * T2PI * R / cols / 1.5f
+    fun P(arc: Float, z: Float, rr: Float): T2V { val th = -T2PI / 2f + arc / R; return t2v(cos(th) * rr, ay + sin(th) * rr, z) }
+    var paneth = 0
+    for (row in -4..6) for (c in 0 until cols) {
+        val ac = (c - cols / 2) * 1.5f * rh; val zc = T2_PLATE_Z + row * sqrt(3f) * rh + (if (c % 2 != 0) sqrt(3f) * rh * 0.5f else 0f)
+        val bottom = P(ac, zc, R); val dc = (bottom - t2v(T2_SPX, T2_SPY, T2_PLATE_Z)).len()
+        if (dc < T2_CELL_R + 0.8f || zc < -14f || zc > 34f) continue
+        val isPaneth = paneth < 3 && row == -2 && abs(c - cols / 2) <= 1
+        if (isPaneth) paneth++
+        val shrinkA = if (isPaneth) 2.5f / (2f * rh) else 0.96f; val shrinkB = if (isPaneth) 4.5f / (2f * rh) else 0.96f
+        val cor = (0 until 6).map { k -> val a = k * T2PI / 3f; floatArrayOf(ac + cos(a) * rh, zc + sin(a) * rh) }
         for (k in 0 until 6) {
-            val a = corners[k]; val b = corners[(k + 1) % 6]
-            g.quad(t2v(a.x, basal, a.z), t2v(b.x, basal, b.z), t2v(b.x, apical, b.z), t2v(a.x, apical, a.z), T2_EPITHELIUM, 1f)
-            g.tri(t2v(x, apical, z), t2v(a.x, apical, a.z), t2v(b.x, apical, b.z), T2_EPITHELIUM_TOP, 1f)
+            val a = cor[k]; val b = cor[(k + 1) % 6]
+            fun Q(pt: FloatArray, rr: Float, sh: Float) = P(ac + (pt[0] - ac) * sh, zc + (pt[1] - zc) * sh, rr)
+            g.quad(Q(a, R + H, shrinkB), Q(b, R + H, shrinkB), Q(b, R, shrinkA), Q(a, R, shrinkA), if (isPaneth) T2_PANETH else T2_EPITHELIUM, 1f)
+            g.tri(P(ac, zc, R), Q(a, R, shrinkA), Q(b, R, shrinkA), if (isPaneth) T2_PANETH else T2_EPITHELIUM_TOP, 1f)
         }
-        g.ellAxis(t2v(x, apical - 9f + rnd.nextFloat() * 2f, z), t2v(0f, 1f, 0f), 1.3f, 3.2f, 1.3f, T2_NUCLEUS, 1f, 6, 9)
-        repeat(90) {   // brush border (microvilli, 1-2 µm) on the apical surface
+        val nr = R + H - 7f + rnd.nextFloat() * 2f
+        val nc = P(ac, zc, nr); val out = (nc - t2v(0f, ay, nc.z)).unit()
+        g.ellAxis(nc, out, 1.0f, 3.0f, 1.0f, T2_EPI_NUC, 1f, 6, 9)
+        if (isPaneth) {   // eosinophilic secretory granules crowding the apex
+            for (q in 0 until 10) g.ball(P(ac + (rnd.nextFloat() - 0.5f) * 1.6f, zc + (rnd.nextFloat() - 0.5f) * 1.6f, R + 0.6f + rnd.nextFloat() * 1.6f), 0.35f, T2_PANETH_GRAN, 1f, 5, 7)
+        } else repeat(45) {   // short, sparse microvilli (crypt cells), 0.4 µm
             val u = (rnd.nextFloat() - 0.5f) * rh * 1.5f; val w = (rnd.nextFloat() - 0.5f) * rh * 1.5f
-            brush.addAll(listOf(x + u, apical, z + w, 0.99f, 0.9f, 0.86f, 0.7f, x + u, apical + 1.1f, z + w, 0.99f, 0.9f, 0.86f, 0.7f))
+            val a = P(ac + u, zc + w, R); val b = P(ac + u, zc + w, R - 0.5f)
+            brush.addAll(listOf(a.x, a.y, a.z, 0.99f, 0.9f, 0.86f, 0.7f, b.x, b.y, b.z, 0.99f, 0.9f, 0.86f, 0.7f))
         }
     }
     val rigid = t2Bend(i, 0f, 0f)
@@ -3369,7 +3416,7 @@ internal fun StereoBodyRenderer.drawDivision(n: TourNode, i: Int, seconds: Float
             var v = 0
             val ch = t2Chromos
             val col = t2mix(T2_CHROMATID, T2_CHROMOSOME_LIGHT_T2, telo * 0.6f)
-            val al = (1f - 0.55f * telo) * cycleA
+            val al = (1f - 0.55f * t2sm((telo - 0.7f) / 0.3f)) * cycleA
             val r = 0.28f * (1f + 0.3f * telo); val shrink = 1f - 0.25f * telo
             val tw = FloatArray(3)
             for (c in ch) {
@@ -3438,10 +3485,30 @@ internal fun StereoBodyRenderer.drawDivision(n: TourNode, i: Int, seconds: Float
             t2Basis(p, f0[6], f0[7], f0[8], f0[9], f0[10], f0[11], 0.1f, 0.1f, 0.25f, cylinder, T2_GTP_CAP, COL_LAMP, cycleA, 0.3f)
         }
         // nuclear envelopes re-forming round each set (telophase)
-        if (telo > 0.02f) for (sgn in SIGNS) {
-            val p = t2W(f0, T2_SPX, T2_SPY, T2_PLATE_Z + sgn * (poleD - 1.9f)).copyOf()
-            val rr = 3.4f * telo
-            t2Basis(p, f0[3], f0[4], f0[5], f0[9], f0[10], f0[11], rr, rr, rr * 0.9f, t2BallMesh(), T2_NUCLEUS, COL_LAMP, 0.3f * telo * cycleA, 0.1f)
+        // (drawn as a light wire of meridians with a few pores, so the chromosomes stay readable)
+        if (telo > 0.02f) {
+            t2LinesBegin()
+            val al = 0.18f * telo * cycleA
+            for (sgn in SIGNS) {
+                val cz = T2_PLATE_Z + sgn * (poleD - 1.9f); val rr = 3.4f * telo
+                for (mrd in 0 until 24) {
+                    val ph = mrd * T2PI / 12f; var px = 0f; var py = 0f; var pz = 0f
+                    for (q in 0..12) {
+                        val th = q * T2PI / 12f
+                        val w = t2W(f0, T2_SPX + sin(th) * cos(ph) * rr, T2_SPY + sin(th) * sin(ph) * rr, cz + cos(th) * rr * 0.9f)
+                        if (q > 0) t2Seg(px, py, pz, w[0], w[1], w[2], T2_NUCLEUS, al * 3f)
+                        px = w[0]; py = w[1]; pz = w[2]
+                    }
+                }
+            }
+            t2LinesEnd(1f)
+            for (sgn in SIGNS) for (k in 0 until 6) {
+                val cz = T2_PLATE_Z + sgn * (poleD - 1.9f); val rr = 3.4f * telo
+                val th = 0.6f + k * 0.4f; val ph = k * 1.7f
+                val w = t2W(f0, T2_SPX + sin(th) * cos(ph) * rr, T2_SPY + sin(th) * sin(ph) * rr, cz + cos(th) * rr * 0.9f)
+                t2Vert(w[0], w[1], w[2], T2_NPC, telo * cycleA)
+            }
+            t2LinesEnd(1f, true, 5f)
         }
         // the cell: rounded, elongating in anaphase, then cleaved by the contractile ring
         val d = 1.1f * anaB + 4.8f * cyto; val R = T2_CELL_R - 1.2f * cyto
