@@ -241,14 +241,14 @@
    "text": "[awe] Right bronchus, the Pilot's pick, and watch it fork. And fork again. Counting from the trachea it's about twenty-three splits to the deepest sacs, ending in three to five hundred million alveoli. [emphasis] Spread it flat: fifty to a hundred square metres of gas-exchange surface, depending who's counting. Call it a badminton court, folded into your chest."
   },
   {
-   "t": 333600,
+   "t": 339200,
    "view": 2,
    "role": "ENGINEERING",
    "clip": "eng_drop_to_alveolus",
    "text": "[tense] Three, two, one, drop. [dry] Two powers of ten: a hundred and twenty micrometres, about the width of a coarse hair. This bronchiole's tighter than my budget. Sacs ahead, Pilot. Find us a pretty one."
   },
   {
-   "t": 335600,
+   "t": 341500,
    "view": 1,
    "sfx": "shrink"
   },
@@ -431,7 +431,7 @@
    "view": 3,
    "role": "SCIENCE",
    "clip": "sci_antibodies_macrophage",
-   "text": "[reflective] Look what drifts past now we wear the right colours. Those tiny Y shapes are antibodies, ten nanometres, each built to grip one stranger. That slow cell, twenty micrometres, is a monocyte; once it climbs out into tissue it becomes a macrophage and eats whatever the antibodies tag, whole. [wonder] This army asks one question of everything: are you me? It never asks where you're from."
+   "text": "[reflective] Look what drifts past now we wear the right colours. Those tiny glints on the bacteria are antibodies, Y-shaped molecules ten nanometres long, far too small to see the Y from here, each built to grip one stranger. That slow cell, twenty micrometres, is a monocyte; once it climbs out into tissue it becomes a macrophage and eats whatever the antibodies tag, whole. [wonder] This army asks one question of everything: are you me? It never asks where you're from."
   },
   {
    "t": 870600,
@@ -548,7 +548,12 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "nav_mitochondrion_approach",
-   "text": "[warm] Mitochondrion dead ahead, a micrometre across and a few long. Its outer skin is riddled with porin channels, and we're taking one, then squeezing the inner membrane, [chuckle] don't ask how. [awe] Look at those folds, the cristae, like the bellows of an accordion. And those little spinning things studding every fold: that's the turbine the Engineer promised us back in the scale bay."
+   "text": "[warm] Mitochondrion dead ahead, a micrometre across and a few long. [dry] Dropping half a power of ten, to forty nanometres, so we can see her engines. Its outer skin is riddled with porin channels, and we're taking one, then squeezing the inner membrane, [chuckle] don't ask how. [awe] Look at those folds, the cristae, like the bellows of an accordion. And those little spinning things studding every fold: that's the turbine the Engineer promised us back in the scale bay."
+  },
+  {
+   "t": 1185500,
+   "view": 1,
+   "sfx": "shrink"
   },
   {
    "t": 1208500,
@@ -576,7 +581,7 @@
    "view": 2,
    "role": "ENGINEERING",
    "clip": "eng_drop_to_nucleus",
-   "text": "[tense] Three, two, one, drop. [dry] One power of ten: twelve nanometres, the last step this drive was ever rated for. Doc's been grinning since the turbines, which means the next stop is the one she came for. Pilot, find us a pore."
+   "text": "[tense] Three, two, one, drop. [dry] Half a power of ten: twelve nanometres, the last step this drive was ever rated for. Doc's been grinning since the turbines, which means the next stop is the one she came for. Pilot, find us a pore."
   },
   {
    "t": 1306000,
