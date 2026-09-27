@@ -5183,7 +5183,7 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     part(-0.050f, 0.668f, 0.012f, 0.058f, 0.042f, 0.052f, COL_ORG_LIVER, COL_LAMP, 1f)                     // liver, right lobe
     part(0.018f, 0.682f, 0.030f, 0.042f, 0.018f, 0.028f, COL_ORG_LIVER, COL_LAMP, 1f)                      //   left lobe
     part(-0.035f, 0.632f, 0.040f, 0.008f, 0.014f, 0.008f, COL_GALLBLADDER, COL_LAMP, 1f)                   // gallbladder
-    tube(listOf(v3(-0.033f, 0.625f, 0.036f), v3(-0.028f, 0.61f, 0.02f)), 0.002f, COL_GALLBLADDER)          //   bile duct
+    (if (him) s0 else s).tube(listOf(v3(-0.033f, 0.625f, 0.036f), v3(-0.028f, 0.61f, 0.02f)), { 0.002f }, COL_GALLBLADDER, COL_LAMP, 1f, 0f, 0.12f)  //   bile duct (his stays with his still duodenum)
     if (him) s = s0                               // (under his fixed left dome his stomach stays put)
     tube(spline(listOf(v3(0.006f, 0.712f, -0.02f), v3(0.02f, 0.70f, -0.012f), v3(0.04f, 0.693f, -0.002f)), 4), 0.0065f, COL_OESOPHAGUS)  // abdominal oesophagus to the cardia
     part(0.058f, if (him) 0.690f else 0.682f, 0f, 0.022f, 0.022f, 0.022f, COL_STOMACH_LB, COL_LAMP, 1f)     // stomach: fundus under the dome,
