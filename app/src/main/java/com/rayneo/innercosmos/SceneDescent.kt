@@ -2926,7 +2926,8 @@ internal fun StereoBodyRenderer.drawAtom(n: TourNode, i: Int, seconds: Float) {
 internal fun StereoBodyRenderer.drawLookBack(n: TourNode, i: Int, seconds: Float) {
     val h = personHeightUnits()
     // A cosmos of cells while the person is still far too big to see whole.
-    val cosmos = ((h - 30f) / 30f).coerceIn(0f, 1f)
+    // (drawn over the world, so only once the craft is really at the look-back, never from the stop before)
+    val cosmos = if (routeProgress > i - 0.35f) ((h - 30f) / 30f).coerceIn(0f, 1f) else 0f
     if (cosmos > 0.01f) {
         val keep = colorShader.globalFade
         colorShader.globalFade = keep * cosmos
