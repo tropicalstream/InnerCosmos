@@ -2082,7 +2082,7 @@ private fun StereoBodyRenderer.t2LiverMeshes(i: Int): Array<ColorVboMesh> = t2Ge
             val c0 = cyl(ac, zc, rf); val mA = cyl(ac + (ca[m] - ac) * 0.5f, zc + (cz[m] - zc) * 0.5f, rf); val mB = cyl(ac + (ca[m1] - ac) * 0.5f, zc + (cz[m1] - zc) * 0.5f, rf)
             val oA = cyl(ca[m], cz[m], rf); val oB = cyl(ca[m1], cz[m1], rf)
             // a faint window over the nucleus, the rest of the blood face nearly opaque
-            glass.tri(c0, mA, mB, face, 0.7f); glass.tri(mA, oA, oB, face, 0.85f); glass.tri(mA, oB, mB, face, 0.85f)
+            glass.tri(c0, mA, mB, face, 0.82f); glass.tri(mA, oA, oB, face, 0.85f); glass.tri(mA, oB, mB, face, 0.85f)
             val bA = cyl(ca[m], cz[m], ro); val bB = cyl(ca[m1], cz[m1], ro)
             opaque.tri(cyl(ac, zc, ro), cyl(ca[m], cz[m], ro), cyl(ca[m1], cz[m1], ro), T2_HEPATOCYTE_BACK)
             glass.quad(oA, oB, bB, bA, T2_HEPATOCYTE_BACK, 0.4f)
@@ -2367,7 +2367,7 @@ private fun StereoBodyRenderer.t2KidneyMeshes(i: Int): Array<ColorVboMesh> = t2G
     //      granular juxtaglomerular cells (they make renin) on the afferent, and the macula densa, a
     //      plaque of tall crowded cells in the distal tubule that touches the pole.
     // (placed about 30 degrees up and 30 degrees to port of straight ahead from the stop)
-    val vdir = (t2v(-6f, 4f, 11f) - T).unit(); val ve1 = t2perp(vdir); val ve2 = vdir cross ve1
+    val vdir = (t2v(-6f, 1.5f, 11f) - T).unit(); val ve1 = t2perp(vdir); val ve2 = vdir cross ve1
     val tIn = T + vdir * (R - 0.8f)
     var tOut = R + 2f; run { var d = R; while (d < 40f) { if ((T + vdir * d - K).len() > RC) { tOut = d; break }; d += 0.1f } }
     for ((k, rr) in floatArrayOf(1.25f, 0.85f).withIndex()) {
@@ -4046,7 +4046,7 @@ private fun StereoBodyRenderer.t2Epithelium(i: Int): Array<ColorVboMesh> = t2Get
     for (row in -4..6) for (c in 0 until cols) {
         val ac = (c - cols / 2) * 1.5f * rh; val zc = T2_PLATE_Z + row * sqrt(3f) * rh + (if (c % 2 != 0) sqrt(3f) * rh * 0.5f else 0f)
         val bottom = P(ac, zc, R); val dc = (bottom - t2v(T2_SPX, T2_SPY, T2_PLATE_Z)).len()
-        if (dc < T2_CELL_R * 0.55f || zc < -14f || zc > 42f) continue
+        if (dc < T2_CELL_R + 1.2f || zc < -14f || zc > 42f) continue
         val isPaneth = paneth < 3 && row == -2 && abs(c - cols / 2) <= 1
         if (isPaneth) paneth++
         val shrinkA = if (isPaneth) 2.5f / (2f * rh) else 0.96f; val shrinkB = if (isPaneth) 4.5f / (2f * rh) else 0.96f
@@ -4055,7 +4055,7 @@ private fun StereoBodyRenderer.t2Epithelium(i: Int): Array<ColorVboMesh> = t2Get
         // out to its surface, so they lean over and hug it and the sheet stays continuous
         val cc = t2v(T2_SPX, T2_SPY, T2_PLATE_Z); val rc = T2_CELL_R + 0.25f
         var pushedAny = false
-        fun push(q: T2V): T2V { val d = q - cc; val l = d.len(); if (l >= rc) return q; pushedAny = true; return cc + d.unit() * rc }
+        fun push(q: T2V): T2V = q
         for (k in 0 until 6) {
             val a = cor[k]; val b = cor[(k + 1) % 6]
             fun Q(pt: FloatArray, rr: Float, sh: Float) = push(P(ac + (pt[0] - ac) * sh, zc + (pt[1] - zc) * sh, rr))
@@ -4078,6 +4078,20 @@ private fun StereoBodyRenderer.t2Epithelium(i: Int): Array<ColorVboMesh> = t2Get
             val a = P(ac + u, zc + w, R); val b = P(ac + u, zc + w, R - 0.5f)
             brush.addAll(listOf(a.x, a.y, a.z, 0.99f, 0.9f, 0.86f, 0.7f, b.x, b.y, b.z, 0.99f, 0.9f, 0.86f, 0.7f))
         }
+    }
+    // the sheet's apical surface, continuous round the rounded-up cell, and the socket it sits in
+    // (the neighbours' faces bordering it), so no cut cell faces show
+    val cc = t2v(T2_SPX, T2_SPY, T2_PLATE_Z); val hole = T2_CELL_R - 0.4f
+    val sheet = T2Geo()
+    sheet.surf(80, 120, T2_EPITHELIUM_TOP) { v, u ->
+        val z = -14f + 56f * v; val th = (u - 0.5f) * 2f * T2PI * 0.999f
+        t2v(ax0 + cos(th) * (R - 0.05f), sin(th) * (R - 0.05f), z)
+    }
+    g.appendWhere(sheet) { x, y, z -> (t2v(x, y, z) - cc).len() > hole }
+    g.surf(12, 40, T2_EPI_BORDER) { v, u ->
+        val a = u * 2f * T2PI; val th = 0.25f + 1.2f * v     // the socket: the far side of a sphere round the cell
+        val dir = t2v(cos(th), sin(th) * cos(a), sin(th) * sin(a))
+        cc + dir * (T2_CELL_R + 0.2f)
     }
     val rigid = t2Bend(i, 0f, 0f)
     val bA = brush.toFloatArray(); for (k in 0 until bA.size / 7) rigid(bA, k * 7)
