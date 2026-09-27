@@ -124,7 +124,9 @@ internal val T3_ENDOTHELIUM = floatArrayOf(0.94f, 0.82f, 0.85f, 1f)
 internal val T3_JUNCTION = floatArrayOf(0.94f, 0.80f, 0.84f, 1f)
 internal val T3_ENDO_NUCLEUS = floatArrayOf(0.80f, 0.64f, 0.82f, 1f)
 internal val T3_ENDO_NUC_FLAT = floatArrayOf(0.70f, 0.58f, 0.78f, 1f)
-internal val T3_ENDO_NUC_PALE = floatArrayOf(0.86f, 0.76f, 0.82f, 1f)
+internal val T3_ENDO_NUC_PALE = floatArrayOf(0.74f, 0.60f, 0.70f, 1f)
+internal val T3_ENDO_NUC_RIM = floatArrayOf(0.40f, 0.30f, 0.36f, 1f)
+internal val T3_JUNCTION_LOW = floatArrayOf(0.78f, 0.66f, 0.72f, 1f)
 internal val T3_MUSCLE_NUC_LOW = floatArrayOf(0.58f, 0.40f, 0.52f, 1f)
 internal val T3_TISSUE_DARK = floatArrayOf(0.20f, 0.11f, 0.15f, 1f)
 internal val T3_ISCHAEMIC = floatArrayOf(0.52f, 0.50f, 0.60f, 1f)
@@ -2042,50 +2044,47 @@ internal fun StereoBodyRenderer.drawTransfusion(n: TourNode, i: Int, seconds: Fl
     // dark cells of the emptied vessel ahead of it. The tissue reddens just behind the front, and
     // its collapsed capillaries open and fill with cells as it passes.
     val T = sinceArrival(i, seconds)
-    // the front starts a few units ahead of the pilot and creeps on down the vessel
-    // (about 6 units ahead of the pilot as the hold begins, advancing slowly)
-    val front = (3.2f + 0.1f * T).coerceAtMost(22f)
+    // the front starts a few units ahead of the craft and creeps on down the vessel: near enough
+    // (3.6 units, ~4 ahead of the pilot's eye, just past the lens pocket) that the short column seen
+    // from the bridge does not hide the grey, collapsed muscle beyond it, and held within 5.2 units
+    // of the craft through the hold so the boundary never runs out of view
+    val shipA = run { val f0 = rfv(b, 0f); (V3(shipX, shipY, shipZ) - f0.c).dot(f0.d) }
+    val front = (shipA + 3.6f + 0.04f * T).coerceAtMost(shipA + 5.2f).coerceAtMost(22f)
     // Reperfusion, stretch by stretch (every 2 units): the muscle and its capillaries turn from
     // ischaemic grey-blue to perfused red exactly where the front of new blood has reached.
     val camA0 = run { val f0 = rfv(b, 0f); (V3(camNowX, camNowY, camNowZ) - f0.c).dot(f0.d) }
-    // (four stretches at a time are drawn as one when all four are the same colour: only the
-    // group the front is crossing goes stretch by stretch)
-    for (g in 0 until (TF_SEGS.size - 1) / 4) {
-        val tA = smooth01((front - (TF_SEGS[g * 4] + 1f) + 1f) / 2f); val tB = smooth01((front - (TF_SEGS[g * 4 + 3] + 1f) + 1f) / 2f)
-        if (tA != tB) continue
-        val fibre = mixCol(T3_ISCHAEMIC, T3_PERFUSED, tA, tmpCol0)
-        val band = mixCol(T3_ISCHAEMIC_A, T3_PERFUSED_A, tA, tmpCol1)
-        val cap = mixCol(T3_CAP_EMPTY, T3_CAPILLARY, tA, tmpCol2)
-        val lvl = (tA * 3.99f).toInt()
-        drawMesh(cached("tg_gfibres$g") { transfusionMesh(b, um, 0, -2 - g) }, fibre, fibre, 1f, 0f, 0.05f + 0.08f * tA)
-        drawMesh(cached("tg_gbands$g") { transfusionMesh(b, um, 1, -2 - g) }, band, band, 0.6f, 0f, 0.03f)
-        drawMesh(cached("tg_gcaps${g}_$lvl") { transfusionMesh(b, um, 3, -2 - g, lvl) }, cap, cap, 1f, 0f, 0.1f + 0.25f * tA)
+    // (the fully perfused stretches behind the front are drawn as one run, the still-grey ones beyond
+    // it as another, and only the stretch the front is crossing on its own; nothing behind the eye)
+    val nS = TF_SEGS.size - 1
+    fun tOf(seg: Int) = smooth01((front - (TF_SEGS[seg] + TF_SEGS[seg + 1]) / 2f + 1f) / 2f)
+    var sv = 0; while (sv < nS - 1 && TF_SEGS[sv + 1] < camA0 - 1f) sv++
+    var rEnd = sv - 1; while (rEnd + 1 < nS && tOf(rEnd + 1) >= 1f) rEnd++
+    var gStart = nS; while (gStart - 1 > rEnd && tOf(gStart - 1) <= 0f) gStart--
+    if (rEnd >= sv) {
+        drawMesh(cached("tg_rf_${sv}_$rEnd") { transfusionMesh(b, um, 0, sv, 3, rEnd) }, T3_PERFUSED, T3_PERFUSED, 1f, 0f, 0.13f)
+        drawMesh(cached("tg_rb_${sv}_$rEnd") { transfusionMesh(b, um, 1, sv, 3, rEnd) }, T3_PERFUSED_A, T3_PERFUSED_A, 0.6f, 0f, 0.03f)
+        drawMesh(cached("tg_rc_${sv}_$rEnd") { transfusionMesh(b, um, 3, sv, 3, rEnd) }, T3_CAPILLARY, T3_CAPILLARY, 1f, 0f, 0.35f)
+        // red cells in single file through the reopened capillaries
+        val f = rfv(b, 0f); val off = (seconds * 0.4f) % 1.6f
+        Matrix.setIdentityM(model, 0)
+        Matrix.translateM(model, 0, f.d.x * off, f.d.y * off, f.d.z * off)
+        drawLitModel(cached("tg_rk_${sv}_$rEnd") { transfusionMesh(b, um, 4, sv, 3, rEnd) }, T3_RBC, T3_RBC, landmarkFade, 0f, 0.12f)
     }
-    for (seg in 0 until TF_SEGS.size - 1) {
-        val segMid = (TF_SEGS[seg] + TF_SEGS[seg + 1]) / 2f
-        val t = smooth01((front - segMid + 1f) / 2f)
-        val g = seg / 4
-        val grouped = smooth01((front - (TF_SEGS[g * 4] + 1f) + 1f) / 2f) == smooth01((front - (TF_SEGS[g * 4 + 3] + 1f) + 1f) / 2f)
+    for (seg in maxOf(sv, rEnd + 1) until gStart) {
+        val t = tOf(seg)
         val fibre = mixCol(T3_ISCHAEMIC, T3_PERFUSED, t, tmpCol0)
         val band = mixCol(T3_ISCHAEMIC_A, T3_PERFUSED_A, t, tmpCol1)
         val cap = mixCol(T3_CAP_EMPTY, T3_CAPILLARY, t, tmpCol2)
-        val mid = rfv(b, segMid).c
-        val d = sqrt((mid.x - camNowX).pow(2) + (mid.y - camNowY).pow(2) + (mid.z - camNowZ).pow(2))
-        val lod = 1f - 0.75f * ((d - 6f) / 8f).coerceIn(0f, 1f)          // far striations fade to plain muscle
-        if (!grouped) {
-            drawMesh(cached("tg_fibres$seg") { transfusionMesh(b, um, 0, seg) }, fibre, fibre, 1f, 0f, 0.05f + 0.08f * t)
-            if (d < 16f) drawMesh(cached("tg_bands$seg") { transfusionMesh(b, um, 1, seg) }, band, band, lod, 0f, 0.03f)
-            val lvl = (t * 3.99f).toInt()
-            drawMesh(cached("tg_caps${seg}_$lvl") { transfusionMesh(b, um, 3, seg, lvl) }, cap, cap, 1f, 0f, 0.1f + 0.25f * t)
-        }
-        if (t > 0.9f && segMid > camA0 - 1f && segMid < camA0 + 12f) {
-            // red cells in single file through the reopened capillaries
-            val f = rfv(b, segMid)
-            val off = (seconds * 0.4f) % 1.6f
-            Matrix.setIdentityM(model, 0)
-            Matrix.translateM(model, 0, f.d.x * off, f.d.y * off, f.d.z * off)
-            drawLitModel(cached("tg_capcells$seg") { transfusionMesh(b, um, 4, seg) }, T3_RBC, T3_RBC, landmarkFade, 0f, 0.12f)
-        }
+        drawMesh(cached("tg_fibres$seg") { transfusionMesh(b, um, 0, seg) }, fibre, fibre, 1f, 0f, 0.05f + 0.08f * t)
+        drawMesh(cached("tg_bands$seg") { transfusionMesh(b, um, 1, seg) }, band, band, 0.6f, 0f, 0.03f)
+        val lvl = (t * 3.99f).toInt()
+        drawMesh(cached("tg_caps${seg}_$lvl") { transfusionMesh(b, um, 3, seg, lvl) }, cap, cap, 1f, 0f, 0.1f + 0.25f * t)
+    }
+    if (gStart < nS) {
+        val gs = maxOf(gStart, sv)
+        drawMesh(cached("tg_gf_${gs}") { transfusionMesh(b, um, 0, gs, 0, nS - 1) }, T3_ISCHAEMIC, T3_ISCHAEMIC, 1f, 0f, 0.05f)
+        drawMesh(cached("tg_gb_${gs}") { transfusionMesh(b, um, 1, gs, 0, nS - 1) }, T3_ISCHAEMIC_A, T3_ISCHAEMIC_A, 0.6f, 0f, 0.03f)
+        drawMesh(cached("tg_gc_${gs}") { transfusionMesh(b, um, 3, gs, 0, nS - 1) }, T3_CAP_EMPTY, T3_CAP_EMPTY, 1f, 0f, 0.1f)
     }
     // the fibres' nuclei: opaque, low-contrast, flattened under the sarcolemma (a slight bulge only)
     drawMesh(cached("tg_nuclei") { transfusionMesh(b, um, 2, -1) }, T3_MUSCLE_NUC_LOW, T3_MUSCLE_NUC_LOW, 1f, 0f, 0f)
@@ -2096,80 +2095,92 @@ internal fun StereoBodyRenderer.drawTransfusion(n: TourNode, i: Int, seconds: Fl
     val tileL = 1.5f
     val camA = run { val f0 = rfv(b, 0f); (V3(camNowX, camNowY, camNowZ) - f0.c).dot(f0.d) }
     val cam = V3(camNowX, camNowY, camNowZ)
+    val rr = 7.5f / 2f / um
+    // this file's own red cell (unit radius, axis along local y), whose dimple is closed at the pole
+    val unitRbc = cached("tf_unitrbc") { Mb().apply { redCell(V3(0f, 0f, 0f), V3(0f, 1f, 0f), 1f, 4, 12) }.build() }
     fun block(key: String, build: () -> List<Pair<V3, V3>>, a: Float, spin: Float) {
-        if (a < -8f || a > 24f) return
+        if (a < -8f || a > 24f || a + tileL < camA - 1.5f) return
         val f = rfv(b, a)
         val Y = f.radial(spin + 1.57f); val Z = f.d; val X = Y.cross(Z).unit()
-        if (a + tileL > camA - LENS_POCKET - 0.5f && a < camA + LENS_POCKET + 0.5f) {
+        if (a + tileL > camA - LENS_POCKET - rr && a < camA + LENS_POCKET + rr) {
             // at the lens of whichever view is being drawn (the pilot's or the chase camera's): the
-            // block in eight chunks (quadrant x half-length); a chunk clear of the eye is drawn whole,
-            // one that reaches it cell by cell, any cell near the eye left out, so none fills a view
-            val chunks = cachedValue("${key}_chunks") {
+            // block in three slices along the flow. No point of a slice can be nearer the eye than its
+            // distance along the vessel, so a slice clear of the lens pocket that way is drawn whole;
+            // the others cell by cell, any cell near the eye left out, so none fills a view
+            // (and each slice in quadrants, any quadrant whose bounding sphere clears the pocket drawn whole)
+            val slices = cachedValue("${key}_slices") {
                 val cells = cachedValue("${key}_cells", build)
-                (0 until 8).map { q ->
-                    val mine = cells.filter { (c, _) ->
-                        val sec = (((atan2(c.y, c.x) + PI.toFloat()) / (PI.toFloat() / 2f)).toInt()).coerceIn(0, 3)
-                        sec + (if (c.z < tileL / 2f) 0 else 4) == q
-                    }
-                    val ctr = if (mine.isEmpty()) V3(0f, 0f, 0f) else mine.fold(V3(0f, 0f, 0f)) { acc, (c, _) -> acc + c } * (1f / mine.size)
-                    Triple(ctr, (mine.maxOfOrNull { (c, _) -> (c - ctr).len() } ?: 0f) + 7.5f / 2f / um, mine)
-                }
+                (0 until 3).map { q -> cells.filter { (c, _) -> ((c.z / (tileL / 3f)).toInt()).coerceIn(0, 2) == q } }
             }
-            for ((q, ch) in chunks.withIndex()) {
-                val (ctr, rad, mine) = ch
+            val quads = cachedValue("${key}_quads") {
+                slices.map { sl -> (0 until 4).map { w ->
+                    val mine = sl.filter { (c, _) -> (((atan2(c.y, c.x) + PI.toFloat()) / (PI.toFloat() / 2f)).toInt()).coerceIn(0, 3) == w }
+                    val ctr = if (mine.isEmpty()) V3(0f, 0f, 0f) else mine.fold(V3(0f, 0f, 0f)) { acc, (c, _) -> acc + c } * (1f / mine.size)
+                    Triple(ctr, (mine.maxOfOrNull { (c, _) -> (c - ctr).len() } ?: 0f) + rr, mine)
+                } }
+            }
+            for ((q, mineAll) in slices.withIndex()) {
+                if (mineAll.isEmpty()) continue
+                val z0 = a + q * tileL / 3f - rr; val z1 = a + (q + 1) * tileL / 3f + rr
+                if (z0 > camA + LENS_POCKET || z1 < camA - LENS_POCKET) {
+                    drawLocal(cached("${key}_sl$q") { cellsMesh(mineAll, rr) }, f.c, Z, Y, T3_RBC, T3_RBC_RIM3, 1f, 0.05f)
+                    continue
+                }
+                for ((w, qd) in quads[q].withIndex()) {
+                val (ctr, rad, mine) = qd
                 if (mine.isEmpty()) continue
                 val pc = f.c + X * ctr.x + Y * ctr.y + Z * ctr.z
                 if ((pc - cam).len() - rad > LENS_POCKET) {
-                    drawLocal(cached("${key}_ch$q") { cellsMesh(mine, 7.5f / 2f / um) }, f.c, Z, Y, T3_RBC, T3_RBC_RIM3, 1f, 0.05f)
+                    drawLocal(cached("${key}_q${q}_$w") { cellsMesh(mine, rr) }, f.c, Z, Y, T3_RBC, T3_RBC_RIM3, 1f, 0.05f)
                     continue
                 }
                 for ((c, ax) in mine) {
                     val p = f.c + X * c.x + Y * c.y + Z * c.z
                     if ((p - cam).len() < LENS_POCKET) continue
                     val axW = (X * ax.x + Y * ax.y + Z * ax.z).unit()
-                    drawScaled(rbc, p, perp(axW), axW, 7.5f / 2f / um, 7.5f / 2f / um, 7.5f / 2f / um, T3_RBC, T3_RBC_RIM3, 1f, 0.05f)
+                    drawScaled(unitRbc, p, perp(axW), axW, rr, rr, rr, T3_RBC, T3_RBC_RIM3, 1f, 0.05f)
+                }
                 }
             }
         } else drawLocal(cached(key) { cellsMesh(cachedValue("${key}_cells", build), 7.5f / 2f / um) }, f.c, Z, Y, T3_RBC, T3_RBC_RIM3, 1f, 0.05f)
     }
-    // the leading edge: a disc-shaped crowd of cells face-on to the flow, spanning the whole core
-    // (drawn bright-rimmed so the boundary reads against the emptied vessel beyond it)
+    // the leading edge: one sparse layer of cells face-on to the flow, spanning the vessel as a
+    // meniscus, concave toward the pilot (the centre stream leads, cells at radius r trail by
+    // 0.4 (r/R)^2), drawn bright-rimmed so the boundary reads against the emptied vessel beyond it
     run {
-        val f = rfv(b, front - 0.5f); val Y = f.radial(T * 0.05f + 1.57f)
-        if ((f.c - cam).len() > LENS_POCKET + 1.5f) drawLocal(cached("tf_edge3") { cellsMesh(redCellDisc(b, um, 40, 0.3f), 7.5f / 2f / um) }, f.c, f.d, Y, T3_RBC, T3_RBC_RIM3, 1f, 0.25f)
+        val f = rfv(b, front); val Y = f.radial(T * 0.05f + 1.57f)
+        if ((f.c - cam).len() > LENS_POCKET + 0.4f) drawLocal(cached("tf_meniscus3") { cellsMesh(redCellMeniscus(b, um, 14, 0.97f), rr) }, f.c, f.d, Y, T3_RBC, T3_RBC_RIM3, 1f, 0.2f)
     }
-    block("tf_lead", { redCellCells(b, um, tileL, 16f, 99, true) }, front - 0.5f - tileL, T * 0.05f)
+    // the head of the column, its cells trimmed to the same curve (so the edge of the meniscus is the
+    // column itself, reaching the plasma layer at the wall)
+    val Rcore = (radiusAt(b, 0f) * 0.97f - 0.35f) * 0.95f
+    block("tf_head", { redCellCells(b, um, tileL, 6.5f, 39, false).filter { (c, _) ->
+        val q = (c.x * c.x + c.y * c.y) / (Rcore * Rcore)
+        c.z <= tileL - 0.4f * q - 0.12f
+    } }, front - tileL, T * 0.05f)
     var k = 1
-    while (front - 0.5f - tileL * (k + 1) > -8f - tileL) {
-        // ahead of the eye the new cells are still thin, piling up at the front; behind, the column is full
-        val a = front - 0.5f - tileL * (k + 1)
+    while (front - tileL * (k + 1) > -8f - tileL) {
+        // behind the front the column is full, right back past the craft
+        val a = front - tileL * (k + 1)
         block("tf_d${k % 6}", { redCellCells(b, um, tileL, 6.5f, 40 + k % 6, false) }, a, k * 1.7f + T * 0.05f)
         k++
     }
-    val rr = 7.5f / 2f / um
-    val R = radiusAt(b, 0f) * 0.97f
-    for (q in 0 until 8) {
-        val h = ((q * 7919) % 1000) / 1000f
-        val a = front + 1.5f + ((h * 20f + seconds * 0.8f) % 20f)
-        if (a > 24f) continue
-        val f = rfv(b, a); val th = q * 2.399f
-        val p = f.pol(th, sqrt(h) * (R - 0.35f - rr))
-        if ((p.x - camNowX).pow(2) + (p.y - camNowY).pow(2) + (p.z - camNowZ).pow(2) < LENS_POCKET * LENS_POCKET) continue
-        val tb = seconds * (0.3f + 0.5f * h) + q
-        val nrm = (f.radial(th + tb * 0.3f) * 0.6f + (f.d * cos(tb) + f.radial(th + 1.57f) * sin(tb)) * 0.4f).unit()
-        drawScaled(rbc, p, perp(nrm), nrm, rr, rr, rr, T3_RBC_DEOXY, T3_RBC_RIM3, 1f, 0.05f)
+    // ahead of the front, the eight old dark cells left in the emptied vessel, drifting on slowly
+    run {
+        val f = rfv(b, front); val Y = f.radial(T * 0.08f)
+        drawLocal(cached("tf_old8") { darkCellsMesh(b, um) }, f.c, f.d, Y, T3_RBC_DEOXY, T3_RBC_RIM3, 1f, 0.05f)
     }
-    // The vessel's own wall: endothelium, and outside it one layer of circumferential smooth
-    // muscle cells (a terminal arteriole), each with its elongated nucleus.
     drawMesh(cached("tf_smcnuc2") { smoothMuscleCoat(b, um, true) }, T3_MUSCLE_NUCLEUS, T3_MUSCLE_NUCLEUS, 1f, 0f, 0.1f)
     val (tube, junc, nuc) = endotheliumMeshes("tf_endo2", b, -8f, 24f, { a -> radiusAt(b, a) * 0.97f }, 30f / um, 10, nucThick = 0.02f)
     drawMesh(cached("tf_smc2") { smoothMuscleCoat(b, um, false) }, T3_SMC, T3_SMC, 1f, 0f, 0.1f)
-    drawMesh(junc, T3_JUNCTION, T3_JUNCTION, 0.45f, 0f, 0.08f)
+    // (nothing on the wall brighter than the lining itself: the cell borders a muted rose line)
+    drawMesh(junc, T3_JUNCTION_LOW, T3_JUNCTION_LOW, 0.45f, 0f, 0f)
     GLES20.glDepthMask(false)
     drawMesh(tube, T3_ENDOTHELIUM, T3_JUNCTION, 0.22f, 0f, 0.15f)
     GLES20.glDepthMask(true)
-    // the endothelial nuclei, flat in the wall, barely brighter than the lining they belong to
-    drawMesh(nuc, T3_ENDO_NUC_PALE, T3_ENDO_NUC_PALE, 1f, 0f, 0f)
+    // the endothelial nuclei, flat in the wall, a shade darker than the lining they belong to
+    // (drawn part-transparent, so each reads as a slightly denser patch of the same sheet)
+    drawMesh(nuc, T3_ENDO_NUC_PALE, T3_ENDO_NUC_RIM, 0.45f, 0f, 0f)
 }
 
 /**
@@ -2214,16 +2225,29 @@ private fun StereoBodyRenderer.redCellCells(b: Float, um: Float, len: Float, per
     return out
 }
 
-/** A disc-shaped crowd of [n] cells [thick] units deep, face-on to the flow, across the whole core. */
-private fun StereoBodyRenderer.redCellDisc(b: Float, um: Float, n: Int, thick: Float): List<Pair<V3, V3>> {
-    val rnd = java.util.Random(7)
+/** The eight old dark cells ahead of the front, in the front's local frame (z along the flow). */
+private fun StereoBodyRenderer.darkCellsMesh(b: Float, um: Float): T3Mesh {
     val rr = 7.5f / 2f / um
+    val R = radiusAt(b, 0f) * 0.97f - 0.35f - rr
+    val mb = Mb(); val rnd = java.util.Random(13)
+    for (q in 0 until 8) {
+        val h = ((q * 7919) % 1000) / 1000f
+        val th = q * 2.399f; val rho = sqrt(h) * R * 0.9f
+        val ax = V3(rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f).unit()
+        mb.redCell(V3(cos(th) * rho, sin(th) * rho, 1.5f + q * 0.95f + 0.4f * rnd.nextFloat()), ax, rr, 4, 12)
+    }
+    return mb.build()
+}
+
+/** The column's leading edge: [n] cells face-on to the flow across the whole core, cells at radius r trailing the centre by 0.4 (r/R)^2. */
+private fun StereoBodyRenderer.redCellMeniscus(b: Float, um: Float, n: Int, span: Float = 1f): List<Pair<V3, V3>> {
+    val rnd = java.util.Random(7)
     val R = (radiusAt(b, 0f) * 0.97f - 0.35f) * 0.95f
     val out = ArrayList<Pair<V3, V3>>()
     for (q in 0 until n) {
-        val rho = R * sqrt((q + 0.5f) / n); val th = q * 2.39996f
-        val ax = (V3(0f, 0f, 1f) + V3(rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f, 0f) * 0.4f).unit()
-        out.add(V3(cos(th) * rho, sin(th) * rho, thick * rnd.nextFloat()) to ax)
+        val rho = R * span * sqrt((q + 0.5f) / n); val th = q * 2.39996f
+        val ax = (V3(0f, 0f, 1f) + V3(rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f, 0f) * 0.3f).unit()
+        out.add(V3(cos(th) * rho, sin(th) * rho, -0.4f * (rho / R) * (rho / R) + 0.06f * (rnd.nextFloat() - 0.5f)) to ax)
     }
     return out
 }
@@ -2275,12 +2299,18 @@ private fun mixCol(a: FloatArray, c: FloatArray, t: Float, out: FloatArray): Flo
     return out
 }
 
-/** Muscle around the vessel, one stretch [seg] of it: fibres (0), their A bands (1), nuclei (2), capillaries (3). */
-private fun StereoBodyRenderer.transfusionMesh(b: Float, um: Float, part: Int, seg: Int, lvl: Int = 3): T3Mesh {
-    // seg >= 0: one 2-unit stretch; -1: the whole run; -2 - g: group g of four stretches
-    val s0 = when { seg >= 0 -> TF_SEGS[seg]; seg == -1 -> TF_SEGS.first(); else -> TF_SEGS[(-2 - seg) * 4] }
-    val s1 = when { seg >= 0 -> TF_SEGS[seg + 1]; seg == -1 -> TF_SEGS.last(); else -> TF_SEGS[(-2 - seg) * 4 + 4] }
+/**
+ * Muscle around the vessel, stretches [seg]..[segB] of it (seg -1: the whole run in one piece):
+ * fibres (0), their A bands (1), nuclei (2), capillaries (3), capillary red cells (4).
+ */
+private fun StereoBodyRenderer.transfusionMesh(b: Float, um: Float, part: Int, seg: Int, lvl: Int = 3, segB: Int = seg): T3Mesh {
     val mb = Mb()
+    if (seg < 0) addTransfusion(mb, b, um, part, TF_SEGS.first(), TF_SEGS.last(), lvl)
+    else for (q in seg..segB) addTransfusion(mb, b, um, part, TF_SEGS[q], TF_SEGS[q + 1], lvl)
+    return mb.build()
+}
+
+private fun StereoBodyRenderer.addTransfusion(mb: Mb, b: Float, um: Float, part: Int, s0: Float, s1: Float, lvl: Int) {
     val sarc = 2.5f / um
     val rf = 50f / 2f / um
     val angles = floatArrayOf(40f, 140f, 220f, 320f)
@@ -2318,7 +2348,6 @@ private fun StereoBodyRenderer.transfusionMesh(b: Float, um: Float, part: Int, s
             }
         }
     }
-    return mb.build()
 }
 
 /**
