@@ -1039,7 +1039,7 @@ internal fun StereoBodyRenderer.drawThreshold(n: TourNode, i: Int, seconds: Floa
         val tmp = FloatArray(2)
         // the skin, in three bands so its edge fades out instead of ending in a rim
         // the skin fades out over the outer quarter of the patch in eight thin steps (a ramp, no rim)
-        val nb = 9
+        val nb = 17
         for (b in 0 until nb) {
             val u0 = if (b == 0) 0f else 0.75f + 0.25f * (b - 1) / (nb - 1f); val u1 = 0.75f + 0.25f * b / (nb - 1f)
             val skin = t1Mesh("face2.$b") { ParamMesh(if (b == 0) 64 else 2, 144) { u, v, out -> t1FacePoint(u0 + (u1 - u0) * u, v, tmp, out) } }
@@ -1739,7 +1739,7 @@ internal fun StereoBodyRenderer.drawAlveolus(n: TourNode, i: Int, seconds: Float
     val d = t1Dyn.data
     var v = 0
     val cDark = floatArrayOf(0.50f, 0.06f, 0.10f); val cBright = floatArrayOf(0.90f, 0.12f, 0.14f); val col = FloatArray(3)
-    val nDisc = if (quality == 0) 12 else 6
+    val nDisc = if (quality == 0) 6 else 3
     t1Cells("alv.rbc2", 110, 0f, COL_RBC_OXY, 0.3f) { b ->
         for ((j, path) in net.paths.withIndex()) {
             val segs = path.size / 3 - 1
@@ -1839,7 +1839,7 @@ internal fun StereoBodyRenderer.drawBloodstream(n: TourNode, i: Int, seconds: Fl
     }
     // red cells in the plasma
     val nCells = when (quality) { 0 -> 120; 1 -> 80; else -> 60 }
-    t1Cells("venule3.rbc", 125, 0f, T1_RBC_OXY, 0.25f) { b -> t1FlowCells(b, 2.3f, 3.5f, 1.6f, nCells, 1.9f, seconds, 3, skipNear = 1.2f, span = 2.0f) }
+    t1Cells("venule3.rbc", 125, 0f, T1_RBC_OXY, 0.25f) { b -> t1FlowCells(b, 2.3f, 3.5f, 1.6f, nCells, 1.9f, seconds, 3, skipNear = 1.7f, span = 2.0f) }
     // plasma: a faint straw haze drifting with the flow
     val d = t1Dyn.data
     var v = 0
@@ -3671,18 +3671,18 @@ private fun t1BuildNucleus(): T1Nucleus {
         dnaB.t1Tube(path.toFloatArray(), 0.125f, 5)
     }
     // euchromatin: loose 10 nm fibres through the middle, kept off the craft's lane
-    for (fib in 0 until 18) {
-        val ang = fib * 0.349f + 0.4f + 0.2f * rnd.nextFloat()
+    for (fib in 0 until 12) {
+        val ang = fib * 0.524f + 0.4f + 0.2f * rnd.nextFloat()
         val rad = 3.4f + (fib % 3) * 0.9f
-        fibre(hb, dna, h1, cos(ang) * rad, sin(ang) * rad, -(2.0f + (fib / 6) * 3.5f + rnd.nextFloat() * 1.5f), -sin(ang), cos(ang), -0.6f,
+        fibre(hb, dna, h1, cos(ang) * rad, sin(ang) * rad, -(2.0f + (fib / 4) * 3.5f + rnd.nextFloat() * 1.5f), -sin(ang), cos(ang), -0.6f,
             16, 1.8f, 0.6f, 0.6f, 3.0f, 5.4f, -14f, -2f)
     }
     // heterochromatin: the same beads on a string, packed much tighter, against the periphery
     val het = T1Builder(); val hetDna = T1Builder(); val pl = ArrayList<Float>()
-    for (fib in 0 until 14) {
-        val ang = fib * TAU / 14f
+    for (fib in 0 until 8) {
+        val ang = fib * TAU / 8f
         fibre(het, hetDna, null, cos(ang) * 6.1f, sin(ang) * 6.1f, -(2.8f + (fib % 3) * 3f), -sin(ang), cos(ang), -0.3f,
-            22, 1.2f, 0.3f, 1.2f, 5.6f, 6.6f, -12f, -2.6f)
+            18, 1.2f, 0.3f, 1.2f, 5.8f, 6.6f, -12f, -2.6f)
     }
     val plc = floatArrayOf(0.80f, 0.60f, 1f, 0.6f)
     for (k in 0 until 88) for (m in 0 until 20) for (hh in 0..1) {
@@ -3749,7 +3749,7 @@ internal fun StereoBodyRenderer.drawNucleus(n: TourNode, i: Int, seconds: Float)
     if (rp < 8.2f || rp > 9.75f) return
     val vis = t1Smooth(8.2f, 8.3f, rp) * (1f - t1Smooth(9.55f, 9.75f, rp))
     landmarkFade *= vis; colorShader.globalFade *= vis
-    val nu = t1Mesh("nucleus4") { t1BuildNucleus() }
+    val nu = t1Mesh("nucleus5") { t1BuildNucleus() }
     val fp = frameAt(T1_NPC_P)
     val off = t1ShipOff(fp); val so = off[0]; val uo = off[1]
     t1Lit(nu.npc, fp, 0f, so, uo, T1_NPC, T1_WHITE, 1f, 0.25f)
@@ -3797,7 +3797,7 @@ internal fun StereoBodyRenderer.drawNucleus(n: TourNode, i: Int, seconds: Float)
     t1Lit(nu.hetero, f9, 0f, s9, u9, T1_HET_HIST, T1_WHITE, 1f, 0.05f)
     t1Lit(nu.heteroDna, f9, 0f, s9, u9, T1_HETERO, T1_WHITE, 1f, 0.05f)
     t1Color(nu.periLamina, f9, 0f, s9, u9, 1f, false, 0.35f)
-    t1Lit(nu.dna, f9, 0f, s9, u9, T1_DNA, T1_WHITE, 1f, 0.3f)
+    t1Lit(nu.dna, f9, 0f, s9, u9, T1_DNA, T1_WHITE, 1f, 0.12f)
     // Pol II slides 0.8 units/s (6.4 nm/s ~ 20 nt/s); the helix is drawn in two parts either side of
     // the bubble inside the enzyme
     val hx = t1Mesh("helix2") { t1BuildHelix() }
