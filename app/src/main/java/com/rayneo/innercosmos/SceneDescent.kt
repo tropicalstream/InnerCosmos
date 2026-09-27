@@ -308,10 +308,14 @@ internal fun StereoBodyRenderer.drawLookBack(n: TourNode, i: Int, seconds: Float
     if (map.id == 3) drawPlate("portrait", frameAt(i + 0.12f), tunnelRadius(i + 0.12f) * 0.34f, tunnelRadius(i + 0.12f) * 0.10f, 3.6f, seconds)
 }
 
+/** One rib: an arc of a ring open at the front (the sternum), laid horizontal around the chest. */
+private val ribArc by lazy { ParamMesh.torusArc(0.045f, 0.80f, 24) }
+
 /**
- * An upright person facing the craft, H units tall, feet at the bottom. Figure-space x is the
- * person's LEFT (+x) / RIGHT (-x) as seen from the front, y is up from the soles, z toward the
- * viewer. Proportions follow the classical eight-head canon.
+ * An upright person facing the craft, H units tall, soles at the bottom. Figure-space x is across
+ * (+x = her LEFT, on the viewer's right), y is up from the soles, z is toward the viewer; all in
+ * fractions of her height. Proportions follow the eight-head canon. Organs are opaque and drawn
+ * first; bones next; the skin is a translucent shell over everything, so the viscera read through it.
  */
 internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha: Float, seconds: Float) {
     val f = frameAt(routeProgress)
@@ -325,46 +329,70 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
     val side = 0.9f + 0.28f * H
     val bx = shipX + f.dx * ahead + f.sx * side; val bz = shipZ + f.dz * ahead + f.sz * side
     val by = shipY - H * 0.5f
-    // Figure axes in world space: across (x) = -side so her left is on the viewer's right; up = world up; toward viewer = -dir.
+    // Figure axes in world space: across = -side (her left on the viewer's right), up = world up,
+    // toward the viewer = -dir.
     val ax = -f.sx; val az = -f.sz
     val tx = -f.dx; val tz = -f.dz
-    fun wx(x: Float, z: Float) = bx + ax * x * H + tx * z * H
-    fun wz(x: Float, z: Float) = bz + az * x * H + tz * z * H
+    val sway = 0.004f * sin(seconds * 0.6f)
+    fun wx(x: Float, z: Float) = bx + ax * (x + sway) * H + tx * z * H
+    fun wz(x: Float, z: Float) = bz + az * (x + sway) * H + tz * z * H
     fun wy(y: Float) = by + y * H
     val yaw = atan2(tx, tz) * 180f / PI.toFloat()
-    val sway = 0.004f * sin(seconds * 0.6f)
     fun part(x: Float, y: Float, z: Float, rx: Float, ry: Float, rz: Float, col: FloatArray, acc: FloatArray, a: Float, pat: Float = 0f, glow: Float = 0f) =
-        drawSphereAt(wx(x + sway, z), wy(y), wz(x + sway, z), rx * H, ry * H, rz * H, col, acc, a * alpha, yaw, 0f, 1f, 0f, sphere, pat, glow)
-    fun limb(x0: Float, y0: Float, x1: Float, y1: Float, r: Float, col: FloatArray, a: Float) {
-        drawStrut(wx(x0 + sway, 0f), wy(y0), wz(x0 + sway, 0f), wx(x1 + sway, 0f), wy(y1), wz(x1 + sway, 0f), r * H, col, COL_SKIN_RIM, 0f)
+        drawSphereAt(wx(x, z), wy(y), wz(x, z), rx * H, ry * H, rz * H, col, acc, a * alpha, yaw, 0f, 1f, 0f, sphere, pat, glow)
+    /** A smooth capsule between two figure-space points (limbs, torso, vessels). */
+    fun seg(x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float, r: Float, col: FloatArray, acc: FloatArray, a: Float, glow: Float = 0f) {
+        val px0 = wx(x0, z0); val py0 = wy(y0); val pz0 = wz(x0, z0)
+        val px1 = wx(x1, z1); val py1 = wy(y1); val pz1 = wz(x1, z1)
+        val dx = px1 - px0; val dy = py1 - py0; val dz = pz1 - pz0
+        val len = sqrt(dx * dx + dy * dy + dz * dz)
+        val rr = r * H
+        // capsule is length 2 along z with radius 0.45: scale so its caps meet the joints.
+        val half = len * 0.5f + rr * 0.9f
+        drawBasis((px0 + px1) * 0.5f, (py0 + py1) * 0.5f, (pz0 + pz1) * 0.5f, dx, dy, dz, tx, 0f, tz,
+            rr / 0.45f, rr / 0.45f, half, capsule, col, acc, a * alpha, 0f, glow)
     }
 
-    // ---- organs first (opaque), so they read through the skin
-    part(0f, 0.925f, 0.005f, 0.045f, 0.036f, 0.05f, COL_ORG_BRAIN, COL_LAMP, 1f, 0.8f)                 // brain
-    for (sgn in SIGNS) part(sgn * 0.058f, 0.715f, 0f, 0.048f, 0.085f, 0.045f, COL_ORG_LUNG, COL_LAMP, 0.95f, 0.5f) // lungs
-    part(0.02f, 0.695f, 0.03f, 0.032f, 0.036f, 0.028f, COL_ORG_HEART, COL_LAMP, 1f, 0f, 0.2f)          // heart, left of midline
-    part(-0.045f, 0.615f, 0.01f, 0.075f, 0.035f, 0.05f, COL_ORG_LIVER, COL_LAMP, 1f)                    // liver, her right
-    part(0.045f, 0.61f, 0.015f, 0.04f, 0.03f, 0.03f, COL_ORG_STOMACH, COL_LAMP, 1f)                     // stomach, her left
-    for (sgn in SIGNS) part(sgn * 0.045f, 0.565f, -0.03f, 0.018f, 0.032f, 0.016f, COL_ORG_KIDNEY, COL_LAMP, 1f) // kidneys, posterior
-    part(0f, 0.525f, 0.02f, 0.072f, 0.05f, 0.045f, COL_ORG_GUT, COL_LAMP, 1f, 1f)                       // small intestine
-    part(0f, 0.465f, 0.025f, 0.022f, 0.02f, 0.02f, COL_ORG_BLADDER, COL_LAMP, 1f)                       // bladder
-    for (k in 0 until 14) part(0f, 0.47f + k * 0.03f, -0.045f, 0.012f, 0.011f, 0.012f, COL_BONE, COL_LAMP, 1f) // spine
-    for (sgn in SIGNS) limb(sgn * 0.07f, 0.46f, sgn * 0.075f, 0.28f, 0.012f, COL_BONE, 1f)              // femurs
+    // ---- organs (opaque), in their true places
+    part(0f, 0.922f, 0.005f, 0.046f, 0.038f, 0.052f, COL_ORG_BRAIN, COL_LAMP, 1f, 0.8f)                   // brain
+    seg(0f, 0.83f, 0.01f, 0f, 0.76f, 0.01f, 0.010f, COL_BONE, COL_LAMP, 0.9f)                              // trachea
+    for (sgn in SIGNS) part(sgn * 0.056f, 0.712f, 0f, 0.046f, 0.082f, 0.044f, COL_ORG_LUNG, COL_LAMP, 0.95f, 0.5f)  // lungs
+    part(0.018f, 0.690f, 0.028f, 0.030f, 0.034f, 0.026f, COL_ORG_HEART, COL_LAMP, 1f, 0f, 0.25f)          // heart, apex to her left
+    seg(0.005f, 0.70f, -0.018f, 0.005f, 0.48f, -0.022f, 0.009f, COL_ORG_HEART, COL_LAMP, 1f, 0.15f)       // descending aorta
+    seg(-0.012f, 0.70f, -0.012f, -0.012f, 0.48f, -0.016f, 0.010f, COL_VEIN_BLUE, COL_LAMP, 1f)            // inferior vena cava
+    part(-0.045f, 0.615f, 0.012f, 0.072f, 0.034f, 0.05f, COL_ORG_LIVER, COL_LAMP, 1f)                     // liver, her right
+    part(0.045f, 0.608f, 0.016f, 0.038f, 0.028f, 0.03f, COL_ORG_STOMACH, COL_LAMP, 1f)                    // stomach, her left
+    for (sgn in SIGNS) part(sgn * 0.044f, 0.565f, -0.032f, 0.017f, 0.030f, 0.015f, COL_ORG_KIDNEY, COL_LAMP, 1f) // kidneys, behind
+    part(0f, 0.522f, 0.022f, 0.068f, 0.048f, 0.042f, COL_ORG_GUT, COL_LAMP, 1f, 1f)                       // small intestine
+    part(0f, 0.466f, 0.026f, 0.021f, 0.018f, 0.018f, COL_ORG_BLADDER, COL_LAMP, 1f)                       // bladder
 
-    // ---- the tour's stops, where they happened, joined in order
+    // ---- skeleton: spine, ribs open at the sternum, clavicles, femurs
+    for (k in 0 until 13) part(0f, 0.47f + k * 0.031f, -0.047f, 0.012f, 0.010f, 0.012f, COL_BONE, COL_LAMP, 1f)
+    for (k in 0 until if (quality == 0) 7 else 4) {
+        val y = 0.785f - k * (if (quality == 0) 0.028f else 0.049f)
+        val w = 0.105f + 0.012f * sin(k * 0.55f + 0.4f)                                                      // widest at the 7th rib
+        // Ring in the horizontal plane: local z = up, local y = toward the viewer; the arc's gap faces front.
+        drawBasis(wx(0f, -0.004f), wy(y), wz(0f, -0.004f), 0f, 1f, 0f, tx, 0f, tz, w * H, 0.068f * H, 0.012f * H,
+            ribArc, COL_BONE, COL_LAMP, 0.75f * alpha, 0f, 0f)
+    }
+    for (sgn in SIGNS) {
+        seg(sgn * 0.012f, 0.822f, 0.03f, sgn * 0.15f, 0.83f, 0.0f, 0.007f, COL_BONE, COL_LAMP, 1f)           // clavicle
+        seg(sgn * 0.07f, 0.47f, 0f, sgn * 0.078f, 0.28f, 0f, 0.012f, COL_BONE, COL_LAMP, 1f)                 // femur
+    }
+
+    // ---- this tour's stops, where they happened, joined in order
     GLES20.glDepthMask(false)
     val arr = dynLines.data
     var v = 0
     for (k in 0 until nodes.size - 1) {
         val a0 = nodes[k]
         val mx = (a0.mapX - 50f) / 100f * 0.667f; val my = 1f - a0.mapY / 150f
-        val hot = 0.9f
-        part(-mx, my, 0.075f, 0.011f, 0.011f, 0.011f, COL_LAMP, COL_LAMP, 1f, 0f, hot)
+        part(-mx, my, 0.078f, 0.011f, 0.011f, 0.011f, COL_LAMP, COL_LAMP, 1f, 0f, 0.9f)
         if (k + 1 < nodes.size - 1 && v + 14 <= arr.size) {
             val b0 = nodes[k + 1]
             val nx = (b0.mapX - 50f) / 100f * 0.667f; val ny = 1f - b0.mapY / 150f
             for ((qx, qy) in listOf(-mx to my, -nx to ny)) {
-                arr[v++] = wx(qx + sway, 0.075f); arr[v++] = wy(qy); arr[v++] = wz(qx + sway, 0.075f)
+                arr[v++] = wx(qx, 0.078f); arr[v++] = wy(qy); arr[v++] = wz(qx, 0.078f)
                 arr[v++] = 1f; arr[v++] = 0.77f; arr[v++] = 0.42f; arr[v++] = 0.8f * alpha
             }
         }
@@ -379,19 +407,20 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
         lineWidth(1f)
     }
 
-    // ---- the translucent skin: head, neck, trunk, arms, legs (eight-head canon)
-    part(0f, 0.93f, 0f, 0.058f, 0.068f, 0.064f, COL_SKIN_SHELL, COL_SKIN_RIM, 0.3f)                    // head
-    limb(0f, 0.845f, 0f, 0.875f, 0.026f, COL_SKIN_SHELL, 0.3f)                                         // neck
-    part(0f, 0.72f, 0f, 0.125f, 0.12f, 0.07f, COL_SKIN_SHELL, COL_SKIN_RIM, 0.28f)                     // chest
-    part(0f, 0.575f, 0f, 0.105f, 0.085f, 0.062f, COL_SKIN_SHELL, COL_SKIN_RIM, 0.28f)                  // abdomen
-    part(0f, 0.49f, 0f, 0.12f, 0.06f, 0.068f, COL_SKIN_SHELL, COL_SKIN_RIM, 0.28f)                     // pelvis
+    // ---- the skin: one smooth translucent shell (head, neck, trunk, limbs)
+    val sk = COL_SKIN_SHELL; val rim = COL_SKIN_RIM
+    part(0f, 0.928f, 0f, 0.056f, 0.068f, 0.064f, sk, rim, 0.3f, glow = 0.35f)                                            // head
+    seg(0f, 0.845f, 0f, 0f, 0.878f, 0f, 0.028f, sk, rim, 0.3f, glow = 0.35f)                                              // neck
+    seg(0f, 0.53f, 0f, 0f, 0.78f, 0f, 0.075f, sk, rim, 0.26f, glow = 0.35f)                                               // trunk core
+    part(0f, 0.735f, 0f, 0.13f, 0.095f, 0.072f, sk, rim, 0.24f, glow = 0.35f)                                             // chest and shoulders
+    part(0f, 0.49f, 0f, 0.118f, 0.06f, 0.068f, sk, rim, 0.26f, glow = 0.35f)                                              // pelvis
     for (sgn in SIGNS) {
-        limb(sgn * 0.165f, 0.80f, sgn * 0.19f, 0.63f, 0.04f, COL_SKIN_SHELL, 0.3f)                      // upper arm
-        limb(sgn * 0.19f, 0.63f, sgn * 0.205f, 0.47f, 0.032f, COL_SKIN_SHELL, 0.3f)                     // forearm
-        part(sgn * 0.21f, 0.43f, 0f, 0.022f, 0.04f, 0.012f, COL_SKIN_SHELL, COL_SKIN_RIM, 0.3f)          // hand
-        limb(sgn * 0.072f, 0.47f, sgn * 0.078f, 0.27f, 0.062f, COL_SKIN_SHELL, 0.28f)                   // thigh
-        limb(sgn * 0.078f, 0.27f, sgn * 0.08f, 0.045f, 0.045f, COL_SKIN_SHELL, 0.28f)                   // shin
-        part(sgn * 0.082f, 0.018f, 0.03f, 0.03f, 0.018f, 0.06f, COL_SKIN_SHELL, COL_SKIN_RIM, 0.3f)      // foot
+        seg(sgn * 0.16f, 0.805f, 0f, sgn * 0.19f, 0.635f, 0f, 0.036f, sk, rim, 0.3f, glow = 0.35f)                        // upper arm
+        seg(sgn * 0.19f, 0.635f, 0f, sgn * 0.205f, 0.47f, 0.01f, 0.028f, sk, rim, 0.3f, glow = 0.35f)                     // forearm
+        part(sgn * 0.21f, 0.43f, 0.012f, 0.021f, 0.042f, 0.012f, sk, rim, 0.3f, glow = 0.35f)                             // hand
+        seg(sgn * 0.072f, 0.475f, 0f, sgn * 0.078f, 0.27f, 0f, 0.056f, sk, rim, 0.27f, glow = 0.35f)                      // thigh
+        seg(sgn * 0.078f, 0.27f, 0f, sgn * 0.08f, 0.05f, 0f, 0.040f, sk, rim, 0.28f, glow = 0.35f)                        // lower leg
+        part(sgn * 0.082f, 0.018f, 0.03f, 0.029f, 0.018f, 0.058f, sk, rim, 0.3f, glow = 0.35f)                            // foot
     }
     GLES20.glDepthMask(true)
 }
