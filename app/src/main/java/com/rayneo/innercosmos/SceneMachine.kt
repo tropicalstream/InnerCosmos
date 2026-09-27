@@ -73,6 +73,7 @@ internal val T2_NUCLEUS = floatArrayOf(0.52f, 0.34f, 0.72f, 1f)
 internal val T2_CANALICULUS = floatArrayOf(0.5f, 0.97f, 0.36f, 1f)
 internal val T2_ENDOTHELIUM = floatArrayOf(0.97f, 0.88f, 0.86f, 1f)
 internal val T2_ENDO_NUC = floatArrayOf(0.74f, 0.64f, 0.9f, 1f)
+internal val T2_CENTRAL_VEIN = floatArrayOf(0.5f, 0.12f, 0.2f, 1f)
 internal val T2_KUPFFER = floatArrayOf(0.8f, 0.84f, 0.7f, 1f)
 internal val T2_CAPILLARY = floatArrayOf(0.88f, 0.22f, 0.28f, 1f)
 internal val T2_MESANGIUM = floatArrayOf(0.62f, 0.24f, 0.3f, 1f)
@@ -1341,6 +1342,9 @@ private fun StereoBodyRenderer.t2LiverMeshes(i: Int): Array<ColorVboMesh> = t2Ge
             fen.addAll(listOf(cos(a + da) * 2.02f, sin(a + da) * 2.02f, z + dz, 0.45f, 0.1f, 0.16f, 0.95f))
         }
     }
+    // downstream the sinusoid opens into the central vein (the blood leaves the lobule there)
+    opaque.surf(10, 28, T2_CENTRAL_VEIN) { v, u -> val a = u * 2f * T2PI; val r = 2.2f + 4.5f * t2sm(v); t2v(cos(a) * r, sin(a) * r, 11.2f + 2.4f * v) }
+    lining.surf(6, 28, T2_ENDOTHELIUM, 0.35f) { v, u -> val a = u * 2f * T2PI; val r = 2.1f + 4.5f * t2sm(v); t2v(cos(a) * r, sin(a) * r, 11.2f + 2.4f * v) }
     val bend = t2Bend(i, 30f, 40f)
     val fenA = fen.toFloatArray(); for (k in 0 until fenA.size / 7) bend(fenA, k * 7)
     val micA = micro.toFloatArray(); for (k in 0 until micA.size / 7) bend(micA, k * 7)
