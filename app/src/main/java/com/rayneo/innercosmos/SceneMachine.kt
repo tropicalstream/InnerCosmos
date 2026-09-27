@@ -1393,7 +1393,7 @@ private fun t2OesR(z: Float, zU: Float, zE: Float): Float {
 /** The oesophagus from the upper sphincter to the cardia (baked along the rail; node-1 frame). */
 private fun StereoBodyRenderer.t2OesophagusMesh(i: Int): TriMesh = t2Get("oes$i") {
     val g = T2Geo(); val st = t2Stom(i)
-    val zU = t2UesZ1(i); val zE = st.zEntry + 0.6f; val zZ = st.zEntry - 3.4f     // Z-line inside the lower sphincter
+    val zU = t2UesZ1(i); val zE = st.zEntry + 0.15f; val zZ = st.zEntry - 3.4f     // Z-line inside the lower sphincter
     val rows = 220; val sides = 42
     fun pt(z: Float, th: Float): T2V {
         val lesR = t2OesR(z, zU, zE); val squeezed = 1f - lesR / 1.6f
