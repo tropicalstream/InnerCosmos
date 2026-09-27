@@ -127,7 +127,7 @@ internal val T2_HEPATOCYTE_BACK = floatArrayOf(0.62f, 0.27f, 0.28f, 1f)
 internal val T2_NUCLEUS = floatArrayOf(0.52f, 0.34f, 0.72f, 1f)
 internal val T2_CANALICULUS = floatArrayOf(0.5f, 0.97f, 0.36f, 1f)
 internal val T2_ENDOTHELIUM = floatArrayOf(0.97f, 0.88f, 0.86f, 1f)
-internal val T2_ENDO_NUC = floatArrayOf(0.74f, 0.64f, 0.9f, 1f)
+internal val T2_ENDO_NUC = floatArrayOf(0.8f, 0.7f, 0.85f, 1f)
 internal val T2_CENTRAL_VEIN = floatArrayOf(0.5f, 0.12f, 0.2f, 1f)
 internal val T2_KUPFFER = floatArrayOf(0.7f, 0.8f, 0.66f, 1f)
 internal val T2_HEP_NUC2 = floatArrayOf(0.5f, 0.4f, 0.65f, 1f)
@@ -2113,7 +2113,7 @@ private fun StereoBodyRenderer.t2LiverMeshes(i: Int): Array<ColorVboMesh> = t2Ge
     repeat(8) {
         val a = rnd.nextFloat() * 2f * T2PI; val z = -4f + rnd.nextFloat() * 14f
         val c = t2v(cos(a) * (re - 0.03f), sin(a) * (re - 0.03f), z)
-        lining.ell(c, t2v(-sin(a), cos(a), 0f) * 0.28f, t2v(cos(a), sin(a), 0f) * 0.07f, t2v(0f, 0f, 0.75f), T2_ENDO_NUC, 0.6f, 8, 12)
+        lining.ell(c + t2v(cos(a), sin(a), 0f) * 0.02f, t2v(-sin(a), cos(a), 0f) * 0.22f, t2v(cos(a), sin(a), 0f) * 0.04f, t2v(0f, 0f, 0.6f), T2_ENDO_NUC, 0.45f, 8, 12)
     }
     // fenestrae: dark holes about 0.1 µm across, grouped in sieve plates
     val fen = ArrayList<Float>()
