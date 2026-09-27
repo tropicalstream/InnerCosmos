@@ -3186,6 +3186,10 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
         var v = 0
         var acc = 0f
         val hc = floatArrayOf(1f, 0.78f, 0.45f)
+        // while the pit folds, only the outer (extracellular) leaflet's heads, the one facing the craft in
+        // the pit: half the points on the GL thread through the heaviest stretch of this stop
+        val folding = !pinched && h > -T1_RV + 0.01f
+        val sides = if (folding) floatArrayOf(1f) else SIGNS
         for (k in 0 until m.np) {
             if (k > 0) acc += sqrt((m.pr[k] - m.pr[k - 1]).pow(2) + (m.pz[k] - m.pz[k - 1]).pow(2))
             if (k > 0 && acc < 0.07f) continue
@@ -3196,7 +3200,7 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
                 if (v + 2 >= 8000) break                  // capped: the pit stays light on the GL thread
                 val a = TAU * (j + t1Hash(k * 977 + j)) / cnt
                 val jr = (t1Hash(k * 131 + j * 7) - 0.5f) * 0.04f
-                for (sg in SIGNS) {
+                for (sg in sides) {
                     val rr = r + jr + m.nr[k] * T1_LEAF * sg; val zz = m.pz[k] + m.nz[k] * T1_LEAF * sg
                     v = t1Put(dd, v, cos(a) * rr, sin(a) * rr, -zz, hc, 0.95f)
                 }
