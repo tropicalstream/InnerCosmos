@@ -2074,7 +2074,13 @@ internal fun StereoBodyRenderer.drawTransfusion(n: TourNode, i: Int, seconds: Fl
     }
     block("tf_lead", { redCellCells(b, um, tileL, 16f, 99, true) }, front - 0.5f - tileL, T * 0.05f)
     var k = 1
-    while (front - 0.5f - tileL * (k + 1) > -8f - tileL) { block("tf_d${k % 6}", { redCellCells(b, um, tileL, 5f, 40 + k % 6, false) }, front - 0.5f - tileL * (k + 1), k * 1.7f + T * 0.05f); k++ }
+    while (front - 0.5f - tileL * (k + 1) > -8f - tileL) {
+        // ahead of the eye the new cells are still thin, piling up at the front; behind, the column is full
+        val a = front - 0.5f - tileL * (k + 1)
+        if (a > camA) block("tf_s${k % 6}", { redCellCells(b, um, tileL, 2.2f, 40 + k % 6, false) }, a, k * 1.7f + T * 0.05f)
+        else block("tf_d${k % 6}", { redCellCells(b, um, tileL, 6.5f, 40 + k % 6, false) }, a, k * 1.7f + T * 0.05f)
+        k++
+    }
     val rr = 7.5f / 2f / um
     val R = radiusAt(b, 0f) * 0.97f
     for (q in 0 until 8) {
