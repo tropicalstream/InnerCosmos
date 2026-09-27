@@ -21,12 +21,14 @@ internal val MACHINE_DRIFT: Map<Int, DriftSpec> = mapOf(
     // The oesophagus and stomach at 8 mm a unit: nothing loose is big enough to see; the scene
     // draws the bolus, the chyme and its food particles.
     1 to DriftSpec.NONE,
-    // Gut at 0.8 mm a unit: bacteria and chylomicrons are sub-pixel; the scene draws the chyme.
-    2 to DriftSpec.NONE,
-    // Phage stop at 80 nm a unit: a whole E. coli is 25 units, so only lumen proteins drift.
-    3 to DriftSpec.of(BodyField.PROTEIN to 1f, density = 0.2f, flow = 0.15f),
+    // Gut and colon: at 0.8 mm a unit the bacteria are sub-pixel (the renderer skips them); once the
+    // Mote is 12 µm in the colon (8 µm a unit) they are 2-µm rods everywhere.
+    2 to DriftSpec.of(BodyField.BACTERIUM to 0.85f, BodyField.CHYLE to 0.15f, density = 0.9f, flow = 0.3f),
+    // The rest of the colon hold, then the phage stop at 80 nm a unit, where a whole E. coli is 25
+    // units (too big to drift, so skipped) and only lumen proteins show.
+    3 to DriftSpec.of(BodyField.BACTERIUM to 0.7f, BodyField.CHYLE to 0.1f, BodyField.PROTEIN to 0.2f, density = 0.9f, flow = 0.2f),
     // A liver sinusoid carries mixed portal and arterial blood.
-    4 to DriftSpec.of(BodyField.RED_CELL to 0.95f, BodyField.PLATELET to 0.05f, density = 0.6f, flow = 1.0f, oxy = false),
+    4 to DriftSpec.of(BodyField.RED_CELL to 0.95f, BodyField.PLATELET to 0.05f, density = 0.25f, flow = 1.0f, oxy = false),
     // Bowman's space holds filtrate, not cells (the scene draws the filtrate).
     5 to DriftSpec.NONE,
     // Inside a skeletal-muscle fibre: no blood cells.
@@ -36,7 +38,7 @@ internal val MACHINE_DRIFT: Map<Int, DriftSpec> = mapOf(
     // The nucleoplasm around a gene and the beta cell's ER: at 8 nm a unit a protein is as big as
     // the craft, so nothing drifts (the scenes draw the molecules that matter).
     8 to DriftSpec.NONE,
-    9 to DriftSpec.of(BodyField.PROTEIN to 0.7f, BodyField.VESICLE to 0.3f, density = 0.25f, flow = 0.12f),
+    9 to DriftSpec.of(BodyField.PROTEIN to 0.9f, BodyField.VESICLE to 0.1f, density = 0.2f, flow = 0.12f),
     10 to DriftSpec.NONE,
 )
 
@@ -59,6 +61,18 @@ internal fun t2MachineRadius(p: Float, r: Float): Float {
 }
 internal const val T2_OES_R = 1.9f
 
+/**
+ * The swallow's route: over the epiglottis, then 5 units (4 cm) down behind the larynx into the
+ * upper oesophageal sphincter (rail progress 0.24-0.29 = 11.3-14.5 units past the mouth stop),
+ * easing back to the stops' level along the oesophagus.
+ */
+internal fun t2MachineDropY(p: Float): Float {
+    if (p <= 0f || p >= 1f) return 0f
+    fun sm(a: Float, b: Float, x: Float): Float { val t = ((x - a) / (b - a)).coerceIn(0f, 1f); return t * t * (3f - 2f * t) }
+    return -T2_DIVE * sm(0.25f, 0.279f, p) * (1f - sm(0.42f, 0.66f, p))
+}
+internal const val T2_DIVE = 4.6f
+
 // ------------------------------------------------------------------------------------ palette
 internal val T2_ENAMEL = floatArrayOf(0.97f, 0.95f, 0.88f, 1f)
 internal val T2_ENAMEL_NECK = floatArrayOf(0.93f, 0.88f, 0.74f, 1f)
@@ -73,6 +87,8 @@ internal val T2_PAPILLA = floatArrayOf(0.99f, 0.62f, 0.64f, 1f)
 internal val T2_FUNGIFORM = floatArrayOf(0.98f, 0.58f, 0.62f, 1f)
 internal val T2_FILIFORM = floatArrayOf(0.98f, 0.82f, 0.82f, 1f)
 internal val T2_PHARYNX = floatArrayOf(0.88f, 0.48f, 0.54f, 1f)
+internal val T2_VALLECULA_T = floatArrayOf(0.7f, 0.3f, 0.38f, 1f)
+internal val T2_RIMA = floatArrayOf(0.35f, 0.12f, 0.16f, 1f)
 internal val T2_VALLECULA = floatArrayOf(0.7f, 0.3f, 0.38f, 1f)
 internal val T2_TONSIL = floatArrayOf(0.93f, 0.52f, 0.54f, 1f)
 internal val T2_EPIGLOTTIS = floatArrayOf(0.98f, 0.82f, 0.8f, 1f)
@@ -91,6 +107,8 @@ internal val T2_FOOD_B = floatArrayOf(0.7f, 0.5f, 0.3f, 1f)
 internal val T2_VILLUS = floatArrayOf(0.95f, 0.6f, 0.62f, 1f)
 internal val T2_VILLUS_TIP = floatArrayOf(0.99f, 0.69f, 0.69f, 1f)
 internal val T2_VILLUS_GLASS = floatArrayOf(1f, 0.8f, 0.8f, 1f)
+internal val T2_COLON = floatArrayOf(0.9f, 0.62f, 0.6f, 1f)
+internal val T2_COLON_RIM = floatArrayOf(0.95f, 0.72f, 0.7f, 1f)
 internal val T2_VENULE = floatArrayOf(0.62f, 0.3f, 0.62f, 1f)
 internal val T2_CRYPT = floatArrayOf(0.62f, 0.24f, 0.3f, 1f)
 internal val T2_LACTEAL = floatArrayOf(0.98f, 0.98f, 0.9f, 1f)
@@ -110,10 +128,12 @@ internal val T2_CANALICULUS = floatArrayOf(0.5f, 0.97f, 0.36f, 1f)
 internal val T2_ENDOTHELIUM = floatArrayOf(0.97f, 0.88f, 0.86f, 1f)
 internal val T2_ENDO_NUC = floatArrayOf(0.74f, 0.64f, 0.9f, 1f)
 internal val T2_CENTRAL_VEIN = floatArrayOf(0.5f, 0.12f, 0.2f, 1f)
-internal val T2_KUPFFER = floatArrayOf(0.86f, 0.78f, 0.62f, 1f)
+internal val T2_KUPFFER = floatArrayOf(0.7f, 0.8f, 0.66f, 1f)
+internal val T2_NUCLEOLUS = floatArrayOf(0.25f, 0.15f, 0.4f, 1f)
+internal val T2_SIEVE = floatArrayOf(0.75f, 0.55f, 0.55f, 1f)
 internal val T2_PHAGOSOME = floatArrayOf(0.55f, 0.18f, 0.2f, 1f)
-internal val T2_STELLATE = floatArrayOf(0.9f, 0.82f, 0.62f, 1f)
-internal val T2_LIPID_DROP = floatArrayOf(1f, 0.9f, 0.45f, 1f)
+internal val T2_STELLATE = floatArrayOf(0.8f, 0.78f, 0.55f, 1f)
+internal val T2_LIPID_DROP = floatArrayOf(1f, 0.95f, 0.7f, 1f)
 internal val T2_HEP_NUC = floatArrayOf(0.42f, 0.28f, 0.62f, 1f)
 internal val T2_CAPILLARY = floatArrayOf(0.88f, 0.22f, 0.28f, 1f)
 internal val T2_MESANGIUM = floatArrayOf(0.62f, 0.24f, 0.3f, 1f)
@@ -127,6 +147,10 @@ internal val T2_JG = floatArrayOf(0.95f, 0.85f, 0.6f, 1f)
 internal val T2_JG_GRANULE = floatArrayOf(0.8f, 0.55f, 0.25f, 1f)
 internal val T2_DISTAL = floatArrayOf(0.9f, 0.72f, 0.72f, 1f)
 internal val T2_MACULA = floatArrayOf(0.9f, 0.7f, 0.7f, 1f)
+internal val T2_EFFERENT = floatArrayOf(0.7f, 0.14f, 0.22f, 1f)
+internal val T2_MESANGIUM_D = floatArrayOf(0.45f, 0.12f, 0.16f, 1f)
+internal val T2_CAP_GLASS = floatArrayOf(0.95f, 0.7f, 0.72f, 1f)
+internal val T2_PARIETAL_NUC = floatArrayOf(0.45f, 0.35f, 0.65f, 1f)
 internal val T2_ARTERIOLE = floatArrayOf(0.82f, 0.16f, 0.2f, 1f)
 internal val T2_FILTRATE = floatArrayOf(0.8f, 0.94f, 1f, 1f)
 internal val T2_ZDISC = floatArrayOf(0.96f, 0.88f, 0.52f, 1f)
@@ -137,6 +161,7 @@ internal val T2_MLINE = floatArrayOf(0.6f, 0.22f, 0.3f, 1f)
 internal val T2_TTUBULE = floatArrayOf(0.26f, 0.5f, 0.58f, 1f)
 internal val T2_SR = floatArrayOf(0.42f, 0.66f, 0.72f, 1f)
 internal val T2_CALCIUM = floatArrayOf(0.55f, 0.95f, 1f, 1f)
+internal val T2_MITO_PALE = floatArrayOf(0.9f, 0.62f, 0.45f, 1f)
 internal val T2_MITO = floatArrayOf(0.96f, 0.56f, 0.26f, 1f)
 internal val T2_MITO_CRISTA = floatArrayOf(0.99f, 0.74f, 0.4f, 1f)
 internal val T2_BONE = floatArrayOf(0.96f, 0.91f, 0.78f, 1f)
@@ -153,12 +178,17 @@ internal val T2_BLAST_NUC = floatArrayOf(0.4f, 0.26f, 0.66f, 1f)
 internal val T2_MYELO_CYTO = floatArrayOf(0.88f, 0.78f, 0.92f, 1f)
 internal val T2_MYELO_NUC = floatArrayOf(0.5f, 0.35f, 0.7f, 1f)
 internal val T2_MYELO_GRAN = floatArrayOf(0.95f, 0.55f, 0.65f, 1f)
-internal val T2_NORMO_EARLY = floatArrayOf(0.62f, 0.62f, 0.78f, 1f)
+internal val T2_NORMO_EARLY = floatArrayOf(0.45f, 0.5f, 0.85f, 1f)
 internal val T2_NORMO_LATE = floatArrayOf(0.9f, 0.45f, 0.5f, 1f)
-internal val T2_NORMO_NUC = floatArrayOf(0.3f, 0.15f, 0.4f, 1f)
+internal val T2_NORMO_NUC = floatArrayOf(0.2f, 0.1f, 0.3f, 1f)
 internal val T2_LYMPH_NUC = floatArrayOf(0.35f, 0.3f, 0.7f, 1f)
 internal val T2_MEGA_NUC = floatArrayOf(0.5f, 0.32f, 0.72f, 1f)
-internal val T2_PLATELET = floatArrayOf(0.97f, 0.82f, 0.52f, 1f)
+internal val T2_PLATELET = floatArrayOf(0.8f, 0.7f, 0.9f, 1f)
+internal val T2_PLT_GRAN = floatArrayOf(0.55f, 0.35f, 0.65f, 1f)
+internal val T2_LYMPH_CYTO = floatArrayOf(0.72f, 0.8f, 0.98f, 1f)
+internal val T2_LYMPH_NUC2 = floatArrayOf(0.25f, 0.22f, 0.55f, 1f)
+internal val T2_BCELL_NUC = floatArrayOf(0.3f, 0.3f, 0.7f, 1f)
+internal val T2_BCELL_CYTO = floatArrayOf(0.8f, 0.9f, 1f, 1f)
 internal val T2_MACROPHAGE = floatArrayOf(0.82f, 0.84f, 0.7f, 1f)
 internal val T2_PROERYTHRO = floatArrayOf(0.56f, 0.46f, 0.86f, 1f)
 internal val T2_NORMOBLAST = floatArrayOf(0.9f, 0.4f, 0.46f, 1f)
@@ -167,18 +197,18 @@ internal val T2_MYELOID = floatArrayOf(0.84f, 0.72f, 0.92f, 1f)
 internal val T2_LYMPHOID = floatArrayOf(0.72f, 0.78f, 0.98f, 1f)
 internal val T2_FAT = floatArrayOf(1f, 0.96f, 0.8f, 1f)
 internal val T2_STROMA = floatArrayOf(0.92f, 0.86f, 0.7f, 1f)
-internal val T2_HISTONE = floatArrayOf(0.64f, 0.52f, 0.86f, 1f)
+internal val T2_HISTONE = floatArrayOf(0.5f, 0.4f, 0.75f, 1f)
 internal val T2_DNA_WRAP = floatArrayOf(0.62f, 0.82f, 1f, 1f)
 internal val T2_SEG_SPACER = floatArrayOf(0.55f, 0.55f, 0.65f, 1f)
 internal val T2_SEG_V = floatArrayOf(1f, 0.35f, 0.55f, 1f)
 internal val T2_SEG_D = floatArrayOf(0.35f, 1f, 0.45f, 1f)
 internal val T2_SEG_J = floatArrayOf(0.35f, 0.6f, 1f, 1f)
 internal val T2_SEG_C = floatArrayOf(0.75f, 0.45f, 1f, 1f)
-internal val T2_BASEPAIR = floatArrayOf(0.55f, 0.55f, 0.62f, 1f)
+internal val T2_BASEPAIR = floatArrayOf(0.85f, 0.85f, 0.9f, 1f)
 internal val T2_DNA_GAP = floatArrayOf(0.5f, 0.5f, 0.55f, 1f)
 internal val T2_RSS = floatArrayOf(1f, 1f, 1f, 1f)
-internal val T2_RAG1 = floatArrayOf(0.99f, 0.8f, 0.36f, 1f)
-internal val T2_RAG2 = floatArrayOf(0.96f, 0.58f, 0.3f, 1f)
+internal val T2_RAG1 = floatArrayOf(1f, 0.82f, 0.3f, 1f)
+internal val T2_RAG2 = floatArrayOf(0.55f, 0.75f, 1f, 1f)
 internal val T2_KU = floatArrayOf(0.52f, 0.92f, 0.9f, 1f)
 internal val T2_LIGASE = floatArrayOf(0.86f, 0.96f, 0.56f, 1f)
 internal val T2_TUBULIN = floatArrayOf(0.5f, 0.88f, 0.66f, 1f)
@@ -187,7 +217,7 @@ internal val T2_DYNACTIN = floatArrayOf(0.6f, 0.6f, 0.95f, 1f)
 internal val T2_ADAPTOR = floatArrayOf(0.8f, 0.7f, 1f, 1f)
 internal val T2_GTP_CAP = floatArrayOf(0.95f, 1f, 0.75f, 1f)
 internal val T2_GTURC = floatArrayOf(0.62f, 0.62f, 0.95f, 1f)
-internal val T2_DYNEIN = floatArrayOf(0.55f, 0.75f, 1f, 1f)
+internal val T2_DYNEIN = floatArrayOf(0.45f, 0.6f, 1f, 1f)
 internal val T2_LYSOSOME = floatArrayOf(0.9f, 0.48f, 0.6f, 1f)
 internal val T2_LYSO_CORE = floatArrayOf(0.66f, 0.32f, 0.44f, 1f)
 internal val T2_ER = floatArrayOf(0.62f, 0.66f, 0.95f, 1f)
@@ -198,8 +228,9 @@ internal val T2_GOLGI_TRANS = floatArrayOf(0.98f, 0.62f, 0.3f, 1f)
 internal val T2_NPC = floatArrayOf(0.7f, 0.7f, 0.92f, 1f)
 internal val T2_NPC_CYTO = floatArrayOf(0.82f, 0.78f, 0.98f, 1f)
 internal val T2_ENVELOPE = floatArrayOf(0.54f, 0.58f, 0.86f, 1f)
-internal val T2_POL2 = floatArrayOf(0.42f, 0.8f, 0.62f, 1f)
+internal val T2_POL2 = floatArrayOf(0.35f, 0.55f, 0.95f, 1f)
 internal val T2_MRNA = floatArrayOf(0.98f, 0.42f, 0.72f, 1f)
+internal val T2_SEC61_RIM = floatArrayOf(0.85f, 0.85f, 1f, 1f)
 internal val T2_SEC61 = floatArrayOf(0.64f, 0.64f, 0.98f, 1f)
 internal val T2_SIGNAL = floatArrayOf(1f, 0.96f, 0.3f, 1f)
 internal val T2_SIGNAL_GLOW = floatArrayOf(1f, 1f, 0.75f, 1f)
@@ -208,7 +239,7 @@ internal val T2_COPII = floatArrayOf(0.95f, 0.85f, 0.4f, 1f)
 internal val T2_COPII_VES = floatArrayOf(0.7f, 0.8f, 1f, 1f)
 internal val T2_CHAIN_A = floatArrayOf(1f, 0.74f, 0.42f, 1f)
 internal val T2_CHAIN_B = floatArrayOf(0.5f, 0.9f, 0.8f, 1f)
-internal val T2_BIP = floatArrayOf(0.6f, 0.92f, 0.6f, 1f)
+internal val T2_BIP = floatArrayOf(0.65f, 0.95f, 0.55f, 1f)
 internal val T2_GRANULE = floatArrayOf(0.8f, 0.92f, 0.96f, 1f)
 internal val T2_INSULIN = floatArrayOf(0.96f, 0.88f, 0.5f, 1f)
 internal val T2_PM = floatArrayOf(0.62f, 0.82f, 0.96f, 1f)
@@ -383,6 +414,18 @@ private class T2Geo {
         for (k in 0 until seg) {
             val a0 = 2f * T2PI * k / seg; val a1 = 2f * T2PI * (k + 1) / seg
             tri(c, c + e1 * (cos(a0) * r) + e2 * (sin(a0) * rb), c + e1 * (cos(a1) * r) + e2 * (sin(a1) * rb), col, al)
+        }
+    }
+
+    /** A low mucosal fold (half-ellipse section: half-width [hw], height [ht]) along [pts] on a wall whose axis passes [axis] (along z). */
+    fun foldAlong(pts: List<T2V>, axis: T2V, hw: Float, ht: Float, col: FloatArray) {
+        val m = pts.size
+        surf(m - 1, 8, col) { u, v ->
+            val f = u * (m - 1); val k = min(f.toInt(), m - 2); val t = f - k
+            val p = pts[k] + (pts[k + 1] - pts[k]) * t; val tg = (pts[k + 1] - pts[k]).unit()
+            val out = t2v(p.x - axis.x, p.y - axis.y, 0f).unit()
+            val side = (tg cross out).unit(); val vv = v * 2f - 1f
+            p + side * (hw * vv) - out * (ht * sqrt(max(0f, 1f - vv * vv)) - 0.05f)
         }
     }
 
@@ -803,7 +846,7 @@ private fun T2Geo.crown(base: T2V, e1: T2V, e2: T2V, e3: T2V, tt: T2Tooth) {
     }
     val sig = 0.34f * min(rim[0], rim[1]).coerceAtLeast(0.05f)
     val tmp = FloatArray(2)
-    surf(22, 16, T2_ENAMEL, 1f, { i -> if (i <= 4) T2_ENAMEL_NECK else T2_ENAMEL }) { u, v ->
+    surf(34, 16, T2_ENAMEL, 1f, { i -> if (i <= 6) T2_ENAMEL_NECK else T2_ENAMEL }) { u, v ->
         val ph = 2f * T2PI * v; val c = cos(ph); val s = sin(ph)
         val cx = sign(c) * abs(c).pow(2f / ex); val cz = sign(s) * abs(s).pow(2f / ex)
         val lx: Float; val lz: Float; val h: Float
@@ -826,6 +869,7 @@ private fun T2Geo.crown(base: T2V, e1: T2V, e2: T2V, e3: T2V, tt: T2Tooth) {
     }
 }
 
+private const val T2_UES_Z = 13.8f
 private const val T2_PH_RX = 2.85f
 private const val T2_PH_RY = 3.2f
 private const val T2_PH_CY = -0.3f
@@ -905,26 +949,39 @@ private fun StereoBodyRenderer.t2MouthMesh(i: Int): TriMesh = t2Get("mouth$i") {
     g.path((0..12).map { q -> val z = 1.4f + q / 12f * 4.7f; t2v(0f, palY(0f, z) - 0.03f, z) }, { 0.045f }, T2_RUGA, 1f, 5, true)
     g.ell(t2v(0f, palY(0f, 1.35f) - 0.06f, 1.42f), t2v(0.22f, 0f, 0f), t2v(0f, 0.1f, 0f), t2v(0f, 0f, 0.3f), T2_RUGA)
     // ---- the oropharynx behind the fauces: its lateral walls (an elliptic tube of mucosa), on which
-    //      the palatoglossal (front) and palatopharyngeal (back) arches stand out as folds running
-    //      down from the free edge of the soft palate to the side of the tongue, the palatine tonsil
-    //      in the fossa between them; the posterior pharyngeal wall closes the view behind.
+    //      the palatoglossal (front) and palatopharyngeal (back) arches rise as low mucosal folds
+    //      running down from the free edge of the soft palate to the side of the tongue, the
+    //      palatine tonsil in the fossa between them.
     g.surf(10, 40, T2_PHARYNX) { v, u ->
-        val z = 7.6f + 4.8f * v; val a = u * 2f * T2PI
+        val z = 7.6f + 4.7f * v; val a = u * 2f * T2PI
         t2v(cos(a) * T2_PH_RX, T2_PH_CY + sin(a) * T2_PH_RY, z)
     }
     for (sd in SIGNS) {
-        val front = (0..8).map { q -> val t = q / 8f; val y = 1.9f - 3.4f * t; t2v(sd * t2PharynxX(y), y, 8.7f - 0.9f * t) }
-        val back = (0..8).map { q -> val t = q / 8f; val y = 2.0f - 4.6f * t; t2v(sd * t2PharynxX(y), y, 9.1f + 1.7f * t) }
-        g.path(listOf(t2v(sd * 1.9f, 1.9f, 8.7f)) + front, { 0.26f }, T2_SOFT_PALATE, 1f, 8, true)
-        g.path(listOf(t2v(sd * 1.9f, 1.95f, 9.1f)) + back, { 0.26f }, T2_SOFT_PALATE, 1f, 8, true)
+        val front = listOf(t2v(sd * 1.9f, 1.9f, 8.7f)) + (0..8).map { q -> val t = q / 8f; val y = 1.85f - 3.35f * t; t2v(sd * t2PharynxX(y), y, 8.7f - 0.9f * t) }
+        val back = listOf(t2v(sd * 1.9f, 1.95f, 9.1f)) + (0..8).map { q -> val t = q / 8f; val y = 1.9f - 4.5f * t; t2v(sd * t2PharynxX(y), y, 9.1f + 1.7f * t) }
+        for (pl in listOf(front, back)) g.foldAlong(pl, t2v(0f, T2_PH_CY, 0f), 0.25f, 0.2f, T2_SOFT_PALATE)
         g.ell(t2v(sd * (t2PharynxX(0.15f) - 0.15f), 0.15f, 9.2f), t2v(0.45f, 0f, 0f), t2v(0f, 1.0f, 0f), t2v(0f, 0f, 0.6f), T2_TONSIL)
     }
-    // posterior pharyngeal wall: a gently dished curtain, open only round the rail where the
-    // laryngopharynx leads on toward the oesophagus
-    g.surf(6, 40, T2_PHARYNX) { v, u ->
-        val a = u * 2f * T2PI; val r = 1.3f + v * 3.4f
-        val x = cos(a) * min(r, T2_PH_RX + 0.2f); val y = T2_PH_CY + sin(a) * min(r, T2_PH_RY + 0.2f)
-        t2v(x, y, 12.3f - 0.4f * v * v)
+    // ---- behind the larynx the oropharynx narrows down and back into the laryngopharynx: its
+    //      posterior wall faces us behind the uvula and slopes down to the upper oesophageal
+    //      sphincter, a transverse slit about 4 cm below the mouth, behind the cricoid; the
+    //      swallow goes over the epiglottis and down behind the larynx into it.
+    val slitY = t2RailYAtRigidZ(i, T2_UES_Z)
+    g.surf(18, 40, T2_PHARYNX) { v, u ->
+        val sv = t2sm(v); val z = 12.3f + (T2_UES_Z - 12.3f) * v; val a = u * 2f * T2PI
+        val w = T2_PH_RX + (1.3f - T2_PH_RX) * sv; val h = T2_PH_RY + (0.9f - T2_PH_RY) * sv
+        t2v(cos(a) * w, T2_PH_CY + (slitY - T2_PH_CY) * sv + sin(a) * h, z)
+    }
+    for (sd in SIGNS) {   // piriform recesses: gutters either side of the larynx, down to the slit
+        val pts = (0..10).map { q -> val t = q / 10f; t2v(sd * (1.35f - 0.55f * t), -2.4f + (slitY + 0.3f + 2.4f) * t, 10.6f + (T2_UES_Z - 0.4f - 10.6f) * t) }
+        g.foldAlong(pts, t2v(0f, -1f, 0f), 0.35f, -0.25f, T2_VALLECULA)
+    }
+    run {   // the upper oesophageal sphincter (cricopharyngeus), a slit-shaped rim
+        val c = t2v(0f, slitY, T2_UES_Z)
+        g.surf(28, 8, T2_OES_MUSCLE) { u, v ->
+            val a = u * 2f * T2PI; val b = v * 2f * T2PI
+            t2v(c.x + cos(a) * (1.3f + 0.2f * cos(b)), c.y + sin(a) * (0.9f + 0.2f * cos(b)), c.z + 0.2f * sin(b))
+        }
     }
     // ---- the tongue filling the floor of the mouth inside the lower arch: a convex dorsum with a
     //      median groove, the V of circumvallate papillae at the back of its oral part, fungiform
@@ -935,9 +992,11 @@ private fun StereoBodyRenderer.t2MouthMesh(i: Int): TriMesh = t2Get("mouth$i") {
         t2v(x, t2TongueY(xn, z), z)
     }
     g.ell(t2v(0f, -1.95f, 1.52f), t2v(0.95f, 0f, 0f), t2v(0f, 0.5f, 0f), t2v(0f, 0f, 0.45f), T2_TONGUE)
-    for (q in -4..4) {
+    for (q in -4..4) {   // circumvallate papillae: flat discs flush with the dorsum, each in its trench
         val side = q / 4f; val z = 6.6f - 0.85f * abs(side); val x = 1.45f * side
-        g.ball(t2v(x, t2TongueY(x / t2TongueHalf(z), z) + 0.06f, z), 0.17f, T2_PAPILLA, 1f, 5, 8)
+        val y = t2TongueY(x / t2TongueHalf(z), z)
+        g.slab(t2v(x, y - 0.01f, z), t2v(0f, 1f, 0f), 0.13f, 0.05f, T2_PAPILLA, 1f, 12)
+        g.torus(t2v(x, y - 0.03f, z), t2v(0f, 1f, 0f), 0.17f, 0.035f, T2_VALLECULA_T, 1f, 14, 5)
     }
     run {
         val rnd = java.util.Random(7L)
@@ -968,7 +1027,7 @@ private fun StereoBodyRenderer.t2MouthMesh(i: Int): TriMesh = t2Get("mouth$i") {
         t2v(c * rx, s * ry, -0.3f + 0.9f * t * t)
     }
     for (sd in SIGNS) g.path(listOf(t2v(sd * 0.36f, 2.3f, -0.52f), t2v(sd * 0.3f, 3.2f, -0.5f), t2v(sd * 0.27f, 4.0f, -0.42f)), { 0.11f }, T2_SKIN, 1f, 6, true)
-    t2Bake(g, i, 3f, 9f)
+    TriMesh(g.baked(t2Bend(i, 0f, 0f)))
 }
 
 /** Filiform papillae: the velvety pile over the front two-thirds of the tongue (points). */
@@ -978,7 +1037,7 @@ private fun StereoBodyRenderer.t2Filiform(i: Int): PointMesh = t2Get("filiform$i
         val z = 1.7f + rnd.nextFloat() * 4.6f; val xn = (rnd.nextFloat() * 2f - 1f) * 0.9f
         out.addAll(listOf(xn * t2TongueHalf(z), t2TongueY(xn, z) + 0.02f, z, T2_FILIFORM[0], T2_FILIFORM[1], T2_FILIFORM[2], 0.85f))
     }
-    val a = out.toFloatArray(); val b = t2Bend(i, 3f, 9f); for (k in 0 until a.size / 7) b(a, k * 7); PointMesh(a)
+    val a = out.toFloatArray(); val b = t2Bend(i, 0f, 0f); for (k in 0 until a.size / 7) b(a, k * 7); PointMesh(a)
 }
 
 /** The soft palate and uvula, hinged at the back of the hard palate (origin), swung up in the swallow. */
@@ -1041,22 +1100,25 @@ internal fun StereoBodyRenderer.drawMouth(n: TourNode, i: Int, seconds: Float) {
         val wave = cyc / 0.22f
         if (wave < 1f) {
             val zb = 2f + 6.5f * t2sm(wave); val env = sin(T2PI * wave)
-            val fr = t2Frame(i, zb); t2Model(fr, 0f, t2TongueMid(zb) - 0.42f + 0.4f * env); t2Draw(t2TongueWave())
+            t2Model(t2Rigid(i, zb), 0f, t2TongueMid(zb) - 0.42f + 0.4f * env); t2Draw(t2TongueWave())
         }
         val tilt = t2sm((cyc - 0.14f) / 0.1f) * (1f - t2sm((cyc - 0.36f) / 0.14f))
         t2DrawWorld(t2Filiform(i), false, 2f, true)
         // safeguards: the soft palate swings up to seal the nasopharynx, the larynx rises and
         // tucks under the epiglottis, the vocal folds close, the epiglottis folds down over the inlet
-        val fp = t2Frame(i, 6.3f); t2Model(fp, 0f, 3.7f); Matrix.rotateM(model, 0, -25f * tilt, 1f, 0f, 0f); t2Draw(t2SoftPalate())
-        val ly = -2.65f + 0.3f * tilt; val lz = 10.45f - 0.2f * tilt
-        val fl = t2Frame(i, lz); t2Model(fl, 0f, ly); t2Draw(t2Larynx())
+        t2Model(t2Rigid(i, 6.3f), 0f, 3.7f); Matrix.rotateM(model, 0, -25f * tilt, 1f, 0f, 0f); t2Draw(t2SoftPalate())
+        val ly = -2.2f + 0.3f * tilt; val lz = 10.45f - 0.2f * tilt
+        t2Model(t2Rigid(i, lz), 0f, ly); t2Draw(t2Larynx())
         val close = tilt
         for (sd in SIGNS) {
-            val a0 = t2W(t2Frame(i, lz + 0.25f), sd * 0.05f, ly - 0.75f).copyOf()
-            val a1 = t2W(t2Frame(i, lz + 1.45f), sd * (0.5f - 0.45f * close), ly - 0.75f).copyOf()
-            drawStrut(a0[0], a0[1], a0[2], a1[0], a1[1], a1[2], 0.1f, T2_VOCAL_CORD, T2_VOCAL_CORD, 0.2f)
+            val a0 = t2W(t2Rigid(i, lz + 0.25f), sd * 0.06f, ly - 0.75f).copyOf()
+            val a1 = t2W(t2Rigid(i, lz + 1.45f), sd * (0.5f - 0.44f * close), ly - 0.75f).copyOf()
+            drawStrut(a0[0], a0[1], a0[2], a1[0], a1[1], a1[2], 0.14f, T2_VOCAL_CORD, T2_VOCAL_CORD, 0.2f)
         }
-        val fe = t2Frame(i, 10.15f); t2Model(fe, 0f, -2.8f + 0.3f * tilt)
+        // the rima glottidis between them: open at rest, closed to a line in the swallow
+        val fr = t2Rigid(i, lz + 0.85f, FloatArray(13))
+        t2Basis(t2W(fr, 0f, ly - 0.8f).copyOf(), fr[9], fr[10], fr[11], fr[3], fr[4], fr[5], 0.4f * (1f - 0.9f * close), 0.6f, 0.02f, sphere, T2_RIMA, T2_RIMA)
+        t2Model(t2Rigid(i, 10.15f), 0f, -2.8f + 0.3f * tilt)
         Matrix.rotateM(model, 0, 8f + 92f * tilt, 1f, 0f, 0f)
         t2Draw(t2Epiglottis())
     }
@@ -1081,97 +1143,201 @@ private fun StereoBodyRenderer.t2ArcAtP(i: Int, p: Float): Float {
     return rail.aMin + (lo + t) * rail.step
 }
 
-private const val T2_UES = 12.4f      // arcs from the mouth (stop 0) along the rail
-private const val T2_LES = 43.4f
-private const val T2_ZLINE = 44.2f
-private const val T2_CARDIA = 46.5f
+/** The J-shaped stomach, swept along a curved centreline (node-1 rigid frame), shared by its meshes and animation. */
+private class T2Stom(val c: Array<T2V>, val t: Array<T2V>, val nrm: Array<T2V>, val r: FloatArray, val zEntry: Float, val pyl: T2V, val pylT: T2V, val sWave0: Int, val sPyl: Int)
 
-private fun t2OesR(a0: Float): Float = when {
-    a0 < T2_UES + 1f -> 1.35f
-    a0 < T2_UES + 1.8f -> 1.35f + 0.25f * t2sm((a0 - T2_UES - 1f) / 0.8f)
-    a0 < T2_LES - 0.6f -> 1.6f
-    a0 < T2_LES + 0.6f -> 1.6f - 0.25f * sin(T2PI * (a0 - T2_LES + 0.6f) / 1.2f)
-    else -> 1.6f + 3.4f * t2sm((a0 - T2_LES - 0.6f) / (T2_CARDIA + 1.5f - T2_LES - 0.6f))
+/**
+ * Centreline control points (x, y, z, radius) in the stomach stop's rigid frame, the rail running
+ * near z: the fundus bulging up and to port above the cardia, the body falling away below (the
+ * greater curvature), the antrum sweeping back up to the pylorus on the rail ahead.
+ */
+private val T2_STOM_CP = arrayOf(
+    floatArrayOf(-2.6f, 7.4f, -13.4f, 0.1f), floatArrayOf(-2.5f, 5.6f, -13.2f, 2.6f), floatArrayOf(-2.3f, 3.2f, -12.4f, 3.9f),
+    floatArrayOf(-1.9f, -0.6f, -9.4f, 5.3f), floatArrayOf(-1.2f, -3.8f, -4.2f, 6.3f), floatArrayOf(-0.3f, -4.6f, 1.0f, 6.5f),
+    floatArrayOf(0.7f, -3.4f, 5.4f, 4.6f), floatArrayOf(0.9f, -1.3f, 8.4f, 2.5f))
+
+private fun StereoBodyRenderer.t2Stom(i: Int): T2Stom = t2Get("stomdata$i") {
+    val off = FloatArray(2)
+    // the last control points follow the rail itself: the pyloric canal and the duodenal bulb
+    val cps = ArrayList<FloatArray>(); for (q in T2_STOM_CP) cps.add(q)
+    for ((z, r) in listOf(10.6f to 1.0f, 11.6f to 1.3f, 13.5f to 1.45f)) { t2RailOffset(i, z, off); cps.add(floatArrayOf(off[0], off[1], z, r)) }
+    val n = cps.size; val samples = 120
+    val c = Array(samples + 1) { t2v(0f, 0f, 0f) }; val rr = FloatArray(samples + 1)
+    for (k in 0..samples) {
+        val f = k.toFloat() / samples * (n - 1); val i1 = min(f.toInt(), n - 2); val tt = f - i1
+        val p0 = cps[max(i1 - 1, 0)]; val p1 = cps[i1]; val p2 = cps[i1 + 1]; val p3 = cps[min(i1 + 2, n - 1)]
+        val v = FloatArray(4) { q -> 0.5f * ((2f * p1[q]) + (-p0[q] + p2[q]) * tt + (2f * p0[q] - 5f * p1[q] + 4f * p2[q] - p3[q]) * tt * tt + (-p0[q] + 3f * p1[q] - 3f * p2[q] + p3[q]) * tt * tt * tt) }
+        c[k] = t2v(v[0], v[1], v[2]); rr[k] = max(0.05f, v[3])
+    }
+    val t = Array(samples + 1) { k -> (c[min(k + 1, samples)] - c[max(k - 1, 0)]).unit() }
+    val nr = arrayOfNulls<T2V>(samples + 1)
+    nr[0] = (t2v(-1f, 0f, 0f) - t[0] * (t2v(-1f, 0f, 0f) dot t[0])).unit()
+    for (k in 1..samples) { val q = nr[k - 1]!! - t[k] * (nr[k - 1]!! dot t[k]); nr[k] = if (q.len() < 1e-5f) t2perp(t[k]) else q.unit() }
+    // where the rail enters the chamber (the cardia)
+    fun inside(p: T2V): Boolean { for (k in 0..samples) if ((p - c[k]).len() < rr[k] * 0.98f) return true; return false }
+    var ze = -18f; while (ze < -6f) { t2RailOffset(i, ze, off); if (inside(t2v(off[0], off[1], ze))) break; ze += 0.05f }
+    val sW = (0..samples).minByOrNull { abs(c[it].z + 4f) + (if (c[it].y > 0f) 99f else 0f) } ?: 40
+    val sP = (0..samples).minByOrNull { abs(c[it].z - 10.6f) } ?: samples
+    T2Stom(c, t, Array(samples + 1) { nr[it]!! }, rr, ze, c[sP], t[sP], sW, sP)
+}
+
+/** A point on the stomach wall at centreline sample [k], angle [ph] from its reference normal, [inset] toward the axis. */
+private fun t2StomWall(st: T2Stom, k: Int, ph: Float, inset: Float): T2V {
+    val n = st.nrm[k]; val b = st.t[k] cross n
+    return st.c[k] + (n * cos(ph) + b * sin(ph)) * (st.r[k] - inset)
+}
+
+/** Ruga height at centreline fraction [s] and wall point [p] (heavier toward the greater curvature, i.e. far from the rail). */
+private fun t2RugaH(s: Float, distFromRail: Float): Float {
+    val along = t2sm((s - 0.08f) / 0.06f) * (1f - t2sm((s - 0.6f) / 0.12f))
+    return along * (0.15f + 0.25f * t2sm((distFromRail - 3f) / 5f))
+}
+
+private fun StereoBodyRenderer.t2StomachMeshes(i: Int): Array<ColorVboMesh> = t2Get("stomach$i") {
+    val st = t2Stom(i); val ns = st.c.size - 1
+    val g = T2Geo(); val glass = T2Geo(); val bits = T2Geo(); val raw = T2Geo(); val rnd = java.util.Random(301L)
+    val off = FloatArray(2)
+    val sides = 176
+    // the wall: gastric mucosa with 14 rugae raised out of it, running lengthwise, heaviest along the
+    // greater curvature, smoothing out in the antrum; 8 folds converging on the pyloric opening
+    val w = sides + 1; val P = FloatArray((ns + 1) * w * 3)
+    for (k in 0..ns) {
+        val sF = k.toFloat() / ns; t2RailOffset(i, st.c[k].z, off)
+        for (j in 0..sides) {
+            val ph = 2f * T2PI * j / sides
+            val base = t2StomWall(st, k, ph, 0f)
+            val dr = sqrt((base.x - off[0]).pow(2) + (base.y - off[1]).pow(2))
+            var fold = 0f
+            val hR = t2RugaH(sF, dr)
+            if (hR > 0.001f) for (f in 0 until 14) {
+                val phk = f * 2f * T2PI / 14f + 0.05f * sin(sF * 22f + f * 1.7f)
+                var d = abs(ph - phk) % (2f * T2PI); if (d > T2PI) d = 2f * T2PI - d
+                val arc = d * st.r[k]; fold += hR * exp(-(arc / 0.22f).pow(2))
+            }
+            if (k > st.sPyl - 12) {   // pyloric folds
+                val pf = t2sm((k - (st.sPyl - 12f)) / 8f) * (1f - t2sm((k - st.sPyl - 2f) / 3f))
+                fold += pf * 0.3f * (0.5f + 0.5f * cos(8f * ph)) * min(1f, st.r[k] / 1.2f)
+            }
+            val p = t2StomWall(st, k, ph, min(fold, st.r[k] * 0.45f)); val o = (k * w + j) * 3
+            P[o] = p.x; P[o + 1] = p.y; P[o + 2] = p.z
+        }
+    }
+    raw.grid(ns, sides, P, T2_GASTRIC, 1f) { k -> if (k > st.sPyl - 4 && k < st.sPyl + 3) T2_PYLORUS else T2_GASTRIC }
+    // open the cardia where the oesophagus comes in
+    g.appendWhere(raw) { x, y, z -> if (z > st.zEntry + 3f) true else { t2RailOffset(i, z, off); (x - off[0]).pow(2) + (y - off[1]).pow(2) > 2.0f * 2.0f } }
+    // the areae gastricae: shallow grooves outlining 2-6 mm mamillated patches
+    val grooves = ArrayList<Float>()
+    val nodes = HashMap<Long, T2V>()
+    fun node(k: Int, j: Int): T2V = nodes.getOrPut(k * 1000L + j) {
+        val kk = (k + (rnd.nextFloat() - 0.5f) * 0.9f).coerceIn(0f, ns.toFloat()); val ph = (j + (rnd.nextFloat() - 0.5f) * 0.9f) * 2f * T2PI / 64f
+        t2StomWall(st, kk.toInt().coerceIn(0, ns), ph, 0.03f)
+    }
+    for (k in (ns * 0.1f).toInt() until (ns * 0.72f).toInt() step 2) for (j in 0 until 64) {
+        val a = node(k, j); val b = node(k, (j + 1) % 64); val c2 = node(k + 2, j)
+        for ((u, v) in listOf(a to b, a to c2)) {
+            if ((u - v).len() > 1.2f) continue
+            grooves.addAll(listOf(u.x, u.y, u.z, 0.7f, 0.3f, 0.3f, 0.35f, v.x, v.y, v.z, 0.7f, 0.3f, 0.3f, 0.35f))
+        }
+    }
+    // the mucus blanket, a fraction of a millimetre thick over the mucosa
+    for (k in 0 until ns step 2) for (j in 0 until 60) {
+        val a0 = 2f * T2PI * j / 60f; val a1 = 2f * T2PI * (j + 1) / 60f; val k1 = min(ns, k + 2)
+        val q = listOf(t2StomWall(st, k, a0, 0.06f), t2StomWall(st, k1, a0, 0.06f), t2StomWall(st, k1, a1, 0.06f), t2StomWall(st, k, a1, 0.06f))
+        if (q[0].z < st.zEntry + 3f) { t2RailOffset(i, q[0].z, off); if ((q[0].x - off[0]).pow(2) + (q[0].y - off[1]).pow(2) < 4.4f) continue }
+        glass.quad(q[0], q[1], q[2], q[3], T2_MUCUS, 0.3f)
+    }
+    // a pool of acid chyme along the greater curvature, food particles in and on it
+    val yPool = -7.2f
+    fun inStom(p: T2V): Boolean { for (k in 0..ns) if ((p - st.c[k]).len() < st.r[k] * 0.93f) return true; return false }
+    for (xi in -24 until 24) for (zi in -30 until 26) {
+        val x0 = xi * 0.4f; val z0 = zi * 0.4f
+        val q = listOf(t2v(x0, yPool, z0), t2v(x0 + 0.4f, yPool, z0), t2v(x0 + 0.4f, yPool, z0 + 0.4f), t2v(x0, yPool, z0 + 0.4f))
+        if (q.all { inStom(it) }) glass.quad(q[0], q[1], q[2], q[3], T2_CHYME_ACID, 0.55f)
+    }
+    var placed = 0; var tries = 0
+    while (placed < 40 && tries < 3000) {
+        tries++
+        val c2 = t2v((rnd.nextFloat() * 2f - 1f) * 7f, yPool - rnd.nextFloat() * 1.6f + 0.15f, -8f + rnd.nextFloat() * 14f)
+        if (!inStom(c2)) continue
+        val s0 = 0.1f + rnd.nextFloat() * 0.25f
+        bits.ell(c2, t2v(s0 * (1f + rnd.nextFloat()), 0f, 0f), t2v(0f, s0 * 0.7f, 0f), t2v(0f, 0f, s0), if (placed % 3 == 0) T2_FOOD_B else T2_FOOD_A, 1f, 4, 6)
+        placed++
+    }
+    val rigid = t2Bend(i, 0f, 0f)
+    val gA = grooves.toFloatArray(); for (k in 0 until gA.size / 7) rigid(gA, k * 7)
+    arrayOf(TriMesh(g.baked(rigid)), TriMesh(glass.baked(rigid)), TriMesh(bits.baked(rigid)), LineMesh(gA))
+}
+
+/** The pyloric sphincter seen from the lumen: mucosa puckered into 8 folds round an opening of radius [open] (outer radius 1). */
+private fun StereoBodyRenderer.t2PylorusIris(open: Float): TriMesh = t2Get("pyl$open") {
+    val g = T2Geo()
+    g.surf(8, 64, T2_PYLORUS) { u, v ->
+        val a = v * 2f * T2PI; val r = 1f + (open - 1f) * u
+        val fold = 0.12f * (0.5f + 0.5f * cos(8f * a)) * sin(T2PI * u)
+        t2v(cos(a) * (r - fold), sin(a) * (r - fold), 0.35f * u * u - fold)
+    }
+    TriMesh(g.baked())
+}
+
+/**
+ * A peristaltic constriction of the wall itself (a unit-radius tube section, z -1.5..1.5): the
+ * wall narrows to [depth] of its radius at the middle, gathering the lining into [folds] folds.
+ */
+private fun StereoBodyRenderer.t2Constriction(depth: Float, folds: Int, col: FloatArray): TriMesh = t2Get("constr$depth.$folds") {
+    val g = T2Geo()
+    // fading out at both ends into the wall it belongs to
+    g.surf(16, 56, col, 1f, { k -> val t = k / 16f; floatArrayOf(col[0], col[1], col[2], t2sm(min(t, 1f - t) / 0.3f)) }) { u, v ->
+        val z = (u * 2f - 1f) * 1.8f; val a = v * 2f * T2PI
+        val squeeze = (1f - depth) * exp(-(z / 0.75f).pow(2))
+        val r = (1f - squeeze) * (1f - 0.12f * squeeze * (0.5f + 0.5f * cos(folds * a)))
+        t2v(cos(a) * r * 0.99f, sin(a) * r * 0.99f, z)
+    }
+    TriMesh(g.baked())
+}
+
+/** Oesophageal wall radius at [z] in the stomach stop's frame ([zU] the upper sphincter, [zE] the cardia). */
+private fun t2OesR(z: Float, zU: Float, zE: Float): Float {
+    val zL = zE - 3f
+    return when {
+        z < zU + 1.2f -> 0.9f + 0.7f * t2sm((z - zU) / 1.2f)                  // opening out of the slit
+        z < zL - 1.5f -> 1.6f
+        z < zL + 1.5f -> 1.6f - 0.5f * sin(T2PI * (z - zL + 1.5f) / 3f)       // the lower sphincter: a 3-unit narrowing
+        else -> 1.6f + 0.4f * t2sm((z - zL - 1.5f) / (zE - zL - 1.2f))
+    }
 }
 
 /** The oesophagus from the upper sphincter to the cardia (baked along the rail; node-1 frame). */
 private fun StereoBodyRenderer.t2OesophagusMesh(i: Int): TriMesh = t2Get("oes$i") {
-    val g = T2Geo(); val l01 = -t2ArcAtP(i, 0f)
-    val a0s = T2_UES; val a0e = T2_CARDIA + 1.5f
-    val rows = 200; val sides = 36
-    fun pt(a0: Float, th: Float): T2V {
-        val fold = if (a0 < T2_ZLINE) 1f - 0.09f * (0.5f + 0.5f * cos(7f * th)) else 1f - 0.05f * (0.5f + 0.5f * cos(11f * th + a0))
-        val r = t2OesR(a0) * fold; return t2v(cos(th) * r, sin(th) * r, a0 - l01)
+    val g = T2Geo(); val st = t2Stom(i)
+    val zU = t2UesZ1(i); val zE = st.zEntry + 0.6f; val zZ = st.zEntry - 3.4f     // Z-line inside the lower sphincter
+    val rows = 220; val sides = 42
+    fun pt(z: Float, th: Float): T2V {
+        val lesR = t2OesR(z, zU, zE); val squeezed = 1f - lesR / 1.6f
+        val folds = 0.09f + 0.3f * max(0f, squeezed)
+        val fold = if (z < zZ) 1f - folds * (0.5f + 0.5f * cos(7f * th)) else 1f - 0.06f * (0.5f + 0.5f * cos(11f * th + z))
+        val flat = if (z < zU + 1.2f) 0.45f + 0.55f * t2sm((z - zU) / 1.2f) else 1f     // the slit opens out
+        val r = lesR * fold; return t2v(cos(th) * r * (2f - flat), sin(th) * r * flat, z)
     }
-    // squamous (pale) above the Z-line, gastric (salmon) below it; the junction is a zig-zag
-    fun zl(th: Float): Float { val u = (th / (2f * T2PI) * 10f) % 1f; return T2_ZLINE + 0.45f * (abs(u * 2f - 1f) - 0.5f) }
+    fun zl(th: Float): Float { val u = (th / (2f * T2PI) * 10f) % 1f; return zZ + 0.45f * (abs(u * 2f - 1f) - 0.5f) }
     for (r in 0 until rows) {
-        val aA = a0s + (a0e - a0s) * r / rows; val aB = a0s + (a0e - a0s) * (r + 1) / rows
+        val zA = zU + (zE - zU) * r / rows; val zB = zU + (zE - zU) * (r + 1) / rows
         for (k in 0 until sides) {
             val tA = 2f * T2PI * k / sides; val tB = 2f * T2PI * (k + 1) / sides
-            val am = (aA + aB) * 0.5f; val tm = (tA + tB) * 0.5f
-            val col = if (am < zl(tm)) T2_OES_LINING else T2_GASTRIC
-            g.quad(pt(aA, tA), pt(aB, tA), pt(aB, tB), pt(aA, tB), col)
+            val col = if ((zA + zB) * 0.5f < zl((tA + tB) * 0.5f)) T2_OES_LINING else T2_GASTRIC
+            g.quad(pt(zA, tA), pt(zB, tA), pt(zB, tB), pt(zA, tB), col)
         }
     }
-    // the sphincters: the cricopharyngeus ring at the top, the thickened lower sphincter
-    g.torus(t2v(0f, 0f, T2_UES + 0.5f - l01), t2v(0f, 0f, 1f), 1.55f, 0.28f, T2_OES_MUSCLE, 1f, 28, 7)
-    g.torus(t2v(0f, 0f, T2_LES - l01), t2v(0f, 0f, 1f), 1.5f, 0.3f, T2_OES_MUSCLE, 1f, 28, 7)
     t2Bake(g, i, 30f, 40f)
 }
 
-/** Stomach wall radius at [z] along the rail from the stop (node 1), before the greater-curvature bulge. */
-private fun t2StomR(z: Float): Float = when {
-    z < -12f -> 1.6f + 3.0f * t2sm((z + 15f) / 3f)
-    z < 2f -> 4.6f + 0.6f * sin(T2PI * (z + 12f) / 14f)
-    z < 8.4f -> 4.6f - 2.6f * t2sm((z - 2f) / 6.4f)
-    else -> 2.0f
-}
-private fun t2StomPt(z: Float, th: Float, inset: Float = 0f): T2V {
-    val r = (t2StomR(z) - inset) * (1f + 0.12f * max(0f, -sin(th)))     // the greater curvature below
-    return t2v(cos(th) * r, sin(th) * r, z)
-}
-
-private fun StereoBodyRenderer.t2StomachMeshes(i: Int): Array<ColorVboMesh> = t2Get("stomach$i") {
-    val g = T2Geo(); val glass = T2Geo(); val bits = T2Geo(); val rnd = java.util.Random(301L)
-    val z0 = T2_CARDIA - 1f + t2ArcAtP(i, 0f); val z1 = 8.6f
-    // the wall (gastric mucosa)
-    g.surf(60, 40, T2_GASTRIC) { v, u -> t2StomPt(z0 + (z1 - z0) * v, u * 2f * T2PI) }
-    // rugae: serpentine longitudinal folds, heavier toward the greater curvature
-    for (k in 0 until 16) {
-        val th0 = 2f * T2PI * k / 16f; val low = max(0f, -sin(th0))
-        val pts = (0..30).map { q -> val z = -11f + 16.5f * q / 30f; val th = th0 + 0.07f * sin(z * 1.3f + k); t2StomPt(z, th, 0.05f) }
-        g.path(pts, { t -> (0.18f + 0.26f * low) * (0.4f + 0.6f * sin(T2PI * t).coerceAtLeast(0f)) }, T2_RUGA_G, 1f, 6, true)
-    }
-    // gastric pits: dimples all over the mucosa
-    repeat(420) {
-        val z = -11.5f + rnd.nextFloat() * 18.5f; val th = rnd.nextFloat() * 2f * T2PI
-        val pp = t2StomPt(z, th, 0.02f); val nrm = t2v(-cos(th), -sin(th), 0f)
-        g.disc(pp, nrm, 0.07f, T2_PIT, 1f, 6)
-    }
-    // the pylorus: a thick muscular ring round a small opening, the duodenal bulb beyond
-    g.torus(t2v(0f, 0f, 8.7f), t2v(0f, 0f, 1f), 1.5f, 0.7f, T2_PYLORUS, 1f, 32, 10)
-    g.surf(8, 28, T2_GASTRIC) { v, u -> val a = u * 2f * T2PI; val r = 1.4f + 0.3f * sin(T2PI * v); t2v(cos(a) * r, sin(a) * r, 9.2f + 2.4f * v) }
-    // the mucus blanket over the mucosa
-    glass.surf(40, 36, T2_MUCUS, 0.22f) { v, u -> t2StomPt(-11.5f + 18f * v, u * 2f * T2PI, 0.4f) }
-    // a pool of acid chyme along the greater curvature, food particles in and on it
-    val yPool = -3.2f
-    glass.surf(24, 12, T2_CHYME_ACID, 0.55f) { v, u ->
-        val z = -10f + 15f * v; val R = t2StomR(z) * 1.1f; val w = sqrt(max(0f, R * R - yPool * yPool)) * 0.98f
-        t2v((u * 2f - 1f) * w, yPool, z)
-    }
-    repeat(36) {
-        val z = -9f + rnd.nextFloat() * 13f; val R = t2StomR(z) * 1.1f; val w = sqrt(max(0f, R * R - yPool * yPool)) * 0.8f
-        val c = t2v((rnd.nextFloat() * 2f - 1f) * w, yPool - rnd.nextFloat() * 1.4f + 0.1f, z)
-        val s0 = 0.1f + rnd.nextFloat() * 0.25f
-        bits.ell(c, t2v(s0 * (1f + rnd.nextFloat()), 0f, 0f), t2v(0f, s0 * 0.7f, 0f), t2v(0f, 0f, s0), if (it % 3 == 0) T2_FOOD_B else T2_FOOD_A, 1f, 4, 6)
-    }
-    arrayOf(t2Bake(g, i, 30f, 40f), t2Bake(glass, i, 30f, 40f), t2Bake(bits, i, 30f, 40f))
-}
-
-/** A peristaltic constriction: a thick ring of contracted circular muscle (unit major radius). */
-private fun StereoBodyRenderer.t2PeriRing(): TriMesh = t2Get("peri") {
-    val g = T2Geo(); g.torus(t2v(0f, 0f, 0f), t2v(0f, 0f, 1f), 1f, 0.17f, T2_OES_MUSCLE, 1f, 32, 10); TriMesh(g.baked())
+/** The upper sphincter's position in the stomach stop's rail coordinates (arc from node 1). */
+private fun StereoBodyRenderer.t2UesZ1(i: Int): Float = t2Get("uesz$i") {
+    // walk the rail back from the stomach to where it passes the mouth frame's rigid z of the slit
+    val r0 = t2Rail(i - 1); val f0 = FloatArray(13); r0.at(0f, f0); val fr = FloatArray(13)
+    var a = 0f
+    while (a < 40f) { r0.at(a, fr); val rz = (fr[0] - f0[0]) * f0[3] + (fr[1] - f0[1]) * f0[4] + (fr[2] - f0[2]) * f0[5]; if (rz >= T2_UES_Z) break; a += 0.05f }
+    val pUes = fr[12]
+    java.lang.Float.valueOf(t2ArcAtP(i, pUes))
 }
 
 /** Tour II stop 2: the oesophagus (drawn through the swallow) and the stomach. */
@@ -1180,19 +1346,40 @@ internal fun StereoBodyRenderer.drawStomach(n: TourNode, i: Int, seconds: Float)
     if (!inOes && !t2Near(i)) return
     t2Open(i, seconds) { own ->
         t2DrawWorld(t2OesophagusMesh(i))
-        // the peristaltic wave: a ring of contraction just behind the craft, walking it down
-        val shipArc = t2ArcAtP(i, routeProgress); val l01 = -t2ArcAtP(i, 0f)
-        val ringA0 = shipArc + l01 - 2.0f
-        if (ringA0 > T2_UES + 1.5f && ringA0 < T2_LES - 1f) {
-            t2Model(t2Frame(i, shipArc - 2.0f), 0f, 0f); Matrix.scaleM(model, 0, 1.45f, 1.45f, 1.45f); t2Draw(t2PeriRing())
+        // the peristaltic wave: the wall itself closing in 7 folds just behind the craft
+        val st = t2Stom(i)
+        val shipArc = t2ArcAtP(i, routeProgress)
+        val zRing = shipArc - 2.2f
+        if (zRing > t2UesZ1(i) + 2f && zRing < st.zEntry - 5f) {
+            t2Model(t2Frame(i, zRing), 0f, 0f); Matrix.scaleM(model, 0, 1.6f, 1.6f, 1f); t2Draw(t2Constriction(0.4f, 7, T2_OES_LINING), true)
         }
         if (routeProgress > 0.45f) {
             val m = t2StomachMeshes(i)
             t2DrawWorld(m[0])
-            // food particles bob in the churning acid
-            val fr = t2Rigid(i, 0f, FloatArray(13))
+            lineWidth(1f); t2DrawWorld(m[3], true)
+            // antral peristalsis: every 20 s a ring of contraction starts in the body and sweeps to
+            // the pylorus, which closes as it arrives and throws the chyme back (retropulsion)
+            val f0 = t2Rigid(i, 0f, FloatArray(13))
+            val tw = seconds % 20f
+            val sPos = st.sWave0 + tw * 0.8f / max(0.05f, (st.c[st.sWave0 + 1] - st.c[st.sWave0]).len())
+            val arrive = if (sPos >= st.sPyl - 6) t2sm((sPos - (st.sPyl - 6)) / 6f) else 0f
+            if (sPos < st.sPyl - 3) {
+                val k = sPos.toInt().coerceIn(0, st.c.size - 2); val c = st.c[k]; val tg = st.t[k]; val nn = st.nrm[k]; val r = st.r[k]
+                val wp = t2W(f0, c.x, c.y, c.z).copyOf()
+                t2ModelBasis(wp[0], wp[1], wp[2], f0[6] * tg.x + f0[9] * tg.y + f0[3] * tg.z, f0[7] * tg.x + f0[10] * tg.y + f0[4] * tg.z, f0[8] * tg.x + f0[11] * tg.y + f0[5] * tg.z,
+                    f0[6] * nn.x + f0[9] * nn.y + f0[3] * nn.z, f0[7] * nn.x + f0[10] * nn.y + f0[4] * nn.z, f0[8] * nn.x + f0[11] * nn.y + f0[5] * nn.z, r * 1.05f, r * 1.05f, 1.3f)
+                t2Draw(t2Constriction(0.75f, 14, T2_GASTRIC), true)
+            }
+            // the pylorus: open (radius 0.5), closing to a pinhole as the wave arrives
+            val open = when { arrive > 0.66f -> 0.1f; arrive > 0.33f -> 0.3f; else -> 0.5f }
+            val pp = t2W(f0, st.pyl.x, st.pyl.y, st.pyl.z).copyOf(); val pt = st.pylT
+            t2ModelBasis(pp[0], pp[1], pp[2], f0[6] * pt.x + f0[9] * pt.y + f0[3] * pt.z, f0[7] * pt.x + f0[10] * pt.y + f0[4] * pt.z, f0[8] * pt.x + f0[11] * pt.y + f0[5] * pt.z,
+                f0[9], f0[10], f0[11], 1.05f, 1.05f, 1f)
+            t2Draw(t2PylorusIris(open))
+            // food particles bob in the acid, and are thrown back as the pylorus closes
+            val back = -1f * arrive * (1f - t2sm((tw - 19f) / 1f))
             Matrix.setIdentityM(model, 0)
-            Matrix.translateM(model, 0, fr[9] * 0.08f * sin(seconds * 0.9f) + fr[3] * 0.15f * sin(seconds * 0.4f), fr[10] * 0.08f * sin(seconds * 0.9f) + fr[4] * 0.15f * sin(seconds * 0.4f), fr[11] * 0.08f * sin(seconds * 0.9f) + fr[5] * 0.15f * sin(seconds * 0.4f))
+            Matrix.translateM(model, 0, f0[9] * 0.08f * sin(seconds * 0.9f) + f0[3] * (0.15f * sin(seconds * 0.4f) + back), f0[10] * 0.08f * sin(seconds * 0.9f) + f0[4] * (0.15f * sin(seconds * 0.4f) + back), f0[11] * 0.08f * sin(seconds * 0.9f) + f0[5] * (0.15f * sin(seconds * 0.4f) + back))
             t2Draw(m[2])
             t2DrawWorld(m[1], true)
         }
@@ -1206,13 +1393,13 @@ internal fun StereoBodyRenderer.drawStomach(n: TourNode, i: Int, seconds: Float)
 
 private val T2_CORE = arrayOf(
     floatArrayOf(-1.57f, 4.6f), floatArrayOf(-1.1f, 6.4f), floatArrayOf(-2.05f, 6.0f),
-    floatArrayOf(-0.15f, 3.2f), floatArrayOf(3.3f, 3.8f), floatArrayOf(1.1f, 5.2f)
+    floatArrayOf(-0.15f, 5.5f), floatArrayOf(3.3f, 5.7f), floatArrayOf(1.1f, 5.2f)
 )
 
 private fun t2CoreSlot(ang: Float, z: Float): Boolean {
     for (c in T2_CORE) {
         var d = abs(ang - c[0]) % (2f * T2PI); if (d > T2PI) d = 2f * T2PI - d
-        if (d < 0.34f && abs(z - c[1]) < 0.75f) return true
+        if (d < 0.18f && abs(z - c[1]) < 0.55f) return true
     }
     return false
 }
@@ -1242,7 +1429,7 @@ private val T2_GUT_CHUNK = floatArrayOf(-4.4f, 0.4f, 5.0f, 9.7f)
 private fun StereoBodyRenderer.t2GutMesh(i: Int, sector: Int, chunk: Int): TriMesh = t2Get("gut$i.$sector.$chunk") {
     val g = T2Geo(); val rnd = java.util.Random(101L)
     val rail = t2Rail(i); val fr = FloatArray(13)
-    val nAround = 54; val dzr = 0.42f
+    val nAround = 62; val dzr = 0.46f
     var row = 0; var z = -4.2f
     while (z <= 9.5f) {
         rail.at(z, fr); val p = fr[12]
@@ -1254,6 +1441,7 @@ private fun StereoBodyRenderer.t2GutMesh(i: Int, sector: Int, chunk: Int): TriMe
             val q = rnd.nextFloat() * T2PI
             val lean = rnd.nextFloat() * 0.25f
             if (t2CoreSlot(ang, zz)) continue
+            if (t2OnPlica(ang, zz)) continue
             val an = ((ang % (2f * T2PI)) + 2f * T2PI) % (2f * T2PI)
             if ((an / (T2PI / 3f)).toInt().coerceIn(0, 5) != sector) continue
             if (zz < T2_GUT_CHUNK[chunk] || zz >= T2_GUT_CHUNK[chunk + 1]) continue
@@ -1270,7 +1458,80 @@ private fun StereoBodyRenderer.t2GutMesh(i: Int, sector: Int, chunk: Int): TriMe
         }
         z += dzr; row++
     }
+    // the plicae circulares (Kerckring's folds): crescents of the whole mucosa 1.3 units (1 mm)
+    // high, each round 200 degrees of the wall, carpeted with villi on both faces
+    for ((pk, z0) in T2_PLICA_Z.withIndex()) {
+        if (z0 < T2_GUT_CHUNK[chunk] || z0 >= T2_GUT_CHUNK[chunk + 1]) continue
+        rail.at(z0, fr); val p = fr[12]
+        val thC = pk * 2.094f + 0.5f
+        val th0 = max(thC - 1.75f, sector * T2PI / 3f + (if (sector == 0 && thC - 1.75f < 0f) -1e9f else 0f))
+        fun sec(th: Float): Int = (((th % (2f * T2PI)) + 2f * T2PI) % (2f * T2PI) / (T2PI / 3f)).toInt().coerceIn(0, 5)
+        fun pt(th: Float, t: Float): T2V {
+            val dh = abs(th - thC); val h = 2.4f * t2sm((1.75f - dh) / 0.5f)
+            val rw = t2WallR(p, th) - 0.05f
+            val zz = z0 + 0.5f * cos(T2PI * t) * (1f - 0.5f * sin(T2PI * t)); val r = rw - h * sin(T2PI * t)
+            return t2v(cos(th) * r, sin(th) * r, zz)
+        }
+        val nU = 70
+        for (u in 0 until nU) {
+            val tA = thC - 1.75f + 3.5f * u / nU; val tB = thC - 1.75f + 3.5f * (u + 1) / nU
+            if (sec((tA + tB) * 0.5f) != sector) continue
+            for (v in 0 until 8) {
+                val a0 = v / 8f; val a1 = (v + 1) / 8f
+                g.quad(pt(tA, a0), pt(tB, a0), pt(tB, a1), pt(tA, a1), T2_VILLUS)
+            }
+        }
+        // villi standing out of both faces and the crest, along the local normal
+        var th = thC - 1.6f
+        while (th < thC + 1.6f) {
+            if (sec(th) == sector) for (t in floatArrayOf(0.2f, 0.4f, 0.6f, 0.8f)) {
+                val a = pt(th, t); val du = pt(th + 0.01f, t) - pt(th - 0.01f, t); val dt = pt(th, t + 0.01f) - pt(th, t - 0.01f)
+                var nrm = (du cross dt).unit()
+                val inner = t2v(cos(th) * (t2WallR(p, th) - 0.5f), sin(th) * (t2WallR(p, th) - 0.5f), z0)
+                if ((nrm dot (a - inner)) < 0f) nrm = nrm * -1f
+                if ((a - inner).len() < 0.05f) continue
+                val maj = t2perp(nrm)
+                g.villus(a, nrm, maj, 0.7f + rnd.nextFloat() * 0.3f, 0.12f, 0.09f)
+            }
+            th += 0.46f / 3.8f
+        }
+    }
     t2Bake(g, i, 30f, 40f)
+}
+
+/**
+ * The colon at 12 µm (8 µm a unit), the leg between the gut and the phage stops: a smooth
+ * mucosa with no villi, dotted with the openings of the crypts (~30 µm across, 10 units apart),
+ * under a translucent inner mucus layer; bacteria (the BodyField) fill the lumen beyond it.
+ */
+private fun StereoBodyRenderer.t2ColonMeshes(i: Int): Array<ColorVboMesh> = t2Get("colon$i") {
+    val g = T2Geo(); val glass = T2Geo(); val rnd = java.util.Random(71L)
+    val a0 = t2ArcAtP(i, i + 0.2f); val a1 = t2ArcAtP(i, i + 0.85f); val R = 3.9f
+    g.surf(60, 36, T2_COLON) { v, u -> val a = u * 2f * T2PI; t2v(cos(a) * R, sin(a) * R, a0 + (a1 - a0) * v) }
+    var z = a0 + 1f; var row = 0
+    while (z < a1 - 1f) {
+        for (k in 0 until 3) {
+            val a = (k + 0.5f * (row % 2)) * 2f * T2PI / 3f + (rnd.nextFloat() - 0.5f) * 0.5f
+            val zz = z + (rnd.nextFloat() - 0.5f) * 2f
+            g.disc(t2v(cos(a) * (R - 0.02f), sin(a) * (R - 0.02f), zz), t2v(-cos(a), -sin(a), 0f), 1.6f, T2_CRYPT, 1f, 16)
+            g.torus(t2v(cos(a) * (R - 0.05f), sin(a) * (R - 0.05f), zz), t2v(cos(a), sin(a), 0f), 1.75f, 0.18f, T2_COLON_RIM, 1f, 18, 5)
+        }
+        z += 5f; row++
+    }
+    glass.surf(40, 30, T2_MUCUS, 0.22f) { v, u -> val a = u * 2f * T2PI; t2v(cos(a) * (R - 0.8f), sin(a) * (R - 0.8f), a0 + (a1 - a0) * v) }
+    arrayOf(t2Bake(g, i, 30f, 40f), t2Bake(glass, i, 30f, 40f))
+}
+
+/** Kerckring's folds: positions along the rail (around the gut stop). */
+private val T2_PLICA_Z = floatArrayOf(-2f, 3.5f, 8f)
+private fun t2OnPlica(ang: Float, z: Float): Boolean {
+    for ((pk, z0) in T2_PLICA_Z.withIndex()) {
+        if (abs(z - z0) > 0.6f) continue
+        val thC = pk * 2.094f + 0.5f
+        var d = abs(ang - thC) % (2f * T2PI); if (d > T2PI) d = 2f * T2PI - d
+        if (d < 1.75f) return true
+    }
+    return false
 }
 
 /** A villus for the lit shader: base at z = 0, tip at z = 1, radius 1 (scaled per villus). */
@@ -1285,6 +1546,16 @@ private fun StereoBodyRenderer.t2VillusMesh(): LitMesh = t2Get("villusmesh") {
 /** Tour II stop 2: the villous carpet of the small intestine, the nearest villi opened to show the lacteal and capillaries. */
 internal fun StereoBodyRenderer.drawGut(n: TourNode, i: Int, seconds: Float) {
     if (!t2Near(i)) return
+    // past the drop to 12 µm (the colon leg) the small intestine's villi are 80 times too small to
+    // be this scene: the colon's wall takes over instead
+    if (routeProgress > i + 0.05f) {
+        val colon = t2sm((routeProgress - i - 0.05f) / 0.06f)
+        val keep = colorShader.globalFade; colorShader.globalFade = keep * colon
+        val cm = t2ColonMeshes(i); t2DrawWorld(cm[0]); t2DrawWorld(cm[1], true)
+        colorShader.globalFade = keep
+        if (routeProgress > i + 0.11f) return
+        landmarkFade *= 1f - colon; colorShader.globalFade *= 1f - colon
+    }
     // the carpet sways like kelp: each sector is sheared along the rail about the wall, so the
     // bases stay put and the tips (about a unit off the wall) swing to and fro
     for (ch in 0 until 3) {
@@ -1293,7 +1564,7 @@ internal fun StereoBodyRenderer.drawGut(n: TourNode, i: Int, seconds: Float) {
             val th = (sec + 0.5f) * T2PI / 3f
             val nx = fr[6] * cos(th) + fr[9] * sin(th); val ny = fr[7] * cos(th) + fr[10] * sin(th); val nz = fr[8] * cos(th) + fr[11] * sin(th)
             val c = 0.1f * sin(seconds * 0.9f + 1.1f * sec + 0.7f * ch)
-            val R = 3.6f + fr[0] * nx + fr[1] * ny + fr[2] * nz
+            val R = 4.6f + fr[0] * nx + fr[1] * ny + fr[2] * nz
             val D = floatArrayOf(fr[3], fr[4], fr[5]); val N = floatArrayOf(nx, ny, nz)
             for (col in 0..2) for (row in 0..2) model[col * 4 + row] = (if (col == row) 1f else 0f) - c * D[row] * N[col]
             model[3] = 0f; model[7] = 0f; model[11] = 0f; model[15] = 1f
@@ -1330,6 +1601,15 @@ internal fun StereoBodyRenderer.drawGut(n: TourNode, i: Int, seconds: Float) {
         val pa = FloatArray(3); val pb = FloatArray(3)
         pt3(1f, 0.02f, 0f, pa); pt3(1f, 0.88f, 0f, pb); t2Seg(pa[0], pa[1], pa[2], pb[0], pb[1], pb[2], T2_ARTERIOLE, 1f)
         pt3(-1f, 0.02f, 0f, pa); pt3(-1f, 0.88f, 0f, pb); t2Seg(pa[0], pa[1], pa[2], pb[0], pb[1], pb[2], T2_VENULE, 1f)
+        for (q in 0 until 4) {   // verticals joining the loops into a net
+            val ang = q * T2PI / 2f + 0.8f; var qx0 = 0f; var qy0 = 0f; var qz0 = 0f
+            for (r in 0..5) {
+                val hh = h * (0.16f + r * 0.14f); val cx = cos(ang) * 0.09f; val cy = sin(ang) * 0.09f
+                val xx = bx + ax * hh + tx * cx + bxv * cy; val yy = by + ay * hh + ty * cx + byv * cy; val zz = bz + az * hh + tz * cx + bzv * cy
+                if (r > 0) t2Seg(qx0, qy0, qz0, xx, yy, zz, T2_CAPILLARY, 0.85f)
+                qx0 = xx; qy0 = yy; qz0 = zz
+            }
+        }
         for (r in 1..5) {   // the subepithelial capillary net: loops round the villus just under its surface
             val t = r / 6.4f
             for (hs in SIGNS) {
@@ -1352,19 +1632,7 @@ internal fun StereoBodyRenderer.drawGut(n: TourNode, i: Int, seconds: Float) {
             qx = xx; qy = yy; qz = zz
         }
         t2Q[0] = bx; t2Q[1] = by; t2Q[2] = bz
-        t2Basis(t2Q, ax, ay, az, tx, ty, tz, 0.14f, 0.1f, h, vm, T2_VILLUS, T2_VILLUS_TIP, 0.35f, 0.05f)
-    }
-    // mucus strands drifting over the villus tips
-    for (m in 0 until 4) {
-        var px = 0f; var py = 0f; var pz = 0f
-        for (q in 0..12) {
-            val z = -2f + q * 0.8f + ((seconds * 0.4f + m * 3f) % 4f)
-            val a = m * 1.7f + 0.3f * sin(q * 0.7f + seconds * 0.5f)
-            val fr = t2Frame(i, z); val r = 2.05f + 0.15f * sin(q * 1.3f + m)
-            val w = t2W(fr, cos(a) * r, sin(a) * r)
-            if (q > 0) t2Seg(px, py, pz, w[0], w[1], w[2], T2_LACTEAL, 0.22f)
-            px = w[0]; py = w[1]; pz = w[2]
-        }
+        t2Basis(t2Q, ax, ay, az, tx, ty, tz, 0.14f, 0.1f, h, vm, T2_VILLUS, T2_VILLUS_TIP, 0.55f, 0.05f)
     }
     t2LinesEnd(3f)
     // chyme: irregular lumps of partly digested food carried down the lumen
@@ -1383,6 +1651,9 @@ internal fun StereoBodyRenderer.drawGut(n: TourNode, i: Int, seconds: Float) {
 // helices. T4 phages (prolate icosahedral head 111 x 86 nm, contractile tail 100 nm, hexagonal
 // baseplate, six kinked long tail fibres) sit on it: one lands, contracts its sheath and injects;
 // the rest are at other stages. Off to port another infected cell fills with progeny and bursts.
+
+/** Host A's axis height above the rail at the phage stop. */
+private const val T2_HOST_Y = 7.8f
 
 private fun StereoBodyRenderer.t2PhageHead(): LitMesh = t2Get("phagehead") {
     val g = T2Geo(); val e = 0.16f; val sc = 0.6f
@@ -1466,8 +1737,8 @@ private fun StereoBodyRenderer.t2MiniPhage(): LitMesh = t2Get("miniphage") {
 /** Progeny packed inside a host (host-local: axis +z, radius 6). */
 private fun StereoBodyRenderer.t2Progeny(): LitMesh = t2Get("progeny") {
     val g = T2Geo(); val rnd = java.util.Random(23L)
-    repeat(34) {
-        val r = 3.8f * sqrt(rnd.nextFloat()); val a = rnd.nextFloat() * 2f * T2PI; val z = (rnd.nextFloat() * 2f - 1f) * 8.5f
+    repeat(100) {   // a burst of 100-200 for T4
+        val r = 4.5f * sqrt(rnd.nextFloat()); val a = rnd.nextFloat() * 2f * T2PI; val z = (rnd.nextFloat() * 2f - 1f) * 9f
         val d = t2v(rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f).unit()
         g.miniPhage(t2v(cos(a) * r, sin(a) * r, z) - d * 1f, d, T2_PHAGE_HEAD)
     }
@@ -1477,8 +1748,8 @@ private fun StereoBodyRenderer.t2Progeny(): LitMesh = t2Get("progeny") {
 /** Progeny streaming out: 40 whole phages along rays in a 35-degree cone about +z, 0..12 units out. */
 private fun StereoBodyRenderer.t2Stream(): LitMesh = t2Get("stream") {
     val g = T2Geo(); val rnd = java.util.Random(29L)
-    repeat(40) {
-        val th = 0.61f * sqrt(rnd.nextFloat()); val ph = rnd.nextFloat() * 2f * T2PI; val d = 12f * (it + rnd.nextFloat()) / 40f
+    repeat(80) {
+        val th = 0.61f * sqrt(rnd.nextFloat()); val ph = rnd.nextFloat() * 2f * T2PI; val d = 12f * (it + rnd.nextFloat()) / 80f
         val dir = t2v(sin(th) * cos(ph), sin(th) * sin(ph), cos(th))
         val ax = t2v(rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f).unit()
         g.miniPhage(dir * d - ax * 1f, ax, T2_PHAGE_HEAD)
@@ -1513,7 +1784,7 @@ private fun StereoBodyRenderer.t2Ghost(): LitMesh = t2Get("ghost") {
 
 /** Type 1 fimbriae on host A: fine straight hairs about 1 µm long (host-local, rigid frame), clear of the lane. */
 private fun StereoBodyRenderer.t2Fimbriae(i: Int): LineMesh = t2Get("fimbriae$i") {
-    val rnd = java.util.Random(37L); val out = ArrayList<Float>(); val cy = 8.9f; val cz = 3f
+    val rnd = java.util.Random(37L); val out = ArrayList<Float>(); val cy = T2_HOST_Y; val cz = 3f
     var n = 0; var tries = 0
     while (n < 80 && tries < 4000) {
         tries++
@@ -1546,10 +1817,10 @@ private fun StereoBodyRenderer.t2PhageAt(P: FloatArray, n: FloatArray, e: FloatA
     val q = FloatArray(3)
     fun at(d: Float): FloatArray { q[0] = px + nx * d; q[1] = py + ny * d; q[2] = pz + nz * d; return q }
     val ls = 1.25f - 0.72f * contract; val rs = 0.13f + 0.07f * contract
-    t2Basis(at(lift + 0.07f), nx, ny, nz, ex, ey, ez, 0.33f, 0.33f, 0.06f, t2Hex(), T2_PHAGE_PLATE, COL_LAMP, alpha)
-    t2Basis(at(lift + 0.14f + ls * 0.5f), nx, ny, nz, ex, ey, ez, rs, rs, ls * 0.5f, t2Sheath(), T2_PHAGE_TAIL, COL_LAMP, alpha)
-    t2Basis(at(lift + 0.19f + ls), nx, ny, nz, ex, ey, ez, 0.2f, 0.2f, 0.05f, t2Hex(), T2_PHAGE_PLATE, COL_LAMP, alpha)
-    t2Basis(at(lift + 0.24f + ls + 0.695f), nx, ny, nz, ex, ey, ez, 1f, 1f, 1f, t2PhageHead(), T2_PHAGE_HEAD, COL_LAMP, alpha * (1f - 0.6f * empty), 0.05f)
+    t2Basis(at(lift + 0.07f), nx, ny, nz, ex, ey, ez, 0.33f, 0.33f, 0.06f, t2Hex(), T2_PHAGE_PLATE, T2_PHAGE_PLATE, alpha, 0.15f)
+    t2Basis(at(lift + 0.14f + ls * 0.5f), nx, ny, nz, ex, ey, ez, rs, rs, ls * 0.5f, t2Sheath(), T2_PHAGE_TAIL, T2_PHAGE_TAIL, alpha, 0.15f)
+    t2Basis(at(lift + 0.19f + ls), nx, ny, nz, ex, ey, ez, 0.2f, 0.2f, 0.05f, t2Hex(), T2_PHAGE_PLATE, T2_PHAGE_PLATE, alpha, 0.15f)
+    t2Basis(at(lift + 0.24f + ls + 0.695f), nx, ny, nz, ex, ey, ez, 1f, 1f, 1f, t2PhageHead(), T2_PHAGE_HEAD, T2_PHAGE_HEAD, alpha * (1f - 0.6f * empty), 0.15f)
     if (contract > 0.01f) {   // the inner tail tube punched through the outer membrane
         val lt = 0.72f * contract
         t2Basis(at(lift - lt * 0.5f + 0.02f), nx, ny, nz, ex, ey, ez, 0.05f, 0.05f, lt * 0.5f, cylinder, T2_GTP_CAP, COL_LAMP, alpha, 0.3f)
@@ -1585,13 +1856,14 @@ private fun StereoBodyRenderer.t2PhageAt(P: FloatArray, n: FloatArray, e: FloatA
 
 /** Tour II stop 3: T4 phages on the E. coli overhead — landing, contracting, injecting — and a second host bursting. */
 internal fun StereoBodyRenderer.drawPhage(n: TourNode, i: Int, seconds: Float) {
+    if (routeProgress < i - 0.38f) return      // (the colon leg before it is at 12 µm, not 120 nm)
     if (!t2Near(i)) return
     t2Open(i, seconds) { own ->
         val f0 = t2Rigid(i, 0f, FloatArray(13))
         val dx = f0[3]; val dy = f0[4]; val dz = f0[5]; val ux = f0[9]; val uy = f0[10]; val uz = f0[11]
         val cap = t2Capsule()
         // ---- host A overhead: cytoplasm and a translucent outer membrane 20 nm out
-        val hc = t2W(f0, 0f, 8.9f, 3f).copyOf()
+        val hc = t2W(f0, 0f, T2_HOST_Y, 3f).copyOf()
         // cytoplasm bounded by the inner membrane (r 5.65); the periplasm and peptidoglycan to 6.0;
         // the outer membrane at 6.25
         t2Basis(hc, dx, dy, dz, ux, uy, uz, 11.3f, 11.3f, 11.8f, cap, T2_ECOLI, T2_ECOLI_OM, 1f, 0.05f)
@@ -1600,7 +1872,7 @@ internal fun StereoBodyRenderer.drawPhage(n: TourNode, i: Int, seconds: Float) {
             val fl = t2Flagellum()
             for ((k, s) in arrayOf(floatArrayOf(2.6f, 9f), floatArrayOf(3.5f, 12f), floatArrayOf(1.9f, 5f), floatArrayOf(4.3f, 7f), floatArrayOf(3.14f, 14.3f)).withIndex()) {
                 val phi = s[0]; val zo = s[1]
-                val lx = sin(phi) * 5.9f; val ly = 8.9f - cos(phi) * 5.9f
+                val lx = sin(phi) * 5.9f; val ly = T2_HOST_Y - cos(phi) * 5.9f
                 val o = t2W(f0, lx, ly, zo).copyOf()
                 val ax = sin(phi) * 0.3f; val ay = -cos(phi) * 0.3f
                 var zx = f0[6] * ax + f0[9] * ay + dx; var zy = f0[7] * ax + f0[10] * ay + dy; var zz = f0[8] * ax + f0[11] * ay + dz
@@ -1611,7 +1883,7 @@ internal fun StereoBodyRenderer.drawPhage(n: TourNode, i: Int, seconds: Float) {
                 val e2x = zy * e1z - zz * e1y; val e2y = zz * e1x - zx * e1z; val e2z = zx * e1y - zy * e1x
                 val th = seconds * 3.1f + k * 1.3f; val c = cos(th); val sn = sin(th)
                 t2Basis(o, zx, zy, zz, e1x * c + e2x * sn, e1y * c + e2y * sn, e1z * c + e2z * sn, 1f, 1f, 1f, fl, T2_FLAGELLUM, T2_FLAGELLUM, 1f, 0.3f)
-                val bb = t2W(f0, sin(phi) * 6.3f, 8.9f - cos(phi) * 6.3f, zo).copyOf()   // the basal body / hook where it leaves the cell
+                val bb = t2W(f0, sin(phi) * 6.3f, T2_HOST_Y - cos(phi) * 6.3f, zo).copyOf()   // the basal body / hook where it leaves the cell
                 t2Basis(bb, f0[6] * sin(phi) - f0[9] * cos(phi), f0[7] * sin(phi) - f0[10] * cos(phi), f0[8] * sin(phi) - f0[11] * cos(phi), dx, dy, dz, 0.25f, 0.25f, 0.08f, t2Hex(), T2_FLAGELLUM, T2_FLAGELLUM, 1f, 0.2f)
             }
         }
@@ -1621,7 +1893,7 @@ internal fun StereoBodyRenderer.drawPhage(n: TourNode, i: Int, seconds: Float) {
         t2LinesBegin()
         val P = FloatArray(3); val N = FloatArray(3); val E = FloatArray(3)
         fun site(phi: Float, z: Float, rad: Float = 6.25f) {
-            val w = t2W(f0, sin(phi) * rad, 8.9f - cos(phi) * rad, z); P[0] = w[0]; P[1] = w[1]; P[2] = w[2]
+            val w = t2W(f0, sin(phi) * rad, T2_HOST_Y - cos(phi) * rad, z); P[0] = w[0]; P[1] = w[1]; P[2] = w[2]
             val lx = sin(phi); val ly = -cos(phi)
             N[0] = f0[6] * lx + f0[9] * ly; N[1] = f0[7] * lx + f0[10] * ly; N[2] = f0[8] * lx + f0[11] * ly
             E[0] = dx; E[1] = dy; E[2] = dz
@@ -1636,7 +1908,7 @@ internal fun StereoBodyRenderer.drawPhage(n: TourNode, i: Int, seconds: Float) {
             val lift = 3f * (1f - t2sm(t / 0.25f)); val spread = t2sm((t - 0.1f) / 0.15f)
             val con = t2sm((t - 0.36f) / 0.08f); val dna = t2sm((t - 0.46f) / 0.3f); val emp = t2sm((t - 0.5f) / 0.3f)
             val a = t2sm(t / 0.04f) * (1f - t2sm((t - 0.94f) / 0.06f))
-            site(-0.66f, 2.2f); t2PhageAt(P, N, E, lift, con, spread, emp, dna, a)
+            site(-0.35f, 6.0f); t2PhageAt(P, N, E, lift, con, spread, emp, dna, a)
         }
         // one still arriving, tail first, from the port side
         run {
@@ -1651,9 +1923,9 @@ internal fun StereoBodyRenderer.drawPhage(n: TourNode, i: Int, seconds: Float) {
         //      cue): holin and endolysin open the envelope at one point facing us, the progeny spill
         //      out through the tear, and the cell collapses to an empty ghost
         val ph = lysisClock / LYSIS_PERIOD
-        val bl = FloatArray(3); run { val w = t2W(f0, -15f, -3f, 24f); bl[0] = w[0]; bl[1] = w[1]; bl[2] = w[2] }
+        val bl = FloatArray(3); run { val w = t2W(f0, -18f, -6f, 30f); bl[0] = w[0]; bl[1] = w[1]; bl[2] = w[2] }
         // axis pointing away from the craft, so the tear (at the -axis pole) faces us
-        var ax = -15f * f0[6] - 3f * f0[9] + 24f * f0[3]; var ay = -15f * f0[7] - 3f * f0[10] + 24f * f0[4]; var az = -15f * f0[8] - 3f * f0[11] + 24f * f0[5]
+        var ax = -18f * f0[6] - 6f * f0[9] + 30f * f0[3]; var ay = -18f * f0[7] - 6f * f0[10] + 30f * f0[4]; var az = -18f * f0[8] - 6f * f0[11] + 30f * f0[5]
         val al = sqrt(ax * ax + ay * ay + az * az); ax /= al; ay /= al; az /= al
         if (ph < 0.62f) {
             val vis = t2sm((ph - 0.1f) / 0.3f); val swell = 1f + 0.1f * t2sm((ph - 0.35f) / 0.27f)
@@ -1718,14 +1990,14 @@ private fun StereoBodyRenderer.t2LiverMeshes(i: Int): Array<ColorVboMesh> = t2Ge
             val c0 = cyl(ac, zc, rf); val mA = cyl(ac + (ca[m] - ac) * 0.5f, zc + (cz[m] - zc) * 0.5f, rf); val mB = cyl(ac + (ca[m1] - ac) * 0.5f, zc + (cz[m1] - zc) * 0.5f, rf)
             val oA = cyl(ca[m], cz[m], rf); val oB = cyl(ca[m1], cz[m1], rf)
             // a faint window over the nucleus, the rest of the blood face nearly opaque
-            glass.tri(c0, mA, mB, face, 0.45f); glass.tri(mA, oA, oB, face, 0.85f); glass.tri(mA, oB, mB, face, 0.85f)
+            glass.tri(c0, mA, mB, face, 0.7f); glass.tri(mA, oA, oB, face, 0.85f); glass.tri(mA, oB, mB, face, 0.85f)
             val bA = cyl(ca[m], cz[m], ro); val bB = cyl(ca[m1], cz[m1], ro)
             opaque.tri(cyl(ac, zc, ro), cyl(ca[m], cz[m], ro), cyl(ca[m1], cz[m1], ro), T2_HEPATOCYTE_BACK)
             glass.quad(oA, oB, bB, bA, T2_HEPATOCYTE_BACK, 0.4f)
         }
         // nucleus (or two), central in the cell
-        if (cellNo % 4 == 0) for (sd in SIGNS) opaque.ball(cyl(ac + sd * 0.5f, zc, 1.85f), 0.4f, T2_HEP_NUC, 1f, 9, 14)
-        else opaque.ball(cyl(ac, zc, 1.85f), 0.45f, T2_HEP_NUC, 1f, 9, 14)
+        if (cellNo % 4 == 0) for (sd in SIGNS) { opaque.ball(cyl(ac + sd * 0.5f, zc, 1.85f), 0.4f, T2_HEP_NUC, 1f, 9, 14); opaque.ball(cyl(ac + sd * 0.5f, zc, 1.5f), 0.08f, T2_NUCLEOLUS, 1f, 4, 6) }
+        else { opaque.ball(cyl(ac, zc, 1.85f), 0.45f, T2_HEP_NUC, 1f, 9, 14); opaque.ball(cyl(ac, zc, 1.44f), 0.08f, T2_NUCLEOLUS, 1f, 4, 6) }
         // bile canaliculi: a belt along every shared lateral face, half-way through the plate
         for (k in 0 until 6) {
             val a0 = k * T2PI / 3f; val a1 = (k + 1) * T2PI / 3f
@@ -1755,6 +2027,7 @@ private fun StereoBodyRenderer.t2LiverMeshes(i: Int): Array<ColorVboMesh> = t2Ge
     val fen = ArrayList<Float>()
     repeat(70) {
         val a = rnd.nextFloat() * 2f * T2PI; val z = -5f + rnd.nextFloat() * 15f
+        lining.disc(t2v(cos(a) * (re - 0.005f), sin(a) * (re - 0.005f), z), t2v(-cos(a), -sin(a), 0f), 0.25f, T2_SIEVE, 0.25f, 10)
         repeat(14) {
             val da = (rnd.nextFloat() - 0.5f) * 0.3f; val dz = (rnd.nextFloat() - 0.5f) * 0.35f
             fen.addAll(listOf(cos(a + da) * (re - 0.01f), sin(a + da) * (re - 0.01f), z + dz, 0.2f, 0.05f, 0.08f, 1f))
@@ -1762,15 +2035,16 @@ private fun StereoBodyRenderer.t2LiverMeshes(i: Int): Array<ColorVboMesh> = t2Ge
     }
     // hepatic stellate (Ito) cells in the space of Disse, studded with vitamin-A lipid droplets,
     // their thin processes curling round the sinusoid
+    val ito = T2Geo()
     for (sc in arrayOf(floatArrayOf(0.9f, 2.4f), floatArrayOf(3.6f, 7.4f))) {
-        val a = sc[0]; val z = sc[1]; val rr = T2_SIN_RF - 0.02f
+        val a = sc[0]; val z = sc[1]; val rr = T2_SIN_RF - 0.03f
         val c = t2v(cos(a) * rr, sin(a) * rr, z)
         val rad = t2v(cos(a), sin(a), 0f); val tg = t2v(-sin(a), cos(a), 0f)
-        opaque.ell(c, tg * 0.9f, rad * 0.14f, t2v(0f, 0f, 0.7f), T2_STELLATE, 1f, 6, 10)
-        for (d in 0 until 5) { val q = d * 1.26f; opaque.ball(c + tg * (0.5f * cos(q)) + t2v(0f, 0f, 0.4f * sin(q)) - rad * 0.08f, 0.1f + 0.012f * d, T2_LIPID_DROP, 1f, 4, 6) }
+        ito.ell(c, tg * 0.9f, rad * 0.04f, t2v(0f, 0f, 0.6f), T2_STELLATE, 0.5f, 6, 10)
+        for (d in 0 until 5) { val q = d * 1.26f; ito.ball(c + tg * (0.5f * cos(q)) + t2v(0f, 0f, 0.35f * sin(q)), 0.06f, T2_LIPID_DROP, 0.5f, 4, 6) }
         for (pr in 0 until 3) {
             val pts = (0..8).map { q -> val t = q / 8f; val aa = a + (pr - 1f) * 0.3f + (if (pr == 1) 1f else -1f) * t * 1.4f; t2v(cos(aa) * rr, sin(aa) * rr, z + (pr - 1f) * 0.6f * t) }
-            opaque.path(pts, { 0.03f }, T2_STELLATE, 1f, 4, true)
+            ito.path(pts, { 0.025f }, T2_STELLATE, 0.5f, 4, true)
         }
     }
     // the two Kupffer cells further along (static): stellate macrophages on the lining, phagosomes inside
@@ -1781,7 +2055,7 @@ private fun StereoBodyRenderer.t2LiverMeshes(i: Int): Array<ColorVboMesh> = t2Ge
     val bend = t2Bend(i, 30f, 40f)
     val fenA = fen.toFloatArray(); for (k in 0 until fenA.size / 7) bend(fenA, k * 7)
     val micA = micro.toFloatArray(); for (k in 0 until micA.size / 7) bend(micA, k * 7)
-    arrayOf(t2Bake(opaque, i, 30f, 40f), t2Bake(glass, i, 30f, 40f), t2Bake(lining, i, 30f, 40f), PointMesh(fenA), LineMesh(micA))
+    arrayOf(t2Bake(opaque, i, 30f, 40f), t2Bake(glass, i, 30f, 40f), t2Bake(lining, i, 30f, 40f), PointMesh(fenA), LineMesh(micA), t2Bake(ito, i, 30f, 40f))
 }
 
 /** Lumen radius of the sinusoid (the hepatocytes' blood faces): 20 µm across, red cells nearly in single file. */
@@ -1797,24 +2071,24 @@ private val T2_KUPFFER_AT = arrayOf(floatArrayOf(-0.95f, 3.4f, 0f), floatArrayOf
 private fun T2Geo.t2KupfferBody(glass: T2Geo, a: Float, z: Float) {
     val rr = T2_SIN_RF - 0.2f
     val rad = t2v(cos(a), sin(a), 0f); val tg = t2v(-sin(a), cos(a), 0f); val c = rad * rr + t2v(0f, 0f, z)
-    for ((k, o) in arrayOf(floatArrayOf(0f, 0f), floatArrayOf(0.35f, 0.3f), floatArrayOf(-0.3f, -0.25f)).withIndex())
-        glass.ell(c + tg * o[0] + t2v(0f, 0f, o[1]), tg * (0.55f - 0.08f * k), rad * (0.25f - 0.03f * k), t2v(0f, 0f, 0.5f - 0.05f * k), T2_KUPFFER, 0.75f, 7, 11)
-    torus(c - rad * 0.02f, rad, 0.22f, 0.12f, T2_HEP_NUC, 1f, 12, 6, 0f, 1.35f * T2PI, tg)
-    for (k in 0 until 4) { val q = 0.7f + k * 1.5f; ball(c + tg * (0.32f * cos(q)) + t2v(0f, 0f, 0.3f * sin(q)) - rad * 0.05f, 0.15f + 0.015f * k, T2_PHAGOSOME, 1f, 5, 7) }
-    ell(c + tg * (0.32f * cos(0.7f)) + t2v(0f, 0f, 0.3f * sin(0.7f)) - rad * 0.06f, tg * 0.09f, rad * 0.03f, t2v(0f, 0f, 0.07f), COL_RBC_DEOXY, 1f, 4, 6)
+    // three lumpy lobes (9 x 5 x 7 µm) bulging 0.6 into the lumen, phagosomes pressing out under the surface
+    for ((k, o) in arrayOf(floatArrayOf(0f, 0f), floatArrayOf(0.4f, 0.35f), floatArrayOf(-0.35f, -0.3f)).withIndex())
+        ell(c + tg * o[0] + t2v(0f, 0f, o[1]) - rad * 0.1f, tg * (0.55f - 0.07f * k), rad * (0.3f - 0.04f * k), t2v(0f, 0f, 0.45f - 0.05f * k), T2_KUPFFER, 1f, 7, 11)
+    for (k in 0 until 4) { val q = 0.7f + k * 1.5f; ball(c + tg * (0.3f * cos(q)) + t2v(0f, 0f, 0.28f * sin(q)) - rad * 0.33f, 0.14f + 0.015f * k, T2_PHAGOSOME, 1f, 5, 7) }
+    ell(c + tg * (0.3f * cos(0.7f)) + t2v(0f, 0f, 0.28f * sin(0.7f)) - rad * 0.45f, tg * 0.09f, rad * 0.03f, t2v(0f, 0f, 0.07f), COL_RBC_DEOXY, 1f, 4, 6)
 }
 
 private fun StereoBodyRenderer.t2KupfferInto(g: T2Geo, glass: T2Geo, a: Float, z: Float, bridge: Boolean) {
     g.t2KupfferBody(glass, a, z)
     val rr = T2_SIN_RF - 0.12f
-    for (p in 0 until 6) {
-        val da = (p - 2.5f) * 0.45f; val dz = if (p % 2 == 0) 1.3f else -1.2f
+    for (p in 0 until 6) {   // tapered pseudopods lying flat on the lining, mostly along the sinusoid
+        val da = (p - 2.5f) * 0.14f; val dz = if (p % 2 == 0) 1.4f else -1.3f
         val pts = (0..6).map { q -> val t = q / 6f; val aa = a + da * t; t2v(cos(aa) * rr, sin(aa) * rr, z + dz * t) }
-        g.path(pts, { t -> 0.12f - 0.09f * t }, T2_KUPFFER, 1f, 5, true)
+        g.path(pts, { t -> 0.15f - 0.12f * t }, T2_KUPFFER, 1f, 5, true)
     }
-    if (bridge) {   // one pseudopod across the lumen to the opposite wall
+    if (bridge) {   // one pseudopod straight across the lumen to the opposite wall
         val p0 = t2v(cos(a) * rr, sin(a) * rr, z + 0.2f); val p1 = t2v(-cos(a + 0.4f) * rr, -sin(a + 0.4f) * rr, z + 1.2f)
-        g.path((0..6).map { q -> val t = q / 6f; p0 + (p1 - p0) * t + t2v(0f, 0f, 0.2f * sin(T2PI * t)) }, { t -> 0.08f - 0.04f * t * (1f - t) * 4f }, T2_KUPFFER, 1f, 5, true)
+        g.path(listOf(p0, (p0 + p1) * 0.5f, p1), { t -> 0.1f - 0.05f * t }, T2_KUPFFER, 1f, 5, true)
     }
 }
 
@@ -1832,7 +2106,8 @@ internal fun StereoBodyRenderer.drawLiver(n: TourNode, i: Int, seconds: Float) {
         t2DrawWorld(m[4], false, 1f)
         t2DrawWorld(m[1], true)
         t2DrawWorld(m[2], true)
-        t2DrawWorld(m[3], true, 2.5f, true)
+        t2DrawWorld(m[5], true)
+        t2DrawWorld(m[3], true, 1f, true)
         // the feeding Kupffer cell: its pseudopods reach out along the lining and close round a
         // worn-out red cell every 15 s, drawing it in
         val eat = (seconds % 15f) / 15f
@@ -1846,14 +2121,17 @@ internal fun StereoBodyRenderer.drawLiver(n: TourNode, i: Int, seconds: Float) {
         val rxw = fr[6] * ca + fr[9] * sa; val ryw = fr[7] * ca + fr[10] * sa; val rzw = fr[8] * ca + fr[11] * sa
         val b = t2W(fr, ca * (rr - 0.1f), sa * (rr - 0.1f)).copyOf()
         for (p in 0 until 6) {
-            val da = (p - 2.5f) * 0.45f; val dzp = if (p % 2 == 0) 1.3f else -1.2f
+            val da = (p - 2.5f) * 0.14f; val dzp = if (p % 2 == 0) 1.4f else -1.3f
             val pa = ang + da; val w = t2W(fr, cos(pa) * rr, sin(pa) * rr, dzp + 0.12f * sin(seconds * 0.7f + p))
             var gx = w[0]; var gy = w[1]; var gz = w[2]
             if (p < 2 && eat > 0.4f && eat < 0.85f) {   // pseudopods closing round the red cell
                 val cw = t2W(fr, ca * 0.55f, sa * 0.55f, -0.75f)
                 val s = t2sm((eat - 0.4f) / 0.15f); gx += (cw[0] - gx) * s; gy += (cw[1] - gy) * s; gz += (cw[2] - gz) * s
             }
-            drawStrut(b[0], b[1], b[2], gx, gy, gz, 0.07f, T2_KUPFFER, T2_KUPFFER)
+            // a tapered pseudopod (cone: base at the cell, tip out along the lining)
+            val dx = gx - b[0]; val dy = gy - b[1]; val dz = gz - b[2]; val ll = sqrt(dx * dx + dy * dy + dz * dz).coerceAtLeast(1e-3f)
+            t2Q[0] = (b[0] + gx) * 0.5f; t2Q[1] = (b[1] + gy) * 0.5f; t2Q[2] = (b[2] + gz) * 0.5f
+            t2Basis(t2Q, dx / ll, dy / ll, dz / ll, rxw, ryw, rzw, 0.15f, 0.15f, ll * 0.5f, cone, T2_KUPFFER, T2_KUPFFER)
         }
         if (eat < 0.9f) {
             val arrive = t2sm(eat / 0.4f); val swallow = t2sm((eat - 0.6f) / 0.28f)
@@ -1901,13 +2179,13 @@ private fun StereoBodyRenderer.t2KidneyMeshes(i: Int): Array<ColorVboMesh> = t2G
     val K = t2v(T2_CAPS[0], T2_CAPS[1], T2_CAPS[2]); val RC = 18.5f
     val up = t2UrinaryPole(i); val E = t2v(up[0], up[1], up[2])
     // ---- tuft core (mesangium and deeper loops) and ~110 capillary loops in six lobules
-    g.ball(T, R - 0.4f, T2_MESANGIUM, 1f, 18, 26)
+    g.ball(T, R - 1.6f, T2_MESANGIUM_D, 1f, 18, 26)
     val lobules = ArrayList<T2V>()
     while (lobules.size < 7) {
         val d = t2v(rnd.nextFloat() * 2f - 1f, rnd.nextFloat() * 2f - 1f, rnd.nextFloat() * 2f - 1f)
         if (d.len() in 0.2f..1f && d.unit().x * T2_FACE > -0.2f) lobules.add(d.unit())
     }
-    val nLoops = 120
+    val nLoops = 180
     val glass = T2Geo()
     val front = ArrayList<List<T2V>>()      // loops facing the passage (for feet and blood)
     for (l in 0 until nLoops) {
@@ -1915,7 +2193,7 @@ private fun StereoBodyRenderer.t2KidneyMeshes(i: Int): Array<ColorVboMesh> = t2G
         val nrm = (lob + t2v(rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f) * 0.55f).unit()
         val e1 = t2perp(nrm); val e2 = nrm cross e1
         val th = rnd.nextFloat() * 2f * T2PI; val dir = e1 * cos(th) + e2 * sin(th); val side = nrm cross dir
-        val len = 2.8f + rnd.nextFloat() * 2.2f; val wid = 0.55f + rnd.nextFloat() * 0.3f; val layer = rnd.nextFloat() * 0.55f
+        val len = 2.8f + rnd.nextFloat() * 2.2f; val wid = 0.55f + rnd.nextFloat() * 0.3f; val layer = rnd.nextFloat() * 0.9f - 0.2f
         val pts = ArrayList<T2V>()
         for (q in 0..22) {
             val t = q / 22f
@@ -1931,21 +2209,35 @@ private fun StereoBodyRenderer.t2KidneyMeshes(i: Int): Array<ColorVboMesh> = t2G
         }
         val shade = 0.9f + 0.1f * rnd.nextFloat()
         val col = floatArrayOf(T2_CAPILLARY[0] * shade, T2_CAPILLARY[1] * shade, T2_CAPILLARY[2] * shade, 1f)
-        val facing = nrm.x * T2_FACE > 0.45f && layer > 0.25f
+        val facing = nrm.x * T2_FACE > 0.45f && layer > 0.3f
         if (facing && front.size < 26) {
             front.add(pts)
             // the first ten are drawn see-through, with red cells passing through them
-            if (front.size <= 10) glass.path(pts, { 0.42f }, col, 0.55f, 8, true) else g.path(pts, { 0.42f }, col, 1f, 8, true)
+            if (front.size <= 10) glass.path(pts, { 0.42f }, T2_CAP_GLASS, 0.35f, 8, true) else g.path(pts, { 0.42f }, col, 1f, 8, true)
         } else g.path(pts, { 0.42f }, col, 1f, 8, true)
     }
     t2Get("kloops$i") { front.take(10) }
-    // ---- podocytes clothing the loops: on each front loop, a primary process of podocyte A runs
-    //      along one flank and one of podocyte B along the other; from them foot processes wrap round
-    //      the loop as C-shaped arcs, A and B alternating every 0.09 units (the interdigitation, the
-    //      filtration slits between them). Cell bodies sit on the loops, bulging into Bowman's space.
-    for ((li, pts) in front.withIndex()) {
-        if (li < 3) continue      // keep a few see-through loops bare, to show the blood inside
-        // resample by arc length
+    // ---- podocytes: 8 large cells, each bulging into Bowman's space over the groove between 2-3
+    //      front loops, primary processes arching over those loops and running along their flanks;
+    //      from the processes of two neighbouring cells the foot processes wrap round each loop as
+    //      C-shaped arcs, alternating every 0.09 units (the interdigitation; the filtration slits
+    //      lie between them). Cells are coloured alternately.
+    val wrapped = front.drop(3)
+    val tops = wrapped.map { it[11] }
+    val cells = ArrayList<T2V>()
+    for (l in tops.indices) { if (cells.size >= 8) break; if (cells.all { (it - tops[l]).len() > 3.2f }) cells.add(tops[l]) }
+    val cellPos = cells.map { c0 ->
+        val near = tops.sortedBy { (it - c0).len() }.take(3); var m0 = t2v(0f, 0f, 0f); for (q in near) m0 = m0 + q
+        val m1 = m0 * (1f / near.size); T + (m1 - T).unit() * (R + 1.3f)
+    }
+    for ((ci, cp) in cellPos.withIndex()) {
+        val col = if (ci % 2 == 0) T2_PODOCYTE_A else T2_PODOCYTE_B
+        val o = (cp - T).unit(); val e1 = t2perp(o)
+        g.ellAxis(cp, o, 0.7f, 0.4f, 0.6f, col, 1f, 8, 12, e1)
+        g.ball(cp + o * 0.1f, 0.3f, T2_HEP_NUC, 0.5f, 5, 7)
+    }
+    fun cellOf(p: T2V, not: Int = -1): Int { var best = 0; var bd = 1e9f; for ((ci, cp) in cellPos.withIndex()) { if (ci == not || (not >= 0 && ci % 2 == not % 2)) continue; val d = (cp - p).len(); if (d < bd) { bd = d; best = ci } }; return best }
+    for (pts in wrapped) {
         val samp = ArrayList<T2V>(); val tans = ArrayList<T2V>()
         var acc = 0f; var next = 0f
         for (q in 0 until pts.size - 1) {
@@ -1953,7 +2245,9 @@ private fun StereoBodyRenderer.t2KidneyMeshes(i: Int): Array<ColorVboMesh> = t2G
             while (next <= acc + sl) { val t = (next - acc) / max(1e-5f, sl); samp.add(a + (b - a) * t); tans.add((b - a).unit()); next += 0.09f }
             acc += sl
         }
-        val colA = if (li % 2 == 0) T2_PODOCYTE_A else T2_PODOCYTE_B; val colB = if (li % 2 == 0) T2_PODOCYTE_B else T2_PODOCYTE_A
+        if (cellPos.isEmpty()) break
+        val ca = cellOf(pts[11]); val cb = cellOf(pts[11], ca)
+        val colA = if (ca % 2 == 0) T2_PODOCYTE_A else T2_PODOCYTE_B; val colB = if (cb % 2 == 0) T2_PODOCYTE_A else T2_PODOCYTE_B
         val procA = ArrayList<T2V>(); val procB = ArrayList<T2V>()
         for ((k, c) in samp.withIndex()) {
             val tn = tans[k]; val oRaw = (c - T).unit(); val o = (oRaw - tn * (oRaw dot tn)).unit(); val b = tn cross o
@@ -1964,22 +2258,24 @@ private fun StereoBodyRenderer.t2KidneyMeshes(i: Int): Array<ColorVboMesh> = t2G
         }
         if (procA.size > 1) g.path(procA, { 0.1f }, colA, 1f, 5, true)
         if (procB.size > 1) g.path(procB, { 0.1f }, colB, 1f, 5, true)
-        // the two cell bodies, each riding on its own flank near the bend
-        val mid = samp[samp.size / 2]; val oM = (mid - T).unit()
-        val tnM = tans[tans.size / 2]; val bM = tnM cross oM
-        g.ellAxis(mid + oM * 0.75f + bM * 0.35f, oM, 0.85f, 0.45f, 0.7f, colA, 1f, 6, 9, tnM)
-        g.ellAxis(samp[samp.size / 5] + (samp[samp.size / 5] - T).unit() * 0.75f - bM * 0.35f, oM, 0.8f, 0.42f, 0.65f, colB, 1f, 6, 9, tnM)
+        // primary processes arching from each cell body over to this loop's flanks
+        for ((cix, pr) in listOf(ca to procA, cb to procB)) {
+            if (pr.size < 2) continue
+            val cp = cellPos[cix]; val tgt = pr[pr.size / 2]; val mid = (cp + tgt) * 0.5f; val archTop = T + (mid - T).unit() * ((mid - T).len() + 0.5f)
+            g.path(listOf(cp, archTop, tgt), { t -> 0.15f - 0.05f * t }, if (cix % 2 == 0) T2_PODOCYTE_A else T2_PODOCYTE_B, 1f, 6, true)
+        }
     }
     // ---- the vascular pole, on the side we face (upper left): the afferent arteriole (20 µm) and
     //      the narrower efferent arteriole enter the tuft through a sleeve of the capsule; a cuff of
     //      granular juxtaglomerular cells (they make renin) on the afferent, and the macula densa, a
     //      plaque of tall crowded cells in the distal tubule that touches the pole.
-    val vdir = t2v(0.55f * T2_FACE, 0.75f, 0.35f).unit(); val ve1 = t2perp(vdir); val ve2 = vdir cross ve1
+    // (placed about 30 degrees up and 30 degrees to port of straight ahead from the stop)
+    val vdir = (t2v(-6f, 6.5f, 11f) - T).unit(); val ve1 = t2perp(vdir); val ve2 = vdir cross ve1
     val tIn = T + vdir * (R - 0.8f)
     var tOut = R + 2f; run { var d = R; while (d < 40f) { if ((T + vdir * d - K).len() > RC) { tOut = d; break }; d += 0.1f } }
     for ((k, rr) in floatArrayOf(1.25f, 0.85f).withIndex()) {
         val off = ve1 * (if (k == 0) 1.45f else -1.3f)
-        g.path((0..8).map { q -> val t = q / 8f; T + vdir * (R - 0.8f + (tOut + 1.5f - R + 0.8f) * t) + off * (0.6f + 0.4f * t) }, { rr }, T2_ARTERIOLE, 1f, 10, true)
+        g.path((0..8).map { q -> val t = q / 8f; T + vdir * (R - 0.8f + (tOut + 1.5f - R + 0.8f) * t) + off * (0.6f + 0.4f * t) }, { rr }, if (k == 0) T2_ARTERIOLE else T2_EFFERENT, 1f, 10, true)
     }
     glass.path(listOf(T + vdir * (R + 0.3f), T + vdir * (tOut + 0.2f)), { t -> 2.6f + 0.8f * t }, T2_PARIETAL, 0.3f, 16, false)
     for (k in 0 until 10) {   // the juxtaglomerular cuff
@@ -2023,7 +2319,7 @@ private fun StereoBodyRenderer.t2KidneyMeshes(i: Int): Array<ColorVboMesh> = t2G
         if (la < lat) ln(grid[la][lo], grid[la + 1][lo])
         if ((la * 3 + lo) % 5 == 0) {
             val c = (grid[la][lo] + grid[la][(lo + 1) % lon]) * 0.5f
-            g.ellAxis(c + (K - c).unit() * 0.08f, (K - c).unit(), 0.5f, 0.12f, 0.35f, T2_NUCLEUS, 1f, 4, 7)
+            g.ellAxis(c + (K - c).unit() * 0.02f, (K - c).unit(), 0.5f, 0.06f, 0.35f, T2_PARIETAL_NUC, 1f, 4, 7)
         }
     }
     // ---- the proximal tubule leaving the urinary pole along the rail: cuboidal cells with round
@@ -2062,9 +2358,9 @@ internal fun StereoBodyRenderer.drawKidney(n: TourNode, i: Int, seconds: Float) 
         // red cells squeezing through the see-through loops (0.6 units/s)
         val f00 = t2Rigid(i, 0f, FloatArray(13))
         @Suppress("UNCHECKED_CAST") val loops = t2Get("kloops$i") { emptyList<List<T2V>>() }
-        for ((li, pts) in loops.withIndex()) for (c in 0..1) {
+        for ((li, pts) in loops.withIndex()) for (c in 0..2) {
             val n = pts.size - 1; var total = 0f; for (q in 0 until n) total += (pts[q + 1] - pts[q]).len()
-            var sPos = ((seconds * 0.6f + c * total * 0.5f + li * 1.7f) % total); var q = 0
+            var sPos = ((seconds * 0.6f + c * total / 3f + li * 1.7f) % total); var q = 0
             while (q < n - 1 && sPos > (pts[q + 1] - pts[q]).len()) { sPos -= (pts[q + 1] - pts[q]).len(); q++ }
             val a = pts[q]; val b = pts[q + 1]; val tt = (sPos / max(1e-4f, (b - a).len())).coerceIn(0f, 1f)
             val pp = a + (b - a) * tt; val tn = (b - a).unit(); val pr = t2perp(tn)
@@ -2115,11 +2411,10 @@ private fun t2Fibrils(): List<FloatArray> {
     return out
 }
 
-/** Thick-filament positions of a detailed myofibril: a hexagonal lattice of 19 filaments (two shells). */
+/** Thick-filament positions of a detailed myofibril: a hexagonal lattice, 2 shells (19 filaments) at spacing [d]. */
 private fun t2ThickLattice(d: Float): List<FloatArray> {
-    val out = ArrayList<FloatArray>(); out.add(floatArrayOf(0f, 0f))
-    for (k in 0 until 6) { val a = k * T2PI / 3f; out.add(floatArrayOf(cos(a) * d, sin(a) * d)) }
-    for (k in 0 until 6) { val a = k * T2PI / 3f; out.add(floatArrayOf(cos(a) * 2f * d, sin(a) * 2f * d)); val b = a + T2PI / 6f; out.add(floatArrayOf(cos(b) * sqrt(3f) * d, sin(b) * sqrt(3f) * d)) }
+    val out = ArrayList<FloatArray>()
+    for (q in -2..2) for (r in -2..2) { if (abs(q + r) > 2) continue; out.add(floatArrayOf(d * (q + r * 0.5f), d * r * sqrt(3f) * 0.5f)) }
     return out
 }
 
@@ -2143,32 +2438,32 @@ private fun t2ThinLattice(d: Float, maxR: Float): List<FloatArray> {
 private fun StereoBodyRenderer.t2MuscleMeshes(): Array<ColorVboMesh> = t2Get("muscle") {
     val th = T2Geo(); val zu = T2Geo(); val sr = T2Geo(); val zg = T2Geo()
     val heads = Array(12) { T2Geo() }; val act = ArrayList<Float>()
-    val zAx = t2v(0f, 0f, 1f); val d = 0.44f
+    val zAx = t2v(0f, 0f, 1f); val d = 0.4f
     val headOn = t2mix(T2_MYOSIN_HEAD, T2_ENAMEL, 0.25f)
     for (fb in t2Fibrils()) {
         if (fb[2] < 0.5f) continue
         val cx = fb[0]; val cy = fb[1]
         for ((pi, p) in t2ThickLattice(d).withIndex()) {
             val x = cx + p[0]; val y = cy + p[1]
-            th.tube(t2v(x, y, -T2_THICK_HALF), t2v(x, y, T2_THICK_HALF), 0.07f, 0.07f, T2_MYOSIN, 1f, 6, false)
+            th.tube(t2v(x, y, -T2_THICK_HALF), t2v(x, y, T2_THICK_HALF), 0.04f, 0.04f, T2_MYOSIN, 1f, 4, false)
             // myosin heads in crowns on both halves (a bare zone at the M line), each reaching for
             // one of the six thin filaments round its thick filament
-            for (sgn in SIGNS) for (c in 0 until 5) {
-                val z = sgn * (0.2f + c * 0.19f)
+            for (sgn in SIGNS) for (c in 0 until 4) {
+                val z = sgn * (0.2f + c * 0.2f)
                 for (h in 0 until 2) {
                     val a = T2PI / 6f + ((c * 2 + h * 3 + pi) % 6) * T2PI / 3f
                     val dx = cos(a); val dy = sin(a)
                     val grp = (pi * 7 + c * 3 + h + (if (sgn > 0f) 1 else 0)) % 3
                     for (pose in 0 until 4) {
                         val swing = -sgn * 0.07f * pose / 3f
-                        heads[grp * 4 + pose].tube(t2v(x + dx * 0.07f, y + dy * 0.07f, z), t2v(x + dx * 0.21f, y + dy * 0.21f, z + swing), 0.03f, 0.026f, if (pose == 0) T2_MYOSIN_HEAD else headOn, 1f, 4, false)
+                        heads[grp * 4 + pose].tube(t2v(x + dx * 0.04f, y + dy * 0.04f, z), t2v(x + dx * 0.12f, y + dy * 0.12f, z + swing * 0.8f), 0.022f, 0.02f, if (pose == 0) T2_MYOSIN_HEAD else headOn, 1f, 3, false)
                     }
                 }
             }
         }
         // M line: a ring and spokes cross-linking the thick filaments at the centre of the A band
-        th.torus(t2v(cx, cy, 0f), zAx, 0.44f, 0.03f, T2_MLINE, 1f, 18, 4)
-        for (k in 0 until 6) { val a = k * T2PI / 3f; th.tube(t2v(cx, cy, 0f), t2v(cx + cos(a) * 0.88f, cy + sin(a) * 0.88f, 0f), 0.022f, 0.022f, T2_MLINE, 1f, 3, false) }
+        th.torus(t2v(cx, cy, 0f), zAx, 0.6f, 0.025f, T2_MLINE, 1f, 18, 4)
+        for (k in 0 until 6) { val a = k * T2PI / 3f; th.tube(t2v(cx, cy, 0f), t2v(cx + cos(a) * 0.9f, cy + sin(a) * 0.9f, 0f), 0.018f, 0.018f, T2_MLINE, 1f, 3, false) }
         // the triads (a T tubule between two terminal cisternae at each A-I junction) and the
         // longitudinal SR, lit up as calcium floods out on each twitch
         for (sgn in SIGNS) { sr.torus(t2v(cx, cy, sgn * 1f), zAx, 1.02f, 0.03f, T2_TTUBULE, 1f, 22, 3); sr.torus(t2v(cx, cy, sgn * 0.9f), zAx, 1.03f, 0.045f, T2_CALCIUM, 1f, 22, 4); sr.torus(t2v(cx, cy, sgn * 1.1f), zAx, 1.03f, 0.045f, T2_CALCIUM, 1f, 22, 4) }
@@ -2176,31 +2471,34 @@ private fun StereoBodyRenderer.t2MuscleMeshes(): Array<ColorVboMesh> = t2Get("mu
         // Z disc: a thin plate (translucent) where the thin filaments of neighbouring sarcomeres
         // end, their ends cross-linked by alpha-actinin in a zig-zag lattice
         zg.slab(t2v(cx, cy, 0f), zAx, 0.98f, 0.1f, T2_ZDISC, 0.45f, 24)
-        val thinA = t2ThinLattice(d, 0.95f)
+        val thinA = t2ThinLattice(d, 0.92f)
         val thinB = thinA.map { q -> val r = sqrt(q[0] * q[0] + q[1] * q[1]); val a = atan2(q[1], q[0]) + 0.26f; floatArrayOf(cos(a) * r, sin(a) * r) }
             .filter { it[0] * it[0] + it[1] * it[1] < 0.95f * 0.95f }
-        for (q in thinA) zu.tube(t2v(cx + q[0], cy + q[1], 0.04f), t2v(cx + q[0], cy + q[1], T2_THIN_LEN), 0.028f, 0.028f, T2_ACTIN, 1f, 4, false)
-        for (q in thinB) zu.tube(t2v(cx + q[0], cy + q[1], -T2_THIN_LEN), t2v(cx + q[0], cy + q[1], -0.04f), 0.028f, 0.028f, T2_ACTIN, 1f, 4, false)
+        for (q in thinA) zu.tube(t2v(cx + q[0], cy + q[1], 0.04f), t2v(cx + q[0], cy + q[1], T2_THIN_LEN), 0.02f, 0.02f, T2_ACTIN, 1f, 3, false)
+        for (q in thinB) zu.tube(t2v(cx + q[0], cy + q[1], -T2_THIN_LEN), t2v(cx + q[0], cy + q[1], -0.04f), 0.02f, 0.02f, T2_ACTIN, 1f, 3, false)
         for (a in thinA) for (b in thinB) {
             val dd = (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1])
-            if (dd < 0.3f * 0.3f) act.addAll(listOf(cx + a[0], cy + a[1], 0.04f, 0.98f, 0.9f, 0.5f, 0.95f, cx + b[0], cy + b[1], -0.04f, 0.98f, 0.9f, 0.5f, 0.95f))
+            if (dd < 0.2f * 0.2f) act.addAll(listOf(cx + a[0], cy + a[1], 0.04f, 0.98f, 0.9f, 0.5f, 0.5f, cx + b[0], cy + b[1], -0.04f, 0.98f, 0.9f, 0.5f, 0.5f))
         }
     }
     // mitochondria: elongated, wrapped round the myofibrils at the I band, in pairs either side of
     // each Z line, on the side of each inner fibril that faces the lane
     for (fb in t2Fibrils()) {
-        val r0 = sqrt(fb[0] * fb[0] + fb[1] * fb[1]); if (r0 > 3f) continue
+        val r0 = sqrt(fb[0] * fb[0] + fb[1] * fb[1]); if (r0 < 3f) continue
         val face = atan2(-fb[1], -fb[0])
-        for (sgn in SIGNS) {
-            val pts = (0..8).map { q -> val a = face + (q / 8f - 0.5f) * 0.73f; t2v(fb[0] + cos(a) * 1.26f, fb[1] + sin(a) * 1.26f, sgn * 0.35f) }
-            zu.path(pts, { 0.24f }, T2_MITO, 1f, 8, true)
+        for (sgn in SIGNS) {   // a thin curved plate wrapped round the fibril at the I band
+            zu.surf(10, 8, T2_MITO_PALE) { u, v ->
+                val a = face + (u - 0.5f) * 1.2f; val b = v * 2f * T2PI; val taper = sqrt(max(0.05f, sin(T2PI * u)))
+                val r = 0.96f + 0.035f * cos(b) * taper
+                t2v(fb[0] + cos(a) * r, fb[1] + sin(a) * r, sgn * 0.35f + 0.09f * sin(b) * taper)
+            }
         }
     }
     val lines = LineMesh(act.toFloatArray())
     (arrayOf<ColorVboMesh>(TriMesh(th.baked()), TriMesh(zu.baked()), TriMesh(sr.baked()), TriMesh(zg.baked())) + heads.map { TriMesh(it.baked()) } + arrayOf<ColorVboMesh>(lines))
 }
 
-private val t2BandTris by lazy { DynMesh(40000) }
+private val t2BandTris by lazy { DynMesh(100000) }
 private var t2BandL = -1f
 private var t2BandT = -1f
 private var t2BandVerts = 0
@@ -2216,17 +2514,17 @@ private val T2_BAND_H = floatArrayOf(0.82f, 0.42f, 0.46f, 1f)
  */
 private fun StereoBodyRenderer.t2Bands(i: Int, L: Float, zRef: Float, seconds: Float) {
     if (abs(L - t2BandL) < 0.002f && t2BandVerts > 0) return
-    if (t2BandVerts > 0 && abs(seconds - t2BandT) < 0.13f) return
+    if (t2BandVerts > 0 && abs(seconds - t2BandT) < 0.18f) return
     t2BandL = L; t2BandT = seconds
     val d = t2BandTris.data; var v = 0
     val fibs = t2Fibrils().filter { it[2] < 0.5f }
-    val sides = 6; val r = 0.9f
+    val sides = 8; val r = 0.9f
     val fa = FloatArray(13); val fb = FloatArray(13)
     fun seg(z0: Float, z1: Float, c: FloatArray) {
         val a0 = max(z0, -9f); val a1 = min(z1, 17f); if (a1 <= a0) return
         t2Frame(i, a0, fa); t2Frame(i, a1, fb)
         for (f in fibs) for (s in 0 until sides) {
-            if (v + 6 > 40000) return
+            if (v + 6 > 100000) return
             val q0 = s * 2f * T2PI / sides; val q1 = (s + 1) * 2f * T2PI / sides
             for ((fr, q) in arrayOf(fa to q0, fb to q0, fb to q1, fa to q0, fb to q1, fa to q1)) {
                 val cq = cos(q); val sq = sin(q); val x = f[0] + cq * r; val y = f[1] + sq * r
@@ -2289,7 +2587,7 @@ internal fun StereoBodyRenderer.drawMuscle(n: TourNode, i: Int, seconds: Float) 
                 t2Model(t2Frame(i, zm), 0f, 0f); t2Draw(m[0])
                 // cross-bridges: while the fibre shortens the heads row, each group out of step;
                 // at rest they stand perpendicular to the filament
-                for (grp in 0 until 3) {
+                if (zm < 8f) for (grp in 0 until 3) {
                     val pose = if (rowing) ((((seconds + grp * 0.133f) / 0.4f) % 1f) * 4f).toInt().coerceIn(0, 3) else 0
                     t2Draw(m[4 + grp * 4 + pose])
                 }
@@ -2329,9 +2627,22 @@ internal fun StereoBodyRenderer.drawMuscle(n: TourNode, i: Int, seconds: Float) 
 private val T2_MK_C = floatArrayOf(5.2f, 0.6f, 8.6f)
 private val T2_MK_R = floatArrayOf(3.1f, 2.8f, 3.0f)
 private val T2_SIN = floatArrayOf(3.4f, -4.9f, 2.8f)        // sinusoid axis (x, y) and radius, along z
-private val T2_ISLAND = floatArrayOf(-3.8f, -2.4f, 4.2f)
+private val T2_ISLAND = floatArrayOf(-5.6f, -3.2f, 4.6f)
 private val T2_HSC = floatArrayOf(-3.2f, 2.8f, 5.5f)
-private val T2_BCELL = floatArrayOf(0.4f, -2.6f, 10.5f)
+private val T2_BCELL = floatArrayOf(1.4f, -2.35f, 7.5f)
+
+/** The rail's height (rigid-frame y) where it crosses rigid-frame [z] past stop [i]. */
+private fun StereoBodyRenderer.t2RailYAtRigidZ(i: Int, z: Float): Float {
+    val rail = t2Rail(i); val f0 = FloatArray(13); rail.at(0f, f0); val fr = FloatArray(13)
+    var a = 0f
+    while (a < 60f) {
+        rail.at(a, fr)
+        val rz = (fr[0] - f0[0]) * f0[3] + (fr[1] - f0[1]) * f0[4] + (fr[2] - f0[2]) * f0[5]
+        if (rz >= z) return (fr[0] - f0[0]) * f0[9] + (fr[1] - f0[1]) * f0[10] + (fr[2] - f0[2]) * f0[11]
+        a += 0.05f
+    }
+    return 0f
+}
 
 /** The rail centre at arc position z, in the node's rigid frame (x, y). */
 private fun StereoBodyRenderer.t2RailOffset(i: Int, z: Float, out: FloatArray) {
@@ -2382,8 +2693,8 @@ private fun StereoBodyRenderer.t2MarrowMeshes(i: Int): Array<ColorVboMesh> = t2G
     for (q in 0 until 12) {   // osteoblasts: cuboidal, on the bone, nucleus toward the marrow
         val (c, nrm) = onBeam(t2v(-1.5f + q * 0.5f, 3f, 6f + q * 0.52f), 0.45f)
         val e1 = t2perp(nrm); val e2 = nrm cross e1
-        g.box(c, e1 * 0.6f, nrm * 0.5f, e2 * 0.6f, T2_OSTEOBLAST_2)
-        g.ball(c + nrm * 0.3f, 0.3f, T2_HEP_NUC, 1f, 5, 7)
+        g.ellAxis(c, nrm, 0.62f, 0.5f, 0.62f, T2_OSTEOBLAST_2, 1f, 7, 10, e1)
+        g.ball(c + nrm * 0.28f, 0.26f, T2_HEP_NUC, 1f, 5, 7)
     }
     run {   // osteoclast: large, multinucleate, its ruffled border against the bone in a scooped pit
         val (c0, nrm0) = onBeam(t2v(-7.5f, 2f, 2.5f), 0.55f)
@@ -2414,30 +2725,32 @@ private fun StereoBodyRenderer.t2MarrowMeshes(i: Int): Array<ColorVboMesh> = t2G
             val p = if (t < 0.4f) st + (t2v(sx - 0.5f + s * 0.3f, sy + 1.3f, st.z) - st) * (t / 0.4f) else t2v(sx - 0.5f + s * 0.3f, sy + 1.3f - s * 0.6f, st.z + (t - 0.4f) * 7f)
             pts.add(p) }
         g.path(pts, { 0.06f }, T2_PLATELET, 1f, 5, true)
-        for (q in 1..10) g.ball(pts[q], 0.2f + 0.03f * (q % 2), T2_PLATELET, 1f, 5, 7)
+        for (q in 1..10) { g.ball(pts[q], 0.2f + 0.03f * (q % 2), T2_PLATELET, 1f, 5, 7); for (gr in 0 until 3) g.ball(pts[q] + t2v(cos(gr * 2.1f), sin(gr * 2.1f), 0.5f).unit() * 0.17f, 0.05f, T2_PLT_GRAN, 1f, 3, 4) }
     }
     // ---- erythroblastic island: central macrophage ringed by erythroblasts maturing round it
     val isl = t2v(T2_ISLAND[0], T2_ISLAND[1], T2_ISLAND[2])
-    g.ball(isl, 1.3f, T2_MACROPHAGE, 1f, 9, 12)
+    g.ball(isl, 1.0f, T2_MACROPHAGE, 1f, 9, 12)
+    // the ring faces the lane (lies across the line of sight), macrophage processes between its cells
+    val toLane = t2v(-isl.x, -isl.y, 0f).unit(); val ie1 = t2v(0f, 0f, 1f); val ie2 = (toLane cross ie1).unit()
     for (k in 0 until 8) {
-        val a = k * T2PI / 4.5f; val d = t2v(cos(a), sin(a) * 0.55f, sin(a) * 0.85f).unit()
+        val a = k * T2PI / 4f; val d = (ie1 * cos(a) + ie2 * sin(a)).unit()
+        val dp = (ie1 * cos(a + T2PI / 8f) + ie2 * sin(a + T2PI / 8f)).unit()
+        g.ellAxis(isl + dp * 1.2f, dp, 0.4f, 0.8f, 0.15f, T2_MACROPHAGE, 1f, 5, 8, toLane)
         val t = k / 8f; val c = t2mix(T2_PROERYTHRO, T2_NORMOBLAST, t)
-        glass.ball(isl + d * 1.85f, 0.62f - 0.18f * t, c, 0.6f, 6, 9)
-        g.ball(isl + d * 1.85f, 0.36f - 0.2f * t, t2mix(T2_BLAST_NUC, T2_NORMO_NUC, t), 1f, 5, 7)
-        g.tube(isl + d * 1.1f, isl + d * 1.6f, 0.08f, 0.06f, T2_MACROPHAGE, 1f, 4, false)
+        glass.ball(isl + d * 1.7f, 0.62f - 0.18f * t, c, 0.5f, 6, 9)
+        g.ball(isl + d * 1.7f, 0.36f - 0.2f * t, t2mix(T2_BLAST_NUC, T2_NORMO_NUC, t), 1f, 5, 7)
     }
     // ---- B-cell precursor held by a reticular stromal cell by the sinusoid wall
     val bc = t2v(T2_BCELL[0], T2_BCELL[1], T2_BCELL[2])
-    g.ball(bc, 0.36f, T2_LYMPH_NUC, 1f, 6, 9)
-    glass.ball(bc, 0.46f, T2_LYMPHOID, 0.5f, 6, 9)
-    val stc = bc + t2v(-1.1f, 0.6f, 0.8f)
+    g.ball(bc, 0.42f, T2_BCELL_NUC, 1f, 7, 10)
+    glass.ball(bc, 0.5f, T2_BCELL_CYTO, 0.35f, 7, 10)
+    // the stromal (reticular) cell holding it: a flat body with three broad processes wrapping
+    // the B cell, the sinusoid wall and a neighbour
+    val stc = bc + t2v(0.4f, -0.9f, 0.9f)
     g.ellAxis(stc, t2v(0.3f, 0.2f, 1f), 0.9f, 0.3f, 0.4f, T2_STROMA, 1f, 6, 9)
-    val stTargets = listOf(bc + t2v(-0.3f, 0.2f, 0f), t2v(sx - sr * 0.7f, sy + sr * 0.7f, bc.z + 1f), t2v(sx - sr * 0.9f, sy + 0.3f, bc.z - 1.5f),
-        stc + t2v(-2.4f, 1.2f, 0.6f), stc + t2v(-1.5f, 2.2f, -1.4f), stc + t2v(0.6f, 2.3f, 1.8f))
-    for ((k, tg) in stTargets.withIndex()) {
-        val mid = (stc + tg) * 0.5f + t2v(0.2f * sin(k * 2f), 0.3f, 0.2f * cos(k * 3f))
-        g.path(listOf(stc, mid, tg), { 0.03f }, T2_STROMA, 1f, 4, true)
-        if (k >= 3) g.path(listOf(mid, mid + t2v(0.8f * cos(k * 1.3f), 0.9f, 0.7f * sin(k * 1.7f))), { 0.025f }, T2_STROMA, 1f, 4, true)   // branch
+    for (tg in listOf(bc + t2v(0f, -0.35f, 0.15f), t2v(sx - sr * 0.6f, sy + sr * 0.8f, stc.z + 0.6f), stc + t2v(-1.2f, -0.6f, 1.4f))) {
+        val mid = (stc + tg) * 0.5f; val dir = (tg - stc).unit()
+        g.ellAxis(mid, dir, 0.6f, (tg - stc).len() * 0.55f, 0.18f, T2_STROMA, 1f, 6, 9)
     }
     // ---- adipocytes: big clear fat cells with the nucleus squeezed to the rim
     val fats = arrayOf(floatArrayOf(-7.8f, 5.2f, 12f, 3.6f), floatArrayOf(8.2f, 6.6f, 15f, 3.3f), floatArrayOf(-8.2f, -6.2f, 14f, 3.4f), floatArrayOf(2.5f, 7.6f, 1f, 2.6f))
@@ -2448,7 +2761,7 @@ private fun StereoBodyRenderer.t2MarrowMeshes(i: Int): Array<ColorVboMesh> = t2G
     //      lymphoid cells (nucleus nearly fills the cell); a few red cells among them.
     val placedP = ArrayList<T2V>(); val placedR = ArrayList<Float>()
     var tries = 0
-    val target = 250
+    val target = 180
     while (placedP.size < target && tries < 60000) {
         tries++
         val x = (rnd.nextFloat() * 2f - 1f) * 10f; val y = (rnd.nextFloat() * 2f - 1f) * 9.5f; val z = -6f + rnd.nextFloat() * 22f
@@ -2473,7 +2786,7 @@ private fun StereoBodyRenderer.t2MarrowMeshes(i: Int): Array<ColorVboMesh> = t2G
         if (bad) continue
         placedP.add(p); placedR.add(r)
         when {
-            kind < 0.15f -> { glass.ball(p, r, T2_BLAST_CYTO, 0.55f, 6, 9); g.ball(p, r * 0.78f, T2_BLAST_NUC, 1f, 6, 9) }
+            kind < 0.15f -> { glass.ball(p, r, T2_BLAST_CYTO, 0.5f, 6, 9); g.ball(p, r * 0.68f, T2_BLAST_NUC, 1f, 6, 9) }
             kind < 0.5f -> {
                 glass.ball(p, r, T2_MYELO_CYTO, 0.55f, 6, 9)
                 val nrm = t2v(rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f).unit()
@@ -2482,10 +2795,10 @@ private fun StereoBodyRenderer.t2MarrowMeshes(i: Int): Array<ColorVboMesh> = t2G
             }
             kind < 0.8f -> {
                 val ripe = rnd.nextFloat()
-                glass.ball(p, r, t2mix(T2_NORMO_EARLY, T2_NORMO_LATE, ripe), 0.6f, 6, 9)
+                glass.ball(p, r, t2mix(T2_NORMO_EARLY, T2_NORMO_LATE, ripe), if (ripe < 0.5f) 0.45f else 0.6f, 6, 9)
                 g.ball(p, r * 0.4f, T2_NORMO_NUC, 1f, 5, 7)
             }
-            kind < 0.95f -> { glass.ball(p, r, T2_LYMPHOID, 0.5f, 6, 9); g.ball(p, r * 0.88f, T2_LYMPH_NUC, 1f, 6, 9) }
+            kind < 0.95f -> { glass.ball(p, r, T2_LYMPH_CYTO, 0.45f, 6, 9); g.ball(p, r * 0.74f, T2_LYMPH_NUC2, 1f, 6, 9) }
             else -> g.redCell(p, t2v(rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f, rnd.nextFloat() - 0.5f), r, COL_RBC_DEOXY)
         }
     }
@@ -2553,6 +2866,11 @@ internal fun StereoBodyRenderer.drawMarrow(n: TourNode, i: Int, seconds: Float) 
             }
         }
         t2DrawWorld(m[1], true)
+        run {   // a faint halo marks the young B cell by the vessel wall, the one the next leg enters
+            val p = t2W(f0, T2_BCELL[0], T2_BCELL[1], T2_BCELL[2]).copyOf()
+            val pulse = 0.5f + 0.5f * sin(seconds * 2f)
+            t2Basis(p, camNowX - p[0], camNowY - p[1], camNowZ - p[2], f0[9], f0[10], f0[11], 0.62f, 0.62f, 1f, t2RingMesh(), T2_BCELL_CYTO, T2_BCELL_CYTO, 0.25f + 0.2f * pulse, 0.5f)
+        }
         // megakaryocyte cytoplasm, translucent over its lobed nucleus
         val mkp = t2W(f0, T2_MK_C[0], T2_MK_C[1], T2_MK_C[2]).copyOf()
         t2Basis(mkp, f0[3], f0[4], f0[5], f0[9], f0[10], f0[11], T2_MK_R[0], T2_MK_R[1], T2_MK_R[2], sphere, T2_MEGA, T2_MEGA, 0.6f, 0.05f)
@@ -2601,34 +2919,38 @@ private fun t2PieceCol(p: T2Piece): FloatArray = when (p.kind) {
  * neutral base pairs between them; a short rung-free grey gap at an end marks a segment boundary.
  */
 private fun StereoBodyRenderer.t2HelixChunk(col: FloatArray, startGap: Boolean, endGap: Boolean): TriMesh = t2Get("chunk${col.contentHashCode()}.$startGap.$endGap") {
-    val g = T2Geo(); val turns = 2f; val rb = 0.1f; val gp = 0.07f
+    val g = T2Geo(); val turns = 2f; val rb = 0.12f; val gp = 0.07f
     val t0 = if (startGap) gp else 0f; val t1 = if (endGap) 1f - gp else 1f
+    val col2 = floatArrayOf(col[0] * 0.7f, col[1] * 0.7f, col[2] * 0.7f, 1f)
     for (strand in 0..1) {
         val off = if (strand == 0) 0f else 2.3f
         fun pt(t: Float): T2V { val a = t * turns * 2f * T2PI + off; return t2v(cos(a) * rb, sin(a) * rb, t - 0.5f) }
-        g.path((0..40).map { q -> pt(t0 + (t1 - t0) * q / 40f) }, { 0.05f }, col, 1f, 6, false)
+        g.path((0..40).map { q -> pt(t0 + (t1 - t0) * q / 40f) }, { 0.035f }, if (strand == 0) col else col2, 1f, 6, false)
         if (startGap) g.path((0..4).map { q -> pt(gp * q / 4f) }, { 0.045f }, T2_DNA_GAP, 1f, 5, false)
         if (endGap) g.path((0..4).map { q -> pt(1f - gp + gp * q / 4f) }, { 0.045f }, T2_DNA_GAP, 1f, 5, false)
     }
     for (q in 0 until 20) {
         val t = (q + 0.5f) / 20f; if (t < t0 || t > t1) continue
         val a = t * turns * 2f * T2PI
-        g.tube(t2v(cos(a) * rb, sin(a) * rb, t - 0.5f), t2v(cos(a + 2.3f) * rb, sin(a + 2.3f) * rb, t - 0.5f), 0.01f, 0.01f, T2_BASEPAIR, 1f, 3, false)
+        g.tube(t2v(cos(a) * rb, sin(a) * rb, t - 0.5f), t2v(cos(a + 2.3f) * rb, sin(a + 2.3f) * rb, t - 0.5f), 0.022f, 0.022f, T2_BASEPAIR, 1f, 4, false)
     }
     TriMesh(g.bakedBright())
 }
 
-private fun StereoBodyRenderer.t2RagMesh(): LitMesh = t2Get("rag") {
+private fun StereoBodyRenderer.t2RagMesh(): TriMesh = t2Get("rag2") {
     val g = T2Geo()
-    // RAG1: two elongated lobes forming a V (60 degrees open) from a stem; RAG2 capping each arm's
-    // tip, where the arm holds one RSS. Local z runs along the DNA; +y from the stem toward it.
+    // RAG1 (gold): two elongated lobes forming a V 60 degrees open from a stem; RAG2 (pale blue):
+    // a flattened crescent on the outer side of each arm tip. Each arm tip has a groove the DNA
+    // runs through, so the two RSSs are held side by side. Local z along the DNA; +y from the
+    // stem toward it; arm tips at z = +-0.8, y = 1.35.
+    g.ball(t2v(0f, -0.1f, 0f), 0.45f, T2_RAG1, 1f, 7, 10)
     for (sd in SIGNS) {
         val dir = t2v(0f, cos(0.52f), sd * sin(0.52f))
-        g.ellAxis(dir * 0.55f, dir, 0.45f, 0.55f, 0.45f, T2_RAG1, 1f, 8, 12)
-        g.ball(dir * 1.12f, 0.4f, T2_RAG2, 1f, 7, 10)
+        g.ellAxis(dir * 0.8f, dir, 0.4f, 0.8f, 0.4f, T2_RAG1, 1f, 8, 12)
+        val tip = dir * 1.55f
+        g.torus(tip + t2v(0f, 0.1f, 0f), t2v(0f, 0f, 1f), 0.45f, 0.14f, T2_RAG2, 1f, 12, 6, 0.3f, 2.8f, t2v(1f, 0f, 0f))
     }
-    g.ball(t2v(0f, -0.05f, 0f), 0.4f, T2_RAG1, 1f, 7, 10)
-    T2Lit(g.lit())
+    TriMesh(g.bakedBright())
 }
 
 /** Nucleosome-packed chromatin on both sides of the working region (local coordinates, bent with the rail). */
@@ -2645,8 +2967,8 @@ private fun StereoBodyRenderer.t2Chromatin(i: Int): TriMesh = t2Get("chromatin$i
             // histone octamer (11 nm x 6 nm) with 1.65 left-handed turns of DNA wrapped round it
             g.ellAxis(c, ax, 0.66f, 0.34f, 0.66f, T2_HISTONE, 1f, 7, 12)
             val e1 = t2perp(ax); val e2 = ax cross e1
-            val wrap = (0..30).map { q -> val t = q / 30f; val a = t * 1.65f * 2f * T2PI; c + (e1 * cos(a) + e2 * sin(a)) * 0.8f + ax * ((t - 0.5f) * 0.5f) }
-            g.path(wrap, { 0.12f }, T2_DNA_WRAP, 1f, 6, false)
+            val wrap = (0..30).map { q -> val t = q / 30f; val a = t * 1.65f * 2f * T2PI; c + (e1 * cos(a) + e2 * sin(a)) * 0.9f + ax * ((t - 0.5f) * 0.5f) }
+            g.path(wrap, { 0.15f }, T2_DNA_WRAP, 1f, 6, false)
             if (prev != null) g.path(listOf(prev, (prev + wrap[0]) * 0.5f + t2v(0f, 0.3f, 0f), wrap[0]), { 0.12f }, T2_DNA_WRAP, 1f, 6, false)
             prev = wrap.last()
         }
@@ -2654,7 +2976,7 @@ private fun StereoBodyRenderer.t2Chromatin(i: Int): TriMesh = t2Get("chromatin$i
     // other chromatin fibres of the nucleus around the room (nucleosome strings in 30 nm fibres)
     val rnd = java.util.Random(19L)
     for (f in 0 until 5) {
-        val a = f * 1.26f + 1.9f; val r = 5.5f + (f % 2) * 2f
+        val a = f * 1.26f + 1.9f; val r = 8.5f + (f % 2) * 2f
         var prev: T2V? = null
         for (k in 0 until 12) {
             val z = -10f + k * 2.2f
@@ -2746,9 +3068,14 @@ internal fun StereoBodyRenderer.drawVdj(n: TourNode, i: Int, seconds: Float) {
         if (ragOn > 0.02f && tau > -0.5f) {
             val fr = t2Frame(i, ragZ)
             // the stem on the side away from the loop; the arms reach to the DNA, each holding an RSS
-            val p = t2W(fr, bx - bdx * 1.12f, by - bdy * 1.12f).copyOf()
+            val p = t2W(fr, bx - bdx * 1.4f, by - bdy * 1.4f)
             val yx = fr[6] * bdx + fr[9] * bdy; val yy = fr[7] * bdx + fr[10] * bdy; val yz = fr[8] * bdx + fr[11] * bdy
-            t2Basis(p, fr[3], fr[4], fr[5], yx, yy, yz, 1f, 1f, 1f, t2RagMesh(), T2_RAG1, COL_LAMP, ragOn, if (tau in 4.3f..5.2f) 0.8f else 0.15f)
+            t2ModelBasis(p[0], p[1], p[2], fr[3], fr[4], fr[5], yx, yy, yz, 1f, 1f, 1f)
+            val dc = sqrt((p[0] - camNowX).pow(2) + (p[1] - camNowY).pow(2) + (p[2] - camNowZ).pow(2))
+            val keep = colorShader.globalFade
+            colorShader.globalFade = keep * ragOn * (if (dc < 3f) 0.85f else 1f) * (if (tau in 4.3f..5.2f) 1f else 1f)
+            t2Draw(t2RagMesh(), colorShader.globalFade < 0.99f)
+            colorShader.globalFade = keep
         }
         // the cut: a flash at both RSS / coding borders
         if (tau in 4.2f..5.6f) {
@@ -2888,18 +3215,22 @@ private fun StereoBodyRenderer.t2HighwayMeshes(i: Int): Array<ColorVboMesh> = t2
             }
         }
     }
-    var yy = -5.6f
-    while (yy < 5.6f) {
-        var zz = -6f
-        while (zz < 13f) {
-            if (rnd.nextFloat() < 0.4f) {
-                val xsurf = -5.4f + 0.3f * sin(zz * 0.35f) + 0.15f * sin(yy * 0.6f)
-                g.ball(t2v(xsurf + 0.2f, yy, zz), 0.2f, T2_RIBO_60S, 1f, 4, 6)
-                g.ball(t2v(xsurf + 0.45f, yy + 0.05f, zz), 0.14f, T2_RIBO_40S, 1f, 4, 6)
-            }
-            zz += 0.62f + rnd.nextFloat() * 0.25f
+    // ribosomes docked on the ER in polysomes: curved rows of 5-8 on one mRNA (pink line)
+    val poly = ArrayList<Float>()
+    fun xs(yy: Float, zz: Float) = -5.4f + 0.3f * sin(zz * 0.35f) + 0.15f * sin(yy * 0.6f)
+    repeat(34) {
+        val cy = -5.4f + rnd.nextFloat() * 10.8f; val cz = -5.5f + rnd.nextFloat() * 18f
+        val n = 5 + rnd.nextInt(4); val rr = 0.6f + rnd.nextFloat() * 0.3f; val a0 = rnd.nextFloat() * 2f * T2PI
+        var prev: T2V? = null
+        for (k in 0 until n) {
+            val a = a0 + k * 0.62f; val yy = cy + cos(a) * rr * (1f + 0.15f * k); val zz = cz + sin(a) * rr * (1f + 0.15f * k)
+            val x0 = xs(yy, zz)
+            g.ball(t2v(x0 + 0.18f, yy, zz), 0.2f, T2_RIBO_60S, 1f, 4, 6)
+            g.ball(t2v(x0 + 0.38f, yy + 0.04f, zz), 0.13f, T2_RIBO_40S, 1f, 4, 6)
+            val m = t2v(x0 + 0.3f, yy, zz)
+            prev?.let { poly.addAll(listOf(it.x, it.y, it.z, 0.98f, 0.42f, 0.72f, 0.9f, m.x, m.y, m.z, 0.98f, 0.42f, 0.72f, 0.9f)) }
+            prev = m
         }
-        yy += 0.75f
     }
     // Golgi stack ahead, cis face toward the ER: six curved cisternae with dilated rims, vesicles budding
     val ag = t2v(-1f, -0.25f, -0.2f).unit(); val ge1 = t2perp(ag); val ge2 = ag cross ge1
@@ -2923,13 +3254,13 @@ private fun StereoBodyRenderer.t2HighwayMeshes(i: Int): Array<ColorVboMesh> = t2
         g.torus(c, t2v(0.3f, 1f, 0.2f), l[3] * 0.45f, 0.06f, T2_LYSOSOME, 1f, 14, 4)
     }
     val bend = t2Bend(i, 3f, 9f)
-    val lA = lat.toFloatArray(); for (k in 0 until lA.size / 7) bend(lA, k * 7)
+    val lA = poly.toFloatArray(); for (k in 0 until lA.size / 7) bend(lA, k * 7)
     arrayOf(TriMesh(g.baked(bend)), TriMesh(glass.baked(bend)), LineMesh(lA))
 }
 
 /** Dynein's motor: a ring of six AAA+ domains (~13 nm), as one lit mesh in its x/y plane. */
 private fun StereoBodyRenderer.t2DyneinRing(): LitMesh = t2Get("dyneinring") {
-    val g = T2Geo(); for (k in 0 until 6) { val a = k * T2PI / 3f; g.ball(t2v(cos(a) * 0.07f, sin(a) * 0.07f, 0f), 0.035f, T2_DYNEIN, 1f, 5, 7) }
+    val g = T2Geo(); for (k in 0 until 6) { val a = k * T2PI / 3f; g.ball(t2v(cos(a) * 0.08f, sin(a) * 0.08f, 0f), 0.045f, T2_DYNEIN, 1f, 5, 7) }
     T2Lit(g.lit())
 }
 
@@ -2938,7 +3269,7 @@ internal fun StereoBodyRenderer.drawHighway(n: TourNode, i: Int, seconds: Float)
     if (!t2Near(i)) return
     t2Open(i, seconds) {
         val m = t2HighwayMeshes(i)
-        t2DrawWorld(m[0])
+        t2DrawWorld(m[0]); t2DrawWorld(m[2], true)
         val mx = T2_MT_X; val my = T2_MT_Y
         // the microtubule, drawn in the same rail frames as the motors that walk on it
         val seg = t2MtSegment(false)
@@ -2997,29 +3328,33 @@ internal fun StereoBodyRenderer.drawHighway(n: TourNode, i: Int, seconds: Float)
             }
             t2Basis(cargo, 0f, 0f, 1f, 0f, 1f, 0f, 0.6f, 0.6f, 0.6f, sphere, COL_CARGO, COL_LAMP, 0.45f * fade, 0.2f)
         }
-        // ---- cytoplasmic dynein under the track, heading for the minus end: two AAA+ ring motors
-        //      (13 nm) on 15-nm stalks whose binding domains grip the microtubule, linkers and tails
-        //      joined to dynactin (its 37-nm filament) and a coiled-coil adaptor holding a lysosome
+        // ---- cytoplasmic dynein on the lane side of the track, heading for the minus end: two AAA+
+        //      ring motors (13 nm) on 15-nm stalks whose binding domains grip the microtubule; linkers
+        //      and tails joined to dynactin (its 37-nm Arp1 filament, banded) and a coiled-coil
+        //      adaptor holding a lysosome
         val dz = 9.5f - ((seconds * 0.15f + 0.5f) % 1f) * 9f
         val dfade = t2sm((9.5f - dz) / 0.6f) * t2sm((dz - 0.5f) / 0.6f)
         val ring = t2DyneinRing()
-        val bot = my - 0.2f
-        val tail = t2W(t2Frame(i, dz + 0.1f), mx - 0.2f, bot - 0.62f).copyOf()
+        val sx = mx + 0.2f
+        val tail = t2W(t2Frame(i, dz + 0.1f), sx + 0.55f, my - 0.1f).copyOf()
         for (h in 0..1) {
             val hz = dz + h * 0.12f + 0.04f * sin(seconds * (2.6f + h * 0.7f) + h * 2f) + (if (((seconds * 1.3f + h).toInt() % 7) == 0) 0.05f else 0f)
             val fr = t2Frame(i, hz, FloatArray(13))
-            val mtbd = t2W(fr, mx + (h - 0.5f) * 0.1f, bot).copyOf()
-            val rc = t2W(fr, mx + (h - 0.5f) * 0.25f, bot - 0.19f - 0.07f).copyOf()
-            t2Basis(mtbd, fr[3], fr[4], fr[5], fr[9], fr[10], fr[11], 0.03f, 0.03f, 0.03f, sphere, T2_DYNEIN, T2_DYNEIN, dfade, 0.3f)
-            drawStrut(rc[0], rc[1], rc[2], mtbd[0], mtbd[1], mtbd[2], 0.01f, T2_DYNEIN, T2_DYNEIN, 0.3f)
-            t2Basis(rc, fr[3], fr[4], fr[5], fr[9], fr[10], fr[11], 1f, 1f, 1f, ring, T2_DYNEIN, T2_DYNEIN, dfade, 0.3f)
-            drawStrut(rc[0], rc[1], rc[2], tail[0], tail[1], tail[2], 0.015f, T2_DYNEIN, T2_DYNEIN, 0.2f)
+            val mtbd = t2W(fr, sx, my + (h - 0.5f) * 0.1f).copyOf()
+            val rc = t2W(fr, sx + 0.27f, my + (h - 0.5f) * 0.25f).copyOf()
+            t2Basis(mtbd, fr[3], fr[4], fr[5], fr[9], fr[10], fr[11], 0.03f, 0.03f, 0.03f, sphere, T2_DYNEIN, T2_DYNEIN, dfade, 0.4f)
+            drawStrut(rc[0], rc[1], rc[2], mtbd[0], mtbd[1], mtbd[2], 0.012f, T2_DYNEIN, T2_DYNEIN, 0.4f)
+            t2Basis(rc, fr[6], fr[7], fr[8], fr[9], fr[10], fr[11], 1f, 1f, 1f, ring, T2_DYNEIN, T2_DYNEIN, dfade, 0.4f)
+            drawStrut(rc[0], rc[1], rc[2], tail[0], tail[1], tail[2], 0.018f, T2_DYNEIN, T2_DYNEIN, 0.3f)
         }
         val fdt = t2Frame(i, dz + 0.1f, FloatArray(13))
-        val dyn = t2W(fdt, mx - 0.35f, bot - 0.68f).copyOf()
-        t2Basis(dyn, fdt[3], fdt[4], fdt[5], fdt[9], fdt[10], fdt[11], 0.06f, 0.06f, 0.23f, sphere, T2_DYNACTIN, T2_DYNACTIN, dfade, 0.2f)
-        val lyso = t2W(t2Frame(i, dz + 0.3f), mx - 0.9f, bot - 1.2f).copyOf()
-        drawStrut(dyn[0], dyn[1], dyn[2], lyso[0], lyso[1], lyso[2], 0.015f, T2_ADAPTOR, T2_ADAPTOR, 0.2f)
+        for (bnd in 0 until 7) {   // dynactin's Arp1 filament: 0.46 long, banded every 0.07
+            val p = t2W(fdt, sx + 0.62f, my - 0.1f, -0.21f + bnd * 0.07f).copyOf()
+            t2Basis(p, fdt[3], fdt[4], fdt[5], fdt[9], fdt[10], fdt[11], 0.06f, 0.06f, 0.032f, sphere, if (bnd % 2 == 0) T2_DYNACTIN else T2_ADAPTOR, T2_DYNACTIN, dfade, 0.3f)
+        }
+        val lyso = t2W(t2Frame(i, dz + 0.4f), sx + 1.3f, my - 0.9f).copyOf()
+        val dyn = t2W(fdt, sx + 0.62f, my - 0.1f).copyOf()
+        drawStrut(dyn[0], dyn[1], dyn[2], lyso[0], lyso[1], lyso[2], 0.02f, T2_ADAPTOR, T2_ADAPTOR, 0.3f)
         t2Basis(lyso, 0f, 0f, 1f, 0f, 1f, 0f, 0.6f, 0.6f, 0.6f, sphere, T2_LYSOSOME, T2_LYSO_CORE, 0.8f * dfade, 0.1f)
         t2LinesEnd(2f)
         t2DrawWorld(m[1], true)
@@ -3036,7 +3371,7 @@ internal fun StereoBodyRenderer.drawHighway(n: TourNode, i: Int, seconds: Float)
 // plasma membrane and releasing hexamers that fall apart into monomers.
 
 /** The factory is laid out from the pore; this shifts it all 3 units ahead so the pore is framed from the stop. */
-private const val T2_FZ = 8f
+private const val T2_FZ = 12f
 
 private fun StereoBodyRenderer.t2FactoryMeshes(i: Int): Array<ColorVboMesh> = t2Get("factory$i") {
     val g = T2Geo(); val glass = T2Geo(); val heads = ArrayList<Float>(); val fg = ArrayList<Float>(); val lam = ArrayList<Float>(); val rnd = java.util.Random(83L)
@@ -3052,8 +3387,8 @@ private fun StereoBodyRenderer.t2FactoryMeshes(i: Int): Array<ColorVboMesh> = t2
     }
     // the pore complex: cytoplasmic, inner (spoke) and nuclear rings, eight-fold, each a continuous
     // ring carrying its eight subunits
-    g.torus(t2v(0f, 0f, 4.8f), t2v(0f, 0f, 1f), 5.6f, 0.42f, T2_NPC_CYTO, 1f, 48, 8)
-    g.torus(t2v(0f, 0f, -0.2f), t2v(0f, 0f, 1f), 5.6f, 0.42f, T2_NPC, 1f, 48, 8)
+    g.torus(t2v(0f, 0f, 4.8f), t2v(0f, 0f, 1f), 5.6f, 0.3f, T2_NPC_CYTO, 1f, 48, 8)
+    g.torus(t2v(0f, 0f, -0.2f), t2v(0f, 0f, 1f), 5.6f, 0.3f, T2_NPC, 1f, 48, 8)
     g.torus(t2v(0f, 0f, 2.3f), t2v(0f, 0f, 1f), 4.1f, 0.5f, T2_NPC, 1f, 48, 8)
     for (k in 0 until 8) {
         val a = k * T2PI / 4f + T2PI / 8f; val d = t2v(cos(a), sin(a), 0f); val tg = t2v(-sin(a), cos(a), 0f)
@@ -3123,7 +3458,7 @@ private fun StereoBodyRenderer.t2FactoryMeshes(i: Int): Array<ColorVboMesh> = t2
         g.ell(q, t2v(0.5f, 0f, 0f), t2v(0f, 0.4f, 0f), t2v(0f, 0f, 0.4f), T2_EXPORT, 1f, 6, 9)
     // rough ER membrane, continuous with the outer nuclear membrane, to port
     for (xm in floatArrayOf(-4.3f, -4.9f)) {
-        glass.surf(10, 12, T2_ER, 0.3f) { v, u -> t2v(xm, -12f + 24f * u, 4.4f + 18f * v) }
+        glass.surf(10, 12, T2_ER, 0.55f) { v, u -> t2v(xm, -12f + 24f * u, 4.4f + 18f * v) }
         var yy = -11.6f; while (yy < 12f) { var zz = 4.8f; while (zz < 22f) { heads.addAll(listOf(xm + (if (xm < -4.6f) -0.02f else 0.02f), yy, zz, 1f, 0.8f, 0.5f, 0.7f)); zz += 0.8f }; yy += 0.8f }
     }
     // ribosomes on Sec61: the large (60S) subunit against the translocon, the small (40S) outward
@@ -3134,6 +3469,7 @@ private fun StereoBodyRenderer.t2FactoryMeshes(i: Int): Array<ColorVboMesh> = t2
         g.ell(t2v(-1.0f, -0.8f, rz), t2v(0.75f, 0f, 0f), t2v(0f, 1.15f, 0f), t2v(0f, 0f, 1.2f), T2_RIBO_40S, 1f, 8, 11)
         g.ball(t2v(-0.9f, 0.5f, rz + 0.2f), 0.55f, T2_RIBO_40S, 1f, 5, 7)
         g.tube(t2v(-4.2f, -0.9f, rz), t2v(-5.0f, -0.9f, rz), 0.6f, 0.6f, T2_SEC61, 1f, 10, true)
+        g.torus(t2v(-4.28f, -0.9f, rz), t2v(1f, 0f, 0f), 0.7f, 0.1f, T2_SEC61_RIM, 1f, 16, 5)
     }
     // the second ribosome's product, already folded in the lumen, with a chaperone
     g.ball(t2v(-6.1f, -0.8f, 9.9f), 0.42f, T2_CHAIN_B, 1f, 6, 8); g.ball(t2v(-6.0f, 0.05f, 10.4f), 0.45f, T2_BIP, 1f, 6, 8)
@@ -3209,10 +3545,25 @@ internal fun StereoBodyRenderer.drawFactory(n: TourNode, i: Int, seconds: Float)
             val t = (seconds % 30f) / 30f
             val px = 0.4f + 1.4f * t; val al = t2sm(t / 0.06f) * (1f - t2sm((t - 0.94f) / 0.06f))
             val fr = t2Frame(i, T2_FZ + -1.6f)
-            val p = t2W(fr, px, -1.85f).copyOf()
-            t2Basis(p, fr[3], fr[4], fr[5], fr[9], fr[10], fr[11], 1.05f, 0.85f, 0.95f, sphere, T2_POL2, COL_LAMP, al, 0.05f)
+            // Pol II clamps the DNA in its cleft: two jaws above and below the helix axis, translucent
+            // enough to show the transcription bubble inside, the strands parted over 0.5 units
+            for (sd in SIGNS) {
+                val p = t2W(fr, px, -2.1f + sd * 0.5f).copyOf()
+                t2Basis(p, fr[3], fr[4], fr[5], fr[9], fr[10], fr[11], 0.95f, 0.36f, 0.85f, sphere, T2_POL2, T2_POL2, 0.7f * al, 0.1f)
+            }
+            t2LinesBegin()
+            for (st in 0..1) {
+                var p0x = 0f; var p0y = 0f; var p0z = 0f
+                for (q in 0..10) {
+                    val x = px - 0.35f + 0.07f * q; val open = sin(T2PI * q / 10f) * 0.25f
+                    val w = t2W(fr, x, -2.1f + (if (st == 0) open else -open))
+                    if (q > 0) t2Seg(p0x, p0y, p0z, w[0], w[1], w[2], if (st == 0) T2_DNA else T2_SIGNAL, al)
+                    p0x = w[0]; p0y = w[1]; p0z = w[2]
+                }
+            }
+            t2LinesEnd(3f)
             val q = t2W(t2Frame(i, T2_FZ + -0.6f), 1.2f, -1.4f).copyOf()
-            val e = t2W(t2Frame(i, T2_FZ + -1.3f), px, -1.2f).copyOf()
+            val e = t2W(t2Frame(i, T2_FZ + -1.6f), px + 0.1f, -1.85f).copyOf()
             drawStrut(e[0], e[1], e[2], q[0], q[1], q[2], 0.07f, T2_MRNA, T2_MRNA)
         }
         // the nascent chain (24 s): out of the large subunit's tunnel, through Sec61, signal peptide
@@ -3290,7 +3641,7 @@ internal fun StereoBodyRenderer.drawFactory(n: TourNode, i: Int, seconds: Float)
 private const val T2_MEM_TOP = -3.0f
 private const val T2_MEM_BOT = -8.0f
 private const val T2_AXX = -3.2f
-private const val T2_AXZ = 9.0f
+private const val T2_AXZ = 23.0f
 private const val T2_SUBA = -2.356f     // subunit a's angle round the ring (+x toward +z): front, away from the lane
 
 private fun StereoBodyRenderer.t2MotorMeshes(i: Int): Array<ColorVboMesh> = t2Get("motor$i") {
@@ -3301,7 +3652,7 @@ private fun StereoBodyRenderer.t2MotorMeshes(i: Int): Array<ColorVboMesh> = t2Ge
     var x = -14f
     while (x <= 16f) {
         var z = -8f
-        while (z <= 24f) {
+        while (z <= 30f) {
             val jx = x + (rnd.nextFloat() - 0.5f) * 0.3f; val jz = z + (rnd.nextFloat() - 0.5f) * 0.3f
             val dr = sqrt((jx - ax) * (jx - ax) + (jz - az) * (jz - az)); val da = sqrt((jx - sax) * (jx - sax) + (jz - saz) * (jz - saz))
             if (dr > 3.3f && da > 2.0f) for (yh in floatArrayOf(T2_MEM_TOP, T2_MEM_BOT)) {
@@ -3319,7 +3670,7 @@ private fun StereoBodyRenderer.t2MotorMeshes(i: Int): Array<ColorVboMesh> = t2Ge
         x += 1.0f
     }
     x = -34f
-    while (x <= 36f) { var z = -26f; while (z <= 44f) { if (x < -14.5f || x > 16.5f || z < -8.5f || z > 24.5f) for (yh in floatArrayOf(T2_MEM_TOP, T2_MEM_BOT)) far.addAll(listOf(x, yh, z, 1f, 0.8f, 0.5f, 0.85f)); z += 1f }; x += 1f }
+    while (x <= 36f) { var z = -26f; while (z <= 44f) { if (x < -14.5f || x > 16.5f || z < -8.5f || z > 30.5f) for (yh in floatArrayOf(T2_MEM_TOP, T2_MEM_BOT)) far.addAll(listOf(x, yh, z, 1f, 0.8f, 0.5f, 0.85f)); z += 1f }; x += 1f }
     // ---- rotor (local, axis at the origin, +y up to the matrix): c8 ring, δε foot, γ
     for (k in 0 until 8) {
         val a = k * T2PI / 4f; val c = if (k == 0) T2_C_MARK else T2_C_RING
@@ -3340,7 +3691,7 @@ private fun StereoBodyRenderer.t2MotorMeshes(i: Int): Array<ColorVboMesh> = t2Ge
     stat.ellAxis(t2v(sax, -5.5f, saz), t2v(0f, 1f, 0f), 1.3f, 3.5f, 2.3f, T2_SUB_A, 1f, 9, 12, t2v(cos(T2_SUBA), 0f, sin(T2_SUBA)))
     val dA = t2v(cos(T2_SUBA), 0f, sin(T2_SUBA))
     val stalk = listOf(t2v(ax, -2f, az) + dA * 4.4f, t2v(ax, 3f, az) + dA * 6.3f, t2v(ax, 8f, az) + dA * 6.7f, t2v(ax, 12.6f, az) + dA * 5.4f, t2v(ax, 14.2f, az) + dA * 2.4f)
-    stat.path(stalk, { 0.3f }, T2_STATOR, 1f, 8, true)
+    stat.path(stalk, { 0.8f }, T2_STATOR, 1f, 10, true)
     stat.ball(t2v(ax, 6.2f, az) + dA * 6.6f, 0.95f, T2_STATOR, 1f, 6, 9)
     stat.ball(t2v(ax, 14.4f, az), 1.6f, T2_STATOR, 1f, 8, 12)
     // the two half-channels in subunit a, at the a/c interface: entry from below, exit to above
@@ -3463,11 +3814,11 @@ internal fun StereoBodyRenderer.drawMotor(n: TourNode, i: Int, seconds: Float) {
 // separate (anaphase B); nuclear envelopes re-form round the decondensing sets and an actomyosin
 // ring pinches the cell in two, leaving a midbody (a 36 s cycle).
 
-private const val T2_SPX = 0f
-private const val T2_SPY = -4.5f       // spindle axis (parallel to the rail, 4.5 below it)
-private const val T2_PLATE_Z = 9.0f
+private const val T2_SPX = 7.5f
+private const val T2_SPY = 0f         // spindle axis: parallel to the rail, 8.5 to starboard at eye level
+private const val T2_PLATE_Z = 16.0f
 private const val T2_CELL_R = 7.5f      // the rounded mitotic cell, 12 µm
-private const val T2_APICAL = -5.7f     // apical surface at the crypt floor under the cell
+private const val T2_APICAL = 5f       // apical surface of the starboard crypt wall (x) where the cell sits
 private const val T2_CRYPT_R = 14f      // the crypt lumen: a tube of this radius round the rail's line
 
 private class T2Chromo(val cx: Float, val cy: Float, val wx: Float, val wy: Float, val lp: Float, val lq: Float, val sx: Float, val sy: Float, val sz: Float)
@@ -3529,15 +3880,15 @@ private fun t2Arm(n0: Int, cx: Float, cy: Float, cz: Float, dx: Float, dy: Float
  */
 private fun StereoBodyRenderer.t2Epithelium(i: Int): Array<ColorVboMesh> = t2Get("epith$i") {
     val g = T2Geo(); val brush = ArrayList<Float>(); val rnd = java.util.Random(151L)
-    val R = T2_CRYPT_R; val ay = T2_APICAL + R     // tube axis (x = 0, y = ay)
+    val R = T2_CRYPT_R; val ax0 = T2_APICAL - R     // tube axis (x = ax0, y = 0), the wall's starboard side at x = 6
     val H = 26f
     val cols = 16; val rh = 2f * T2PI * R / cols / 1.5f
-    fun P(arc: Float, z: Float, rr: Float): T2V { val th = -T2PI / 2f + arc / R; return t2v(cos(th) * rr, ay + sin(th) * rr, z) }
+    fun P(arc: Float, z: Float, rr: Float): T2V { val th = arc / R; return t2v(ax0 + cos(th) * rr, sin(th) * rr, z) }
     var paneth = 0
     for (row in -4..6) for (c in 0 until cols) {
         val ac = (c - cols / 2) * 1.5f * rh; val zc = T2_PLATE_Z + row * sqrt(3f) * rh + (if (c % 2 != 0) sqrt(3f) * rh * 0.5f else 0f)
         val bottom = P(ac, zc, R); val dc = (bottom - t2v(T2_SPX, T2_SPY, T2_PLATE_Z)).len()
-        if (dc < T2_CELL_R + 0.8f || zc < -14f || zc > 34f) continue
+        if (dc < T2_CELL_R + 0.3f || zc < -14f || zc > 42f) continue
         val isPaneth = paneth < 3 && row == -2 && abs(c - cols / 2) <= 1
         if (isPaneth) paneth++
         val shrinkA = if (isPaneth) 2.5f / (2f * rh) else 0.96f; val shrinkB = if (isPaneth) 4.5f / (2f * rh) else 0.96f
@@ -3549,7 +3900,7 @@ private fun StereoBodyRenderer.t2Epithelium(i: Int): Array<ColorVboMesh> = t2Get
             g.tri(P(ac, zc, R), Q(a, R, shrinkA), Q(b, R, shrinkA), if (isPaneth) T2_PANETH else T2_EPITHELIUM_TOP, 1f)
         }
         val nr = R + H - 7f + rnd.nextFloat() * 2f
-        val nc = P(ac, zc, nr); val out = (nc - t2v(0f, ay, nc.z)).unit()
+        val nc = P(ac, zc, nr); val out = (nc - t2v(ax0, 0f, nc.z)).unit()
         g.ellAxis(nc, out, 1.0f, 3.0f, 1.0f, T2_EPI_NUC, 1f, 6, 9)
         if (isPaneth) {   // eosinophilic secretory granules crowding the apex
             for (q in 0 until 10) g.ball(P(ac + (rnd.nextFloat() - 0.5f) * 1.6f, zc + (rnd.nextFloat() - 0.5f) * 1.6f, R + 0.6f + rnd.nextFloat() * 1.6f), 0.35f, T2_PANETH_GRAN, 1f, 5, 7)
@@ -3564,6 +3915,7 @@ private fun StereoBodyRenderer.t2Epithelium(i: Int): Array<ColorVboMesh> = t2Get
     arrayOf(TriMesh(g.baked(rigid)), LineMesh(bA))
 }
 
+private var t2DivArrive = -1f
 private var t2DivBuilt = -1f
 private var t2DivT = -1f
 private var t2DivVerts = 0
@@ -3575,14 +3927,20 @@ internal fun StereoBodyRenderer.drawDivision(n: TourNode, i: Int, seconds: Float
         val f0 = t2Rigid(i, 0f, FloatArray(13))
         val epi = t2Epithelium(i)
         if (own) { t2DrawWorld(epi[0]); t2DrawWorld(epi[1], true) }
-        val t = seconds % 36f
+        // mitosis paced by the crew rather than a free loop: prometaphase on arrival, metaphase held
+        // through "forty-six chromosomes...", anaphase on "...hauled apart", two cells by "And
+        // there's two", then held
+        if (routeProgress < i - 0.3f || routeProgress > i + 0.6f) t2DivArrive = -1f
+        else if (t2DivArrive < 0f && routeProgress > i - 0.2f) t2DivArrive = seconds
+        val tt = if (t2DivArrive < 0f) 0f else seconds - t2DivArrive
+        val t = when { tt < 6f -> 1.2f + tt; tt < 22f -> 7.2f + (tt - 6f) * 8.8f / 16f; else -> min(33f, 16f + (tt - 22f) * 20f / 28f) }
         val cong = t2sm((t - 1f) / 6f); val anaA = t2sm((t - 16f) / 7f); val anaB = t2sm((t - 18f) / 6f)
         val telo = t2sm((t - 23f) / 4f); val cyto = t2sm((t - 23f) / 8f)
         val cycleA = t2sm(t / 1.2f) * (1f - t2sm((t - 34.5f) / 1.5f))
         val poleD = 5.5f + 1.2f * anaB
         // chromosomes, rebuilt at ~20 Hz (both eyes share one build)
         val sig = cong + anaA * 3f + anaB * 7f + telo * 13f + cycleA * 29f
-        if (t2DivVerts == 0 || (abs(sig - t2DivBuilt) > 0.002f && abs(seconds - t2DivT) > 0.1f)) {
+        if (t2DivVerts == 0 || (abs(sig - t2DivBuilt) > 0.002f && abs(seconds - t2DivT) > 0.2f)) {
             t2DivBuilt = sig; t2DivT = seconds
             var v = 0
             val ch = t2Chromos
@@ -3686,8 +4044,26 @@ internal fun StereoBodyRenderer.drawDivision(n: TourNode, i: Int, seconds: Float
         val waist = sqrt(max(0.3f, R * R - d * d))
         for (sgn in SIGNS) {
             val p = t2W(f0, T2_SPX, T2_SPY, T2_PLATE_Z + sgn * d).copyOf()
-            t2Basis(p, f0[3], f0[4], f0[5], f0[9], f0[10], f0[11], R, R, R, t2BallMesh(), T2_CELL, COL_CELL_EDGE, 0.13f * cycleA, 0.1f)
+            t2Basis(p, f0[3], f0[4], f0[5], f0[9], f0[10], f0[11], R, R, R, t2BallMesh(), T2_CELL, COL_CELL_EDGE, 0.25f * cycleA, 0.15f)
             if (d < 0.01f) break
+        }
+        // its outline as seen from the lane, and the thin basal process still holding the sheet
+        t2LinesBegin()
+        for (sgn in SIGNS) {
+            val cz = T2_PLATE_Z + sgn * d
+            var px = 0f; var py = 0f; var pz = 0f
+            for (q in 0..40) {
+                val a = q * 2f * T2PI / 40f
+                val w = t2W(f0, T2_SPX + cos(a) * R, T2_SPY + sin(a) * R, cz)
+                if (q > 0) t2Seg(px, py, pz, w[0], w[1], w[2], T2_CELL_OUTLINE, 0.5f * cycleA)
+                px = w[0]; py = w[1]; pz = w[2]
+            }
+            if (d < 0.01f) break
+        }
+        t2LinesEnd(1.5f)
+        run {
+            val a = t2W(f0, T2_SPX + R * 0.9f, T2_SPY, T2_PLATE_Z).copyOf(); val b = t2W(f0, T2_APICAL + 26f, T2_SPY, T2_PLATE_Z)
+            drawStrut(a[0], a[1], a[2], b[0], b[1], b[2], 0.3f, T2_CELL, COL_CELL_EDGE, 0.1f)
         }
         if (cyto > 0.02f) {
             val p = t2W(f0, T2_SPX, T2_SPY, T2_PLATE_Z).copyOf()
@@ -3700,4 +4076,5 @@ internal fun StereoBodyRenderer.drawDivision(n: TourNode, i: Int, seconds: Float
     }
 }
 
+internal val T2_CELL_OUTLINE = floatArrayOf(0.75f, 0.9f, 0.95f, 1f)
 internal val T2_CHROMOSOME_LIGHT_T2 = floatArrayOf(0.86f, 0.78f, 1f, 1f)

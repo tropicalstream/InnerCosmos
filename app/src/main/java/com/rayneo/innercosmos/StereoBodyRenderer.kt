@@ -1413,6 +1413,7 @@ class StereoBodyRenderer(
         fun cr(a: Float, b: Float, c: Float, d: Float): Float =
             0.5f * ((2f * b) + (-a + c) * t + (2f * a - 5f * b + 4f * c - d) * t * t + (-a + 3f * b - 3f * c + d) * t * t * t)
         out[0] = cr(p0.x, p1.x, p2.x, p3.x); out[1] = cr(p0.y, p1.y, p2.y, p3.y); out[2] = cr(p0.z, p1.z, p2.z, p3.z)
+        map.railDropY?.let { out[1] += it(pc) }
     }
 
     internal val tmpA = FloatArray(3)

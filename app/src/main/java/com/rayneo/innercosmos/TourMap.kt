@@ -32,7 +32,9 @@ class TourMap(
     val id: Int, val title: String, val subtitle: String, val hudTitle: String, val scriptAsset: String,
     val nodes: List<TourNode>, val lengthKeys: FloatArray, val lengthM: DoubleArray, val armStops: FloatArray,
     /** Optional passage-radius profile: (rail progress, the node-interpolated radius) -> radius. */
-    val radiusAt: ((Float, Float) -> Float)? = null
+    val radiusAt: ((Float, Float) -> Float)? = null,
+    /** Optional vertical offset of the rail (world y) by rail progress: 0 at every node. */
+    val railDropY: ((Float) -> Float)? = null
 ) {
     /** Rail progress beyond which the visible airflow is gone: 0.7 past the last AIR stop (or -1 if none). */
     val airEnd: Float = nodes.indexOfLast { it.amb == Amb.AIR }.let { if (it < 0) -1f else it + 0.7f }
@@ -88,7 +90,7 @@ object Tours {
             TourNode("THE MOUTH", 0.0f, 0.0f, 0f, 4.2f, rgb(0.92f, 0.50f, 0.52f), 12.0, Scene.MOUTH, Amb.AIR, 50f, 20f, "MOUTH", "12 m → 12 mm"),
             // 12 mm: the swallow carries the craft ~31 units (25 cm) down the oesophagus into a stomach ~10 cm across
             TourNode("THE STOMACH", 1.4f, -0.3f, -60f, 6.0f, rgb(0.85f, 0.42f, 0.40f), 1.2e-2, Scene.STOMACH, Amb.GUT, 57f, 58f, "STOMACH", "12 mm"),
-            TourNode("THE GUT", 2.4f, 0.3f, -76f, 3.6f, rgb(0.95f, 0.55f, 0.55f), 1.2e-3, Scene.GUT, Amb.GUT, 50f, 68f, "SMALL INTESTINE", "1.2 mm → 12 µm"),
+            TourNode("THE GUT", 2.4f, 0.3f, -76f, 4.6f, rgb(0.95f, 0.55f, 0.55f), 1.2e-3, Scene.GUT, Amb.GUT, 50f, 68f, "SMALL INTESTINE", "1.2 mm → 12 µm"),
             TourNode("THE PHAGE", -2.2f, -0.2f, -92f, 4.5f, rgb(0.14f, 0.2f, 0.2f), 1.2e-7, Scene.PHAGE, Amb.GUT, 52f, 72f, "GUT · PHAGE", "12 µm → 120 nm"),
             TourNode("THE LIVER", 2.0f, 0.4f, -108f, 1.6f, rgb(0.55f, 0.18f, 0.16f), 1.2e-5, Scene.LIVER, Amb.BLOOD, 43f, 52f, "LIVER", "12 µm"),
             TourNode("THE KIDNEY", -2.6f, 0.0f, -124f, 3.0f, rgb(0.6f, 0.42f, 0.44f), 1.2e-5, Scene.KIDNEY, Amb.BLOOD, 60f, 62f, "KIDNEY", "12 µm"),
@@ -106,7 +108,8 @@ object Tours {
         lengthKeys = floatArrayOf(0f, 0.002f, 0.006f, 1.074f, 1.086f, 2.074f, 2.086f, 2.574f, 2.586f, 3.574f, 3.586f, 5.074f, 5.086f, 6.074f, 6.086f, 7.074f, 7.086f, 8.074f, 8.086f, 9.074f, 9.086f, 10.074f, 10.086f, 10.1715f, 10.1835f, 10.269f, 10.281f, 11.074f, 11.086f, 12.074f, 12.98f, 13f),
         lengthM = doubleArrayOf(12.0, 12.0, 0.012, 0.012, 0.0012, 0.0012, 1.2e-05, 1.2e-05, 1.2e-07, 1.2e-07, 1.2e-05, 1.2e-05, 1.2e-06, 1.2e-06, 1.2e-05, 1.2e-05, 1.2e-08, 1.2e-08, 1.2e-07, 1.2e-07, 1.2e-08, 1.2e-08, 5.5e-09, 5.5e-09, 2.6e-09, 2.6e-09, 1.2e-09, 1.2e-09, 1.2e-06, 1.2e-06, 12.0, 12.0),
         armStops = floatArrayOf(1.9f, 2.91f, 3.17f, 6.05f, 9.05f, 10.08f, 11.05f),   // villi, phage landing and lysis, sarcomere, kinesin, factory, ATP synthase
-        radiusAt = { p, r -> t2MachineRadius(p, r) }   // the narrow oesophagus between the mouth and the stomach
+        radiusAt = { p, r -> t2MachineRadius(p, r) },   // the narrow oesophagus between the mouth and the stomach
+        railDropY = { p -> t2MachineDropY(p) }            // the swallow dives behind the larynx into the oesophagus
     )
 
     /**
