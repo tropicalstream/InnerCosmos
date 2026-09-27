@@ -3000,6 +3000,9 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
 
     // ---- organs (opaque), in their true places
     part(0f, 0.922f, 0.005f, 0.046f, 0.038f, 0.052f, COL_ORG_BRAIN, COL_LAMP, 1f, 0.8f)                   // brain
+    part(0f, 0.93f, 0f, 0.051f, 0.05f, 0.058f, COL_BONE, COL_LAMP, 0.35f)                                   // cranium, see-through
+    drawBasis(wx(0f, 0.022f), wy(0.892f), wz(0f, 0.022f), 0f, 1f, 0f, -tx, 0f, -tz, 0.034f * H, 0.036f * H, 0.012f * H,
+        ribArc, COL_BONE, COL_LAMP, 0.85f * alpha, 0f, 0f)                                                  // mandible, open behind
     seg(0f, 0.83f, 0.01f, 0f, 0.76f, 0.01f, 0.010f, COL_BONE, COL_LAMP, 0.9f)                              // trachea
     // Lungs either side of the mediastinum: the right (her -x) is the larger, three-lobed lung; the
     // left is narrower with a cardiac notch where the heart sits. Bases on the diaphragm (~0.645),
@@ -3035,6 +3038,12 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
         part(sgn * 0.075f, 0.515f, -0.01f, 0.05f, 0.04f, 0.012f, COL_BONE, COL_LAMP, 0.85f)                 // iliac wings
         seg(sgn * 0.012f, 0.822f, 0.03f, sgn * 0.125f, 0.83f, 0.0f, 0.007f, COL_BONE, COL_LAMP, 1f)          // clavicle
         seg(sgn * 0.07f, 0.47f, 0f, sgn * 0.078f, 0.28f, 0f, 0.012f, COL_BONE, COL_LAMP, 1f)                 // femur
+        seg(sgn * 0.13f, 0.80f, 0f, sgn * 0.155f, 0.64f, 0f, 0.009f, COL_BONE, COL_LAMP, 1f)                 // humerus
+        seg(sgn * 0.152f, 0.632f, 0.006f, sgn * 0.166f, 0.475f, 0.008f, 0.006f, COL_BONE, COL_LAMP, 1f)      // radius
+        seg(sgn * 0.160f, 0.632f, -0.006f, sgn * 0.174f, 0.475f, -0.004f, 0.006f, COL_BONE, COL_LAMP, 1f)    // ulna
+        part(sgn * 0.175f, 0.435f, 0.012f, 0.012f, 0.03f, 0.006f, COL_BONE, COL_LAMP, 1f)                   // hand bones
+        seg(sgn * 0.075f, 0.265f, 0.004f, sgn * 0.078f, 0.055f, 0.004f, 0.009f, COL_BONE, COL_LAMP, 1f)      // tibia
+        seg(sgn * 0.090f, 0.255f, -0.006f, sgn * 0.090f, 0.06f, -0.006f, 0.005f, COL_BONE, COL_LAMP, 1f)     // fibula (lateral)
     }
 
     // ---- this tour's stops, where they happened, joined in order
@@ -3045,12 +3054,14 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
         val a0 = nodes[k]
         // Map coordinates follow the 2D inset: a figure facing you, image-left = her right (-x).
         val mx = (a0.mapX - 50f) / 150f; val my = 1f - a0.mapY / 150f
-        part(mx, my, 0.078f, 0.011f, 0.011f, 0.011f, COL_LAMP, COL_LAMP, 1f, 0f, 0.9f)
+        val mz = if (abs(mx) > 0.12f) 0.008f else 0.035f          // just under the skin: limbs are thin
+        part(mx, my, mz, 0.011f, 0.011f, 0.011f, COL_LAMP, COL_LAMP, 1f, 0f, 0.9f)
         if (k + 1 < nodes.size - 1 && v + 14 <= arr.size) {
             val b0 = nodes[k + 1]
             val nx = (b0.mapX - 50f) / 150f; val ny = 1f - b0.mapY / 150f
             for ((qx, qy) in listOf(mx to my, nx to ny)) {
-                arr[v++] = wx(qx, 0.078f); arr[v++] = wy(qy); arr[v++] = wz(qx, 0.078f)
+                val qz = if (abs(qx) > 0.12f) 0.008f else 0.035f
+                arr[v++] = wx(qx, qz); arr[v++] = wy(qy); arr[v++] = wz(qx, qz)
                 arr[v++] = 1f; arr[v++] = 0.77f; arr[v++] = 0.42f; arr[v++] = 0.8f * alpha
             }
         }

@@ -120,7 +120,7 @@ object Tours {
             TourNode("THE TRANSFUSION", -2.6f, 0.0f, -64f, 2.0f, rgb(0.62f, 0.08f, 0.10f), 1.2e-5, Scene.TRANSFUSION, Amb.BLOOD, 27f, 55f, "TRANSFUSION", "12 \u00b5m"),
             TourNode("THE TABLE", 2.4f, -0.3f, -80f, 3.2f, rgb(0.78f, 0.34f, 0.32f), 1.2e-2, Scene.SUTURE, Amb.BLOOD, 50f, 60f, "THE TABLE", "12 mm"),
             TourNode("THE STUDENTS", -2.0f, 0.3f, -96f, 3.2f, rgb(0.90f, 0.82f, 0.70f), 1.2e-5, Scene.STUDENTS, Amb.CYTO, 65f, 70.5f, "BONE MARROW", "12 \u00b5m"),
-            TourNode("THE CUT", 2.2f, 0.2f, -112f, 2.6f, rgb(0.82f, 0.40f, 0.38f), 1.2e-5, Scene.CUT, Amb.CYTO, 76f, 80f, "A CUT FINGER", "12 \u00b5m"),
+            TourNode("THE CUT", 2.2f, 0.2f, -112f, 2.6f, rgb(0.82f, 0.40f, 0.38f), 1.2e-5, Scene.CUT, Amb.CYTO, 77f, 88f, "A CUT FINGER", "12 \u00b5m"),
             TourNode("THE FEVER", -2.4f, -0.2f, -128f, 3.0f, rgb(0.66f, 0.10f, 0.14f), 1.2e-5, Scene.SEPSIS, Amb.BLOOD, 54f, 50f, "BLOODSTREAM", "12 \u00b5m"),
             TourNode("THE MEMORY", 0.0f, 0.2f, -146f, 9.0f, rgb(0.38f, 0.22f, 0.36f), 12.0, Scene.LOOKBACK, Amb.LOOKBACK, 50f, 60f, "WHOLE BODY", "12 \u00b5m \u2192 12 m")
         ),
