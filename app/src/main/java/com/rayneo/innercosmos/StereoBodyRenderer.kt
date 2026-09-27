@@ -781,13 +781,29 @@ class StereoBodyRenderer(
         routeNodes.draw(colorShader.positionHandle, colorShader.colorHandle)
     }
 
+    /**
+     * How much of the fine drift a stop shows (1 = all). Some stops have no business with free
+     * specks: stored blood sits still in its bottle, and a vein's plasma is clear at this scale.
+     */
+    internal fun fineDriftAt(stop: Int): Float = when {
+        map.id == 3 && stop == 1 -> 0.25f
+        map.id == 3 && stop == 2 -> 0f
+        else -> 1f
+    }
+
     internal fun drawDrift() {
+        // Cross-fade between the stops on either side of the craft.
+        val k0 = routeProgress.toInt().coerceIn(0, nodes.lastIndex); val t = routeProgress - k0
+        val w = fineDriftAt(k0) * (1f - t) + fineDriftAt(min(k0 + 1, nodes.lastIndex)) * t
+        if (w < 0.01f) return
         GLES20.glDepthMask(false)
         Matrix.setIdentityM(model, 0)
         Matrix.multiplyMM(mv, 0, view, 0, model, 0)
         Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
+        colorShader.globalFade = w
         colorShader.use(mvp, 3.2f, points = true)
         drift.draw(colorShader.positionHandle, colorShader.colorHandle)
+        colorShader.globalFade = 1f
         GLES20.glDepthMask(true)
     }
 
