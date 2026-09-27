@@ -161,7 +161,7 @@ internal val T2_MLINE = floatArrayOf(0.6f, 0.22f, 0.3f, 1f)
 internal val T2_TTUBULE = floatArrayOf(0.26f, 0.5f, 0.58f, 1f)
 internal val T2_SR = floatArrayOf(0.42f, 0.66f, 0.72f, 1f)
 internal val T2_CALCIUM = floatArrayOf(0.55f, 0.95f, 1f, 1f)
-internal val T2_MITO_PALE = floatArrayOf(0.9f, 0.6f, 0.4f, 1f)
+internal val T2_MITO_PALE = floatArrayOf(0.9f, 0.62f, 0.45f, 1f)
 internal val T2_MITO = floatArrayOf(0.96f, 0.56f, 0.26f, 1f)
 internal val T2_MITO_CRISTA = floatArrayOf(0.99f, 0.74f, 0.4f, 1f)
 internal val T2_BONE = floatArrayOf(0.96f, 0.91f, 0.78f, 1f)
@@ -966,7 +966,7 @@ private fun StereoBodyRenderer.t2MouthMesh(i: Int): TriMesh = t2Get("mouth$i") {
     //      posterior wall faces us behind the uvula and slopes down to the upper oesophageal
     //      sphincter, a transverse slit about 4 cm below the mouth, behind the cricoid; the
     //      swallow goes over the epiglottis and down behind the larynx into it.
-    val off0 = FloatArray(2); t2RailOffset(i, T2_UES_Z, off0); val slitY = off0[1]
+    val slitY = t2RailYAtRigidZ(i, T2_UES_Z)
     g.surf(18, 40, T2_PHARYNX) { v, u ->
         val sv = t2sm(v); val z = 12.3f + (T2_UES_Z - 12.3f) * v; val a = u * 2f * T2PI
         val w = T2_PH_RX + (1.3f - T2_PH_RX) * sv; val h = T2_PH_RY + (0.9f - T2_PH_RY) * sv
@@ -2484,12 +2484,12 @@ private fun StereoBodyRenderer.t2MuscleMeshes(): Array<ColorVboMesh> = t2Get("mu
     // mitochondria: elongated, wrapped round the myofibrils at the I band, in pairs either side of
     // each Z line, on the side of each inner fibril that faces the lane
     for (fb in t2Fibrils()) {
-        val r0 = sqrt(fb[0] * fb[0] + fb[1] * fb[1]); if (r0 > 3f) continue
+        val r0 = sqrt(fb[0] * fb[0] + fb[1] * fb[1]); if (r0 < 3f) continue
         val face = atan2(-fb[1], -fb[0])
         for (sgn in SIGNS) {   // a thin curved plate wrapped round the fibril at the I band
             zu.surf(10, 8, T2_MITO_PALE) { u, v ->
                 val a = face + (u - 0.5f) * 1.2f; val b = v * 2f * T2PI; val taper = sqrt(max(0.05f, sin(T2PI * u)))
-                val r = 1.06f + 0.04f * cos(b) * taper
+                val r = 0.96f + 0.035f * cos(b) * taper
                 t2v(fb[0] + cos(a) * r, fb[1] + sin(a) * r, sgn * 0.35f + 0.09f * sin(b) * taper)
             }
         }
@@ -2631,6 +2631,19 @@ private val T2_ISLAND = floatArrayOf(-5.6f, -3.2f, 4.6f)
 private val T2_HSC = floatArrayOf(-3.2f, 2.8f, 5.5f)
 private val T2_BCELL = floatArrayOf(1.4f, -2.35f, 7.5f)
 
+/** The rail's height (rigid-frame y) where it crosses rigid-frame [z] past stop [i]. */
+private fun StereoBodyRenderer.t2RailYAtRigidZ(i: Int, z: Float): Float {
+    val rail = t2Rail(i); val f0 = FloatArray(13); rail.at(0f, f0); val fr = FloatArray(13)
+    var a = 0f
+    while (a < 60f) {
+        rail.at(a, fr)
+        val rz = (fr[0] - f0[0]) * f0[3] + (fr[1] - f0[1]) * f0[4] + (fr[2] - f0[2]) * f0[5]
+        if (rz >= z) return (fr[0] - f0[0]) * f0[9] + (fr[1] - f0[1]) * f0[10] + (fr[2] - f0[2]) * f0[11]
+        a += 0.05f
+    }
+    return 0f
+}
+
 /** The rail centre at arc position z, in the node's rigid frame (x, y). */
 private fun StereoBodyRenderer.t2RailOffset(i: Int, z: Float, out: FloatArray) {
     val rail = t2Rail(i); val f0 = t2G; rail.at(0f, f0); val fr = t2F; rail.at(z, fr)
@@ -2680,8 +2693,8 @@ private fun StereoBodyRenderer.t2MarrowMeshes(i: Int): Array<ColorVboMesh> = t2G
     for (q in 0 until 12) {   // osteoblasts: cuboidal, on the bone, nucleus toward the marrow
         val (c, nrm) = onBeam(t2v(-1.5f + q * 0.5f, 3f, 6f + q * 0.52f), 0.45f)
         val e1 = t2perp(nrm); val e2 = nrm cross e1
-        g.box(c, e1 * 0.6f, nrm * 0.5f, e2 * 0.6f, T2_OSTEOBLAST_2)
-        g.ball(c + nrm * 0.3f, 0.3f, T2_HEP_NUC, 1f, 5, 7)
+        g.ellAxis(c, nrm, 0.62f, 0.5f, 0.62f, T2_OSTEOBLAST_2, 1f, 7, 10, e1)
+        g.ball(c + nrm * 0.28f, 0.26f, T2_HEP_NUC, 1f, 5, 7)
     }
     run {   // osteoclast: large, multinucleate, its ruffled border against the bone in a scooped pit
         val (c0, nrm0) = onBeam(t2v(-7.5f, 2f, 2.5f), 0.55f)
@@ -3628,7 +3641,7 @@ internal fun StereoBodyRenderer.drawFactory(n: TourNode, i: Int, seconds: Float)
 private const val T2_MEM_TOP = -3.0f
 private const val T2_MEM_BOT = -8.0f
 private const val T2_AXX = -3.2f
-private const val T2_AXZ = 19.0f
+private const val T2_AXZ = 23.0f
 private const val T2_SUBA = -2.356f     // subunit a's angle round the ring (+x toward +z): front, away from the lane
 
 private fun StereoBodyRenderer.t2MotorMeshes(i: Int): Array<ColorVboMesh> = t2Get("motor$i") {
@@ -3639,7 +3652,7 @@ private fun StereoBodyRenderer.t2MotorMeshes(i: Int): Array<ColorVboMesh> = t2Ge
     var x = -14f
     while (x <= 16f) {
         var z = -8f
-        while (z <= 24f) {
+        while (z <= 30f) {
             val jx = x + (rnd.nextFloat() - 0.5f) * 0.3f; val jz = z + (rnd.nextFloat() - 0.5f) * 0.3f
             val dr = sqrt((jx - ax) * (jx - ax) + (jz - az) * (jz - az)); val da = sqrt((jx - sax) * (jx - sax) + (jz - saz) * (jz - saz))
             if (dr > 3.3f && da > 2.0f) for (yh in floatArrayOf(T2_MEM_TOP, T2_MEM_BOT)) {
@@ -3657,7 +3670,7 @@ private fun StereoBodyRenderer.t2MotorMeshes(i: Int): Array<ColorVboMesh> = t2Ge
         x += 1.0f
     }
     x = -34f
-    while (x <= 36f) { var z = -26f; while (z <= 44f) { if (x < -14.5f || x > 16.5f || z < -8.5f || z > 24.5f) for (yh in floatArrayOf(T2_MEM_TOP, T2_MEM_BOT)) far.addAll(listOf(x, yh, z, 1f, 0.8f, 0.5f, 0.85f)); z += 1f }; x += 1f }
+    while (x <= 36f) { var z = -26f; while (z <= 44f) { if (x < -14.5f || x > 16.5f || z < -8.5f || z > 30.5f) for (yh in floatArrayOf(T2_MEM_TOP, T2_MEM_BOT)) far.addAll(listOf(x, yh, z, 1f, 0.8f, 0.5f, 0.85f)); z += 1f }; x += 1f }
     // ---- rotor (local, axis at the origin, +y up to the matrix): c8 ring, δε foot, γ
     for (k in 0 until 8) {
         val a = k * T2PI / 4f; val c = if (k == 0) T2_C_MARK else T2_C_RING
