@@ -836,13 +836,23 @@ class StereoBodyRenderer(
             val y = f.cy + (f.sy * ca + f.uy * sa) * rr
             val z = f.cz + (f.sz * ca + f.uz * sa) * rr
             if ((x - camNowX) * dirX + (y - camNowY) * dirY + (z - camNowZ) * dirZ < -1f) continue
+            // A body almost touching the lens fills the frame with a meaningless blur: skip it.
+            val cdx = x - camNowX; val cdy = y - camNowY; val cdz = z - camNowZ
+            if (cdx * cdx + cdy * cdy + cdz * cdz < (rad * 2.2f + 0.45f) * (rad * 2.2f + 0.45f)) continue
             val al = bodies.fade
             val tb = bodies.tumble[i]
             when (kind) {
                 BodyField.RED_CELL -> {
-                    // Face-on to the flow: the disc's normal lies across the rail and turns slowly.
-                    val nx = f.sx * cos(tb) + f.ux * sin(tb); val ny = f.sy * cos(tb) + f.uy * sin(tb); val nz = f.sz * cos(tb) + f.uz * sin(tb)
-                    drawBasis(x, y, z, f.dx, f.dy, f.dz, nx, ny, nz, rad, rad, rad, rbc,
+                    // Red cells in flow tumble in 3D: the disc normal wanders around the rail axis and
+                    // tilts toward and away from it, so the biconcave faces turn to the viewer.
+                    val tilt = 0.9f * sin(tb * 0.7f + bodies.spin[i] * 6.3f)
+                    val ct = cos(tilt); val st = sin(tilt)
+                    val nx = (f.sx * cos(tb) + f.ux * sin(tb)) * ct + f.dx * st
+                    val ny = (f.sy * cos(tb) + f.uy * sin(tb)) * ct + f.dy * st
+                    val nz = (f.sz * cos(tb) + f.uz * sin(tb)) * ct + f.dz * st
+                    // (the basis' z just needs to be any direction not parallel to the normal)
+                    drawBasis(x, y, z, f.dx * ct - (f.sx * cos(tb) + f.ux * sin(tb)) * st, f.dy * ct - (f.sy * cos(tb) + f.uy * sin(tb)) * st,
+                        f.dz * ct - (f.sz * cos(tb) + f.uz * sin(tb)) * st, nx, ny, nz, rad, rad, rad, rbc,
                         if (bodies.oxy) COL_RBC_OXY else COL_RBC_DEOXY, COL_RBC_RIM, al, 0f, 0f)
                 }
                 BodyField.PLATELET -> {
