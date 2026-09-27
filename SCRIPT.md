@@ -161,7 +161,7 @@
 
 **12:17** · SFX: `klaxon`
 
-**12:23** · look: *EXTERNAL (chase, the Mote)*
+**12:27** · look: *EXTERNAL (chase, the Mote)*
 > **DOC:** [urgent] That's a neutrophil. Most common white cell in your blood, half to two thirds of them, roughly ten to fifteen micrometres across, bigger than a red cell, lives a few hours to a few days and spends all of it hunting. [tense] It reads the surface of anything it touches. Self, or not self. And we, my friends, are not self.
 
 **12:45** · SFX: `alarm`
@@ -180,7 +180,7 @@
 **13:56** · look: *OBSERVATION DECK*
 > **DOC:** [reflective] Look what drifts past now we wear the right colours. Those tiny glints on the bacteria are antibodies, Y-shaped molecules ten nanometres long, far too small to see the Y from here, each built to grip one stranger. That slow cell, twenty micrometres, is a monocyte; once it climbs out into tissue it becomes a macrophage and eats whatever the antibodies tag, whole. [wonder] This army asks one question of everything: are you me? It never asks where you're from.
 
-**14:30** · look: *SCALE DRIVE CORE*
+**14:31** · look: *SCALE DRIVE CORE*
 > **ENGINEERING:** [dry] No drop this time; at twelve micrometres the whole neuron fits in the window. [chuckle] Heart rate's back to normal. Mine, I mean. Coat's coming off, it drinks power and the drive's thirsty. Good lie while it lasted. [dry] Only dishonest reading on this whole tour, and Doc's still sore about it.
 
 
@@ -243,7 +243,7 @@
 
 ### 9. The Mitochondrion
 
-**20:08** · look: *EXTERNAL (chase, the Mote)*
+**20:09** · look: *EXTERNAL (chase, the Mote)*
 > **ENGINEERING:** [excited] ATP synthase. Look at her go! A turbine ten nanometres across, spinning about a hundred times a second, and every turn presses out about three molecules of ATP. [heartfelt] Best engine ever built, and nobody built it. I've spent my life on the scale drive, and that thing makes me feel like an amateur. Look at it. Just look at it.
 
 **20:39** · look: *EXTERNAL (chase, the Mote)*

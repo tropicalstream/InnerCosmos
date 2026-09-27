@@ -399,7 +399,7 @@
    "sfx": "klaxon"
   },
   {
-   "t": 743800,
+   "t": 747011,
    "view": 1,
    "role": "SCIENCE",
    "clip": "sci_neutrophil_identify",
@@ -442,7 +442,7 @@
    "text": "[reflective] Look what drifts past now we wear the right colours. Those tiny glints on the bacteria are antibodies, Y-shaped molecules ten nanometres long, far too small to see the Y from here, each built to grip one stranger. That slow cell, twenty micrometres, is a monocyte; once it climbs out into tissue it becomes a macrophage and eats whatever the antibodies tag, whole. [wonder] This army asks one question of everything: are you me? It never asks where you're from."
   },
   {
-   "t": 870600,
+   "t": 871594,
    "view": 2,
    "role": "ENGINEERING",
    "clip": "eng_drop_to_neuron",
@@ -564,7 +564,7 @@
    "sfx": "shrink"
   },
   {
-   "t": 1208500,
+   "t": 1209978,
    "view": 1,
    "role": "ENGINEERING",
    "clip": "eng_atp_synthase_love",
