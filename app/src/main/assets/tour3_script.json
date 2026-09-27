@@ -79,7 +79,7 @@
    "role": "NAVIGATION",
    "clip": "t3_nav_into_the_vein",
    "text": "[warm] Scale change, and mind your footing. We are inside a vein now, running with the current. That grey wall sliding past is endothelium. The polished edge ahead is a cannula, a needle in a soldier's arm, ninety years ago.",
-   "sfx": "shrink"
+   "sfx": "grow"
   },
   {
    "t": 220681,
@@ -128,7 +128,8 @@
    "view": 1,
    "role": "NAVIGATION",
    "clip": "t3_nav_stored_flask",
-   "text": "[hushed] Look out to starboard. Stored blood: cells settled into a dark floor, plasma standing pale above them, everything blue with cold. Somebody gave that away in a room a long way from where it is going to be used."
+   "text": "[hushed] Look out to starboard. Stored blood: cells settled into a dark floor, plasma standing pale above them, everything blue with cold. Somebody gave that away in a room a long way from where it is going to be used.",
+   "sfx": "shrink"
   },
   {
    "t": 360674,
@@ -263,7 +264,8 @@
    "view": 1,
    "role": "NAVIGATION",
    "clip": "t3_nav_clean_margins",
-   "text": "[warm] Different window. This is a war wound handled properly, with not one stitch in it: packed with dry gauze, held open on purpose, to be sewn shut at four or five days if it stays clean. Doc, tell them why it gapes, because that is not neglect."
+   "text": "[warm] Different window. This is a war wound handled properly, with not one stitch in it: packed with dry gauze, held open on purpose, to be sewn shut at four or five days if it stays clean. Doc, tell them why it gapes, because that is not neglect.",
+   "sfx": "grow"
   },
   {
    "t": 781943,
@@ -320,7 +322,7 @@
    "role": "NAVIGATION",
    "clip": "t3_nav_marrow_arrival",
    "text": "[awe] New chamber, and this is the busiest room in the body. Red marrow. Those giants at the sinus wall are megakaryocytes. They never divide, they copy their DNA and swell, then push arms through the wall and shed platelets into the current, working in minutes. Red cells take a week.",
-   "sfx": "grow"
+   "sfx": "shrink"
   },
   {
    "t": 964214,

@@ -104,19 +104,22 @@ object Tours {
         id = 3, title = "BETHUNE", subtitle = "ONE SURGEON  \u00b7  10 STOPS", hudTitle = "INNERCOSMOS III \u00b7 BETHUNE", scriptAsset = "tour3_script.json",
         nodes = listOf(
             TourNode("THE CAVITY", 0.0f, 0.0f, 0f, 4.0f, rgb(0.90f, 0.72f, 0.70f), 1.2e-4, Scene.CAVITY, Amb.AIR, 44f, 52f, "LUNG \u00b7 CAVITY", "120 \u00b5m"),
-            TourNode("THE VEIN", 2.4f, 0.3f, -16f, 2.2f, rgb(0.58f, 0.10f, 0.16f), 1.2e-5, Scene.DONOR, Amb.BLOOD, 22f, 66f, "DONOR'S VEIN", "12 \u00b5m"),
+            TourNode("THE VEIN", 2.4f, 0.3f, -16f, 3.0f, rgb(0.72f, 0.62f, 0.66f), 1.2e-3, Scene.DONOR, Amb.BLOOD, 22f, 66f, "DONOR'S VEIN", "1.2 mm"),
             TourNode("THE BOTTLE", -2.2f, -0.2f, -32f, 3.0f, rgb(0.34f, 0.16f, 0.26f), 1.2e-5, Scene.STORED, Amb.CYTO, 14f, 80f, "STORED BLOOD", "12 \u00b5m"),
             TourNode("THE FRONT", 2.0f, 0.4f, -48f, 2.8f, rgb(0.70f, 0.20f, 0.18f), 1.2e-5, Scene.WOUND, Amb.BLOOD, 40f, 105f, "THE WOUND", "12 \u00b5m"),
             TourNode("THE TRANSFUSION", -2.6f, 0.0f, -64f, 2.0f, rgb(0.62f, 0.08f, 0.10f), 1.2e-5, Scene.TRANSFUSION, Amb.BLOOD, 24f, 70f, "TRANSFUSION", "12 \u00b5m"),
-            TourNode("THE TABLE", 2.4f, -0.3f, -80f, 3.2f, rgb(0.78f, 0.34f, 0.32f), 1.2e-4, Scene.SUTURE, Amb.BLOOD, 50f, 60f, "THE TABLE", "120 \u00b5m"),
+            TourNode("THE TABLE", 2.4f, -0.3f, -80f, 3.2f, rgb(0.78f, 0.34f, 0.32f), 1.2e-2, Scene.SUTURE, Amb.BLOOD, 50f, 60f, "THE TABLE", "12 mm"),
             TourNode("THE STUDENTS", -2.0f, 0.3f, -96f, 3.2f, rgb(0.90f, 0.82f, 0.70f), 1.2e-5, Scene.STUDENTS, Amb.CYTO, 39f, 118f, "BONE MARROW", "12 \u00b5m"),
             TourNode("THE CUT", 2.2f, 0.2f, -112f, 2.6f, rgb(0.82f, 0.40f, 0.38f), 1.2e-5, Scene.CUT, Amb.CYTO, 19f, 76f, "A CUT FINGER", "12 \u00b5m"),
-            TourNode("THE FEVER", -2.4f, -0.2f, -128f, 2.4f, rgb(0.66f, 0.10f, 0.14f), 1.2e-6, Scene.SEPSIS, Amb.BLOOD, 54f, 50f, "BLOODSTREAM", "1.2 \u00b5m"),
-            TourNode("THE MEMORY", 0.0f, 0.2f, -146f, 9.0f, rgb(0.38f, 0.22f, 0.36f), 12.0, Scene.LOOKBACK, Amb.LOOKBACK, 50f, 60f, "WHOLE BODY", "1.2 \u00b5m \u2192 12 m")
+            TourNode("THE FEVER", -2.4f, -0.2f, -128f, 3.0f, rgb(0.66f, 0.10f, 0.14f), 1.2e-5, Scene.SEPSIS, Amb.BLOOD, 54f, 50f, "BLOODSTREAM", "12 \u00b5m"),
+            TourNode("THE MEMORY", 0.0f, 0.2f, -146f, 9.0f, rgb(0.38f, 0.22f, 0.36f), 12.0, Scene.LOOKBACK, Amb.LOOKBACK, 50f, 60f, "WHOLE BODY", "12 \u00b5m \u2192 12 m")
         ),
-        // One decade down into the bacteria at the fever, and the long climb home over the last leg.
-        lengthKeys = floatArrayOf(0f, 0.9f, 1.1f, 4.9f, 5.1f, 5.9f, 6.1f, 7.9f, 8.1f, 8.6f, 9f),
-        lengthM = doubleArrayOf(1.2e-4, 1.2e-4, 1.2e-5, 1.2e-5, 1.2e-4, 1.2e-4, 1.2e-5, 1.2e-5, 1.2e-6, 1.2e-6, 12.0),
+        // Each stop holds its own scale for the whole of its hold (i - 0.14 .. i + 0.08): the step
+        // lands as the hold begins, with the scale cue, and the long climb home fills the last leg.
+        // Lung 120 µm; the donor's vein 1.2 mm (a needle in a 5 mm vein); blood, bottle, wound and
+        // transfusion 12 µm; the table 12 mm (a whole wound, gaping); marrow, cut and fever 12 µm.
+        lengthKeys = floatArrayOf(0f, 0.8595f, 0.8601f, 1.8595f, 1.8601f, 4.8595f, 4.8601f, 5.8595f, 5.8601f, 8.6f, 9f),
+        lengthM = doubleArrayOf(1.2e-4, 1.2e-4, 1.2e-3, 1.2e-3, 1.2e-5, 1.2e-5, 1.2e-2, 1.2e-2, 1.2e-5, 1.2e-5, 12.0),
         armStops = floatArrayOf(3.05f, 5.05f, 7.05f)      // the wound, the sutures, the cut
     )
 
