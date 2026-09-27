@@ -54,7 +54,7 @@ object Tours {
             // 250 pm round a carbon atom. See SceneDescent.kt for each scene's scale.
             TourNode("THE THRESHOLD", 0.0f, 0.0f, 0f, 14.0f, rgb(0.0f, 0.0f, 0.0f), 12.0, Scene.THRESHOLD, Amb.AIR, 50f, 19f, "NOSE", "12 m → 12 mm"),
             TourNode("THE AIRWAY", 2.4f, 0.3f, -16f, 1.5f, rgb(0.90f, 0.56f, 0.56f), 1.2e-2, Scene.AIRWAY, Amb.AIR, 50f, 34f, "TRACHEA", "12 mm"),
-            TourNode("THE ALVEOLUS", -2.2f, -0.2f, -32f, 1.7f, rgb(0.96f, 0.80f, 0.80f), 1.2e-4, Scene.ALVEOLUS, Amb.AIR, 41f, 60f, "LUNG · ALVEOLUS", "120 µm"),
+            TourNode("THE ALVEOLUS", -2.2f, -0.2f, -32f, 2.3f, rgb(0.96f, 0.80f, 0.80f), 1.2e-4, Scene.ALVEOLUS, Amb.AIR, 41f, 60f, "LUNG · ALVEOLUS", "120 µm"),
             TourNode("THE BLOODSTREAM", 2.0f, 0.4f, -48f, 1.6f, rgb(0.93f, 0.66f, 0.66f), 1.2e-5, Scene.BLOOD, Amb.BLOOD, 56f, 53f, "LUNG · VENULE", "12 µm"),
             TourNode("THE HEART", -2.6f, 0.0f, -64f, 3.6f, rgb(0.84f, 0.50f, 0.48f), 1.2e-2, Scene.HEART, Amb.BLOOD, 54f, 50f, "HEART", "12 mm"),
             TourNode("THE SENTINEL", 2.4f, -0.3f, -80f, 3.0f, rgb(0.90f, 0.62f, 0.64f), 1.2e-5, Scene.SENTINEL, Amb.BLOOD, 51f, 30f, "NECK · VENULE", "12 µm"),
