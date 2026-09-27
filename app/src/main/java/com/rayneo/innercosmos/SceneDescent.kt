@@ -2971,9 +2971,9 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
     val side = 0.9f + 0.28f * H
     val bx = shipX + f.dx * ahead + f.sx * side; val bz = shipZ + f.dz * ahead + f.sz * side
     val by = shipY - H * 0.5f
-    // Figure axes in world space: across = -side (her left on the viewer's right), up = world up,
-    // toward the viewer = -dir.
-    val ax = -f.sx; val az = -f.sz
+    // Figure axes in world space. She faces the craft, so her LEFT is on the viewer's RIGHT, and
+    // the rail's side vector is the viewer's right: across = +side. Up = world up; toward the viewer = -dir.
+    val ax = f.sx; val az = f.sz
     val tx = -f.dx; val tz = -f.dz
     val sway = 0.004f * sin(seconds * 0.6f)
     fun wx(x: Float, z: Float) = bx + ax * (x + sway) * H + tx * z * H
@@ -2998,7 +2998,10 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
     // ---- organs (opaque), in their true places
     part(0f, 0.922f, 0.005f, 0.046f, 0.038f, 0.052f, COL_ORG_BRAIN, COL_LAMP, 1f, 0.8f)                   // brain
     seg(0f, 0.83f, 0.01f, 0f, 0.76f, 0.01f, 0.010f, COL_BONE, COL_LAMP, 0.9f)                              // trachea
-    for (sgn in SIGNS) part(sgn * 0.056f, 0.712f, 0f, 0.046f, 0.082f, 0.044f, COL_ORG_LUNG, COL_LAMP, 0.95f, 0.5f)  // lungs
+    for (sgn in SIGNS) {                                                                                     // lungs: base ~0.64, apex above the clavicle ~0.84
+        part(sgn * 0.052f, 0.715f, 0f, 0.050f, 0.075f, 0.046f, COL_ORG_LUNG, COL_LAMP, 0.95f, 0.5f)
+        part(sgn * 0.046f, 0.800f, -0.004f, 0.033f, 0.045f, 0.032f, COL_ORG_LUNG, COL_LAMP, 0.95f, 0.5f)   // apex
+    }
     part(0.018f, 0.690f, 0.028f, 0.030f, 0.034f, 0.026f, COL_ORG_HEART, COL_LAMP, 1f, 0f, 0.25f)          // heart, apex to her left
     seg(0.005f, 0.70f, -0.018f, 0.005f, 0.48f, -0.022f, 0.009f, COL_ORG_HEART, COL_LAMP, 1f, 0.15f)       // descending aorta
     seg(-0.012f, 0.70f, -0.012f, -0.012f, 0.48f, -0.016f, 0.010f, COL_VEIN_BLUE, COL_LAMP, 1f)            // inferior vena cava
@@ -3017,8 +3020,11 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
         drawBasis(wx(0f, -0.004f), wy(y), wz(0f, -0.004f), 0f, 1f, 0f, tx, 0f, tz, w * H, 0.068f * H, 0.012f * H,
             ribArc, COL_BONE, COL_LAMP, 0.75f * alpha, 0f, 0f)
     }
+    drawBasis(wx(0f, 0f), wy(0.50f), wz(0f, 0f), 0f, 1f, 0f, tx, 0f, tz, 0.11f * H, 0.07f * H, 0.014f * H,
+        ribArc, COL_BONE, COL_LAMP, 0.85f * alpha, 0f, 0f)                                                  // pelvic brim
     for (sgn in SIGNS) {
-        seg(sgn * 0.012f, 0.822f, 0.03f, sgn * 0.15f, 0.83f, 0.0f, 0.007f, COL_BONE, COL_LAMP, 1f)           // clavicle
+        part(sgn * 0.075f, 0.515f, -0.01f, 0.05f, 0.04f, 0.012f, COL_BONE, COL_LAMP, 0.85f)                 // iliac wings
+        seg(sgn * 0.012f, 0.822f, 0.03f, sgn * 0.125f, 0.83f, 0.0f, 0.007f, COL_BONE, COL_LAMP, 1f)          // clavicle
         seg(sgn * 0.07f, 0.47f, 0f, sgn * 0.078f, 0.28f, 0f, 0.012f, COL_BONE, COL_LAMP, 1f)                 // femur
     }
 
@@ -3028,12 +3034,13 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
     var v = 0
     for (k in 0 until nodes.size - 1) {
         val a0 = nodes[k]
-        val mx = (a0.mapX - 50f) / 100f * 0.667f; val my = 1f - a0.mapY / 150f
-        part(-mx, my, 0.078f, 0.011f, 0.011f, 0.011f, COL_LAMP, COL_LAMP, 1f, 0f, 0.9f)
+        // Map coordinates follow the 2D inset: a figure facing you, image-left = her right (-x).
+        val mx = (a0.mapX - 50f) / 150f; val my = 1f - a0.mapY / 150f
+        part(mx, my, 0.078f, 0.011f, 0.011f, 0.011f, COL_LAMP, COL_LAMP, 1f, 0f, 0.9f)
         if (k + 1 < nodes.size - 1 && v + 14 <= arr.size) {
             val b0 = nodes[k + 1]
-            val nx = (b0.mapX - 50f) / 100f * 0.667f; val ny = 1f - b0.mapY / 150f
-            for ((qx, qy) in listOf(-mx to my, -nx to ny)) {
+            val nx = (b0.mapX - 50f) / 150f; val ny = 1f - b0.mapY / 150f
+            for ((qx, qy) in listOf(mx to my, nx to ny)) {
                 arr[v++] = wx(qx, 0.078f); arr[v++] = wy(qy); arr[v++] = wz(qx, 0.078f)
                 arr[v++] = 1f; arr[v++] = 0.77f; arr[v++] = 0.42f; arr[v++] = 0.8f * alpha
             }
@@ -3054,12 +3061,12 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
     part(0f, 0.928f, 0f, 0.056f, 0.068f, 0.064f, sk, rim, 0.3f, glow = 0.35f)                                            // head
     seg(0f, 0.845f, 0f, 0f, 0.878f, 0f, 0.028f, sk, rim, 0.3f, glow = 0.35f)                                              // neck
     seg(0f, 0.53f, 0f, 0f, 0.78f, 0f, 0.075f, sk, rim, 0.26f, glow = 0.35f)                                               // trunk core
-    part(0f, 0.735f, 0f, 0.13f, 0.095f, 0.072f, sk, rim, 0.24f, glow = 0.35f)                                             // chest and shoulders
+    part(0f, 0.735f, 0f, 0.115f, 0.095f, 0.072f, sk, rim, 0.24f, glow = 0.35f)                                            // chest and shoulders
     part(0f, 0.49f, 0f, 0.118f, 0.06f, 0.068f, sk, rim, 0.26f, glow = 0.35f)                                              // pelvis
     for (sgn in SIGNS) {
-        seg(sgn * 0.16f, 0.805f, 0f, sgn * 0.19f, 0.635f, 0f, 0.036f, sk, rim, 0.3f, glow = 0.35f)                        // upper arm
-        seg(sgn * 0.19f, 0.635f, 0f, sgn * 0.205f, 0.47f, 0.01f, 0.028f, sk, rim, 0.3f, glow = 0.35f)                     // forearm
-        part(sgn * 0.21f, 0.43f, 0.012f, 0.021f, 0.042f, 0.012f, sk, rim, 0.3f, glow = 0.35f)                             // hand
+        seg(sgn * 0.13f, 0.805f, 0f, sgn * 0.155f, 0.635f, 0f, 0.034f, sk, rim, 0.3f, glow = 0.35f)                       // upper arm
+        seg(sgn * 0.155f, 0.635f, 0f, sgn * 0.17f, 0.47f, 0.01f, 0.027f, sk, rim, 0.3f, glow = 0.35f)                     // forearm
+        part(sgn * 0.175f, 0.43f, 0.012f, 0.021f, 0.042f, 0.012f, sk, rim, 0.3f, glow = 0.35f)                            // hand
         seg(sgn * 0.072f, 0.475f, 0f, sgn * 0.078f, 0.27f, 0f, 0.056f, sk, rim, 0.27f, glow = 0.35f)                      // thigh
         seg(sgn * 0.078f, 0.27f, 0f, sgn * 0.08f, 0.05f, 0f, 0.040f, sk, rim, 0.28f, glow = 0.35f)                        // lower leg
         part(sgn * 0.082f, 0.018f, 0.03f, 0.029f, 0.018f, 0.058f, sk, rim, 0.3f, glow = 0.35f)                            // foot
