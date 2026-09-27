@@ -1473,8 +1473,9 @@ internal fun StereoBodyRenderer.drawStomach(n: TourNode, i: Int, seconds: Float)
 // with their lacteal and capillary loop; lumps of chyme drift down the lumen.
 
 private val T2_CORE = arrayOf(      // (angle round the wall from starboard toward up, arc along the rail)
-    floatArrayOf(3.0f, 5.4f), floatArrayOf(3.25f, 6.7f), floatArrayOf(2.9f, 9.5f),       // port wall, eye level
-    floatArrayOf(-1.57f, 5.2f), floatArrayOf(0.2f, 7.0f), floatArrayOf(1.2f, 5.6f)
+    // three large ones on the starboard wall at eye level, clear of the plicae (seen side-on), three more round the wall
+    floatArrayOf(-0.2f, 4.6f), floatArrayOf(0.1f, 5.9f), floatArrayOf(-0.45f, 6.9f),
+    floatArrayOf(-1.57f, 5.2f), floatArrayOf(1.2f, 5.6f), floatArrayOf(0.5f, 4.2f)
 )
 
 private fun t2CoreSlot(ang: Float, z: Float): Boolean {
@@ -2379,20 +2380,25 @@ private fun StereoBodyRenderer.t2KidneyMeshes(i: Int): Array<ColorVboMesh> = t2G
     //      granular juxtaglomerular cells (they make renin) on the afferent, and the macula densa, a
     //      plaque of tall crowded cells in the distal tubule that touches the pole.
     // (placed about 30 degrees up and 30 degrees to port of straight ahead from the stop)
-    // (where the tuft's stalk meets the capsule, a short way up and forward, in the upper left of view)
-    val vdir = t2v(0.47f, 0.34f, 0.81f).unit(); val ve1 = t2perp(vdir); val ve2 = vdir cross ve1
+    // (on the tuft's top, where it hangs from the capsule roof by its stalk, in the upper left of view:
+    //  the arterioles run inside the stalk, sheathed by the parietal layer turning onto the tuft)
+    val vdir = t2v(0.91f, 0.34f, 0.24f).unit(); val ve1 = t2perp(vdir); val ve2 = vdir cross ve1
     val tIn = T + vdir * (R - 0.8f)
     var tOut = R + 2f; run { var d = R; while (d < 40f) { if ((T + vdir * d - K).len() > RC) { tOut = d; break }; d += 0.1f } }
     for ((k, rr) in floatArrayOf(1.25f, 0.85f).withIndex()) {
-        val off = ve1 * (if (k == 0) 1.45f else -1.3f)
-        g.path((0..8).map { q -> val t = q / 8f; T + vdir * (R - 0.8f + (tOut + 1.5f - R + 0.8f) * t) + off * (0.6f + 0.4f * t) }, { rr }, if (k == 0) T2_ARTERIOLE else T2_EFFERENT, 1f, 10, true)
+        val off = ve1 * (if (k == 0) 0.62f else -0.55f)
+        g.path((0..8).map { q -> val t = q / 8f; T + vdir * (R - 0.8f + (tOut + 1.5f - R + 0.8f) * t) + off * (1f + 0.9f * t * t) }, { rr * 0.72f }, if (k == 0) T2_ARTERIOLE else T2_EFFERENT, 1f, 10, true)
     }
-    glass.path(listOf(T + vdir * (R + 0.3f), T + vdir * (tOut + 0.2f)), { t -> 2.6f + 0.8f * t }, T2_PARIETAL, 0.3f, 16, false)
+    // the stalk's sheath: the capsule wall flaring down from the pole onto the tuft
+    glass.surf(10, 24, T2_PARIETAL, 0.5f) { v, u ->
+        val a = u * 2f * T2PI; val d = R - 0.2f + (tOut + 0.1f - R + 0.2f) * v; val r = 1.6f + 1.8f * v * v
+        T + vdir * d + (ve1 * cos(a) + ve2 * sin(a)) * r
+    }
     for (k in 0 until 10) {   // the juxtaglomerular cuff
         val a = k * T2PI / 5f; val zAlong = tOut - 1.6f + (k / 5) * 0.85f
-        val cc = T + vdir * zAlong + ve1 * 1.45f * 1f
+        val cc = T + vdir * (zAlong + 0.8f) + ve1 * 0.62f * 1.9f
         val rdir = ve1 * cos(a) + ve2 * sin(a)
-        val c = cc + rdir * 1.65f
+        val c = cc + rdir * 1.2f
         g.box(c, rdir * 0.4f, (vdir cross rdir) * 0.4f, vdir * 0.4f, T2_JG)
         for (d in 0 until 4) g.ball(c + rdir * 0.41f + (vdir cross rdir) * ((d % 2 - 0.5f) * 0.4f) + vdir * ((d / 2 - 0.5f) * 0.4f), 0.08f, T2_JG_GRANULE, 1f, 3, 4)
     }
