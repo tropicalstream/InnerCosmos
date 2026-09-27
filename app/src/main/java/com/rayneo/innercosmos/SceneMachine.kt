@@ -89,7 +89,7 @@ internal val T2_ACTIN = floatArrayOf(0.95f, 0.84f, 0.78f, 1f)
 internal val T2_MLINE = floatArrayOf(0.6f, 0.22f, 0.3f, 1f)
 internal val T2_TTUBULE = floatArrayOf(0.26f, 0.5f, 0.58f, 1f)
 internal val T2_SR = floatArrayOf(0.42f, 0.66f, 0.72f, 1f)
-internal val T2_CALCIUM = floatArrayOf(0.6f, 1f, 1f, 1f)
+internal val T2_CALCIUM = floatArrayOf(0.55f, 0.95f, 1f, 1f)
 internal val T2_MITO = floatArrayOf(0.96f, 0.56f, 0.26f, 1f)
 internal val T2_MITO_CRISTA = floatArrayOf(0.99f, 0.74f, 0.4f, 1f)
 internal val T2_BONE = floatArrayOf(0.96f, 0.91f, 0.78f, 1f)
@@ -1631,13 +1631,12 @@ private fun StereoBodyRenderer.t2MuscleMeshes(): Array<TriMesh> = t2Get("muscle"
         // M line: a ring and spokes cross-linking the thick filaments at the centre of the A band
         th.torus(t2v(cx, cy, 0f), zAx, 0.44f, 0.03f, T2_MLINE, 1f, 18, 4)
         for (k in 0 until 6) { val a = k * T2PI / 3f; th.tube(t2v(cx, cy, 0f), t2v(cx + cos(a) * 0.44f, cy + sin(a) * 0.44f, 0f), 0.022f, 0.022f, T2_MLINE, 1f, 3, false) }
-        // T tubules circling the fibril at each A-I junction (the triads' centre)
-        for (sgn in SIGNS) th.torus(t2v(cx, cy, sgn * 1f), zAx, 0.97f, 0.014f, T2_TTUBULE, 1f, 22, 3)
-        // for the calcium flash: terminal cisternae flanking each T tubule and the longitudinal SR
-        for (sgn in SIGNS) { sr.torus(t2v(cx, cy, sgn * 0.9f), zAx, 0.98f, 0.045f, T2_CALCIUM, 1f, 22, 4); sr.torus(t2v(cx, cy, sgn * 1.1f), zAx, 0.98f, 0.045f, T2_CALCIUM, 1f, 22, 4) }
+        // the triads (a T tubule between two terminal cisternae at each A-I junction) and the
+        // longitudinal SR: drawn lit up as calcium floods out on each twitch
+        for (sgn in SIGNS) { sr.torus(t2v(cx, cy, sgn * 1f), zAx, 0.97f, 0.03f, T2_TTUBULE, 1f, 22, 3); sr.torus(t2v(cx, cy, sgn * 0.9f), zAx, 0.98f, 0.045f, T2_CALCIUM, 1f, 22, 4); sr.torus(t2v(cx, cy, sgn * 1.1f), zAx, 0.98f, 0.045f, T2_CALCIUM, 1f, 22, 4) }
         for (k in 0 until 4) { val a = k * T2PI / 2f + 0.5f; sr.tube(t2v(cx + cos(a) * 0.98f, cy + sin(a) * 0.98f, -0.9f), t2v(cx + cos(a) * 0.98f, cy + sin(a) * 0.98f, 0.9f), 0.025f, 0.025f, T2_CALCIUM, 1f, 4, false) }
         // Z disc with the actin (thin) filaments of both neighbouring half-sarcomeres
-        zu.torus(t2v(cx, cy, 0f), zAx, 0.86f, 0.05f, T2_ZDISC, 1f, 22, 5)
+        zu.torus(t2v(cx, cy, 0f), zAx, 0.86f, 0.038f, T2_ZDISC, 1f, 22, 5)
         for (k in 0 until 12) { val a = k * T2PI / 6f; zu.tube(t2v(cx, cy, 0f), t2v(cx + cos(a) * 0.86f, cy + sin(a) * 0.86f, 0f), 0.028f, 0.028f, T2_ZDISC, 1f, 3, false) }
         zu.ball(t2v(cx, cy, 0f), 0.08f, T2_ZDISC, 1f, 4, 6)
         for (q in t2ThinLattice(0.44f, 0.8f)) zu.tube(t2v(cx + q[0], cy + q[1], -T2_THIN_LEN), t2v(cx + q[0], cy + q[1], T2_THIN_LEN), 0.034f, 0.034f, T2_ACTIN, 1f, 4, false)
@@ -1736,7 +1735,7 @@ internal fun StereoBodyRenderer.drawMuscle(n: TourNode, i: Int, seconds: Float) 
             val zm = zz + L * 0.5f
             if (zm in -9f..17f) {
                 t2Model(t2Frame(i, zm), 0f, 0f); t2Draw(m[0])
-                if (flash > 0.02f) { colorShader.globalFade = keep * flash; t2Draw(m[2], true); colorShader.globalFade = keep }
+                colorShader.globalFade = keep * (0.22f + 0.78f * flash); t2Draw(m[2], true); colorShader.globalFade = keep
             }
         }
         // calcium released from the terminal cisternae, spreading into the filaments
@@ -2170,8 +2169,8 @@ private fun StereoBodyRenderer.t2DrawChunk(i: Int, a: FloatArray, b: FloatArray,
 // toward the minus end. Around: rough ER sheets studded with 25 nm ribosomes to port, a
 // mitochondrion with cristae to starboard, a Golgi stack ahead, lysosomes.
 
-private const val T2_MT_X = 1.9f
-private const val T2_MT_Y = -1.5f
+private const val T2_MT_X = -1.4f
+private const val T2_MT_Y = -1.6f
 private const val T2_MT_Z0 = -9f
 private const val T2_MT_Z1 = 10f
 
@@ -2219,7 +2218,7 @@ private fun StereoBodyRenderer.t2HighwayMeshes(i: Int): Array<ColorVboMesh> = t2
     // rough ER: three flattened cisternae to port; ribosomes (25 nm, two subunits) crowd the
     // cytosolic face toward the road, many in polysome rows
     for (k in 0 until 3) {
-        val xs = -4.2f - 1.8f * k
+        val xs = -5.4f - 1.8f * k
         for (face in 0..1) {
             val xo = if (face == 0) 0f else -0.6f
             val geo = if (k == 0) g else glass
@@ -2234,7 +2233,7 @@ private fun StereoBodyRenderer.t2HighwayMeshes(i: Int): Array<ColorVboMesh> = t2
         var zz = -6f
         while (zz < 13f) {
             if (rnd.nextFloat() < 0.4f) {
-                val xsurf = -4.2f + 0.3f * sin(zz * 0.35f) + 0.15f * sin(yy * 0.6f)
+                val xsurf = -5.4f + 0.3f * sin(zz * 0.35f) + 0.15f * sin(yy * 0.6f)
                 g.ball(t2v(xsurf + 0.2f, yy, zz), 0.2f, T2_RIBO_60S, 1f, 4, 6)
                 g.ball(t2v(xsurf + 0.45f, yy + 0.05f, zz), 0.14f, T2_RIBO_40S, 1f, 4, 6)
             }
@@ -2315,8 +2314,8 @@ internal fun StereoBodyRenderer.drawHighway(n: TourNode, i: Int, seconds: Float)
         val hip = t2W(t2Frame(i, body), mx, top + 0.3f).copyOf()
         val sway = 0.04f * sin(seconds * 2f * T2PI)
         val cz = body - 0.55f
-        val tether = t2W(t2Frame(i, cz), mx + 0.25f + sway, top + 1.05f).copyOf()
-        val cargo = t2W(t2Frame(i, cz), mx + 0.3f + sway, top + 1.75f).copyOf()
+        val tether = t2W(t2Frame(i, cz), mx - 0.45f + sway, top + 1.05f).copyOf()
+        val cargo = t2W(t2Frame(i, cz), mx - 0.9f + sway, top + 1.75f).copyOf()
         if (fade > 0.02f) {
             t2Basis(a, 0f, 0f, 1f, 0f, 1f, 0f, 0.09f, 0.07f, 0.1f, sphere, COL_KINESIN, COL_KINESIN_LIGHT, fade, 0.25f)
             t2Basis(b, 0f, 0f, 1f, 0f, 1f, 0f, 0.09f, 0.07f, 0.1f, sphere, COL_KINESIN, COL_KINESIN_LIGHT, fade, 0.25f)
@@ -2326,7 +2325,7 @@ internal fun StereoBodyRenderer.drawHighway(n: TourNode, i: Int, seconds: Float)
             t2Basis(tether, 0f, 0f, 1f, 0f, 1f, 0f, 0.09f, 0.09f, 0.09f, sphere, COL_KINESIN_LIGHT, COL_LAMP, fade, 0.3f)
             for (k in 0 until 5) {
                 val aa = k * 1.26f + seconds * 0.3f
-                val p = t2W(t2Frame(i, cz + 0.35f * cos(aa)), mx + 0.3f + sway + 0.32f * sin(aa), top + 1.75f + 0.28f * sin(aa * 1.7f)).copyOf()
+                val p = t2W(t2Frame(i, cz + 0.35f * cos(aa)), mx - 0.9f + sway + 0.32f * sin(aa), top + 1.75f + 0.28f * sin(aa * 1.7f)).copyOf()
                 t2Basis(p, 0f, 0f, 1f, 0f, 1f, 0f, 0.07f, 0.07f, 0.07f, sphere, COL_PROTEIN, COL_LAMP, fade)
             }
             t2Basis(cargo, 0f, 0f, 1f, 0f, 1f, 0f, 0.72f, 0.72f, 0.72f, sphere, COL_CARGO, COL_LAMP, 0.45f * fade, 0.2f)
@@ -2335,18 +2334,18 @@ internal fun StereoBodyRenderer.drawHighway(n: TourNode, i: Int, seconds: Float)
         val dz = 9.5f - ((seconds * 0.15f + 0.5f) % 1f) * 9f
         val dfade = t2sm((9.5f - dz) / 0.6f) * t2sm((dz - 0.5f) / 0.6f)
         val ring = t2DyneinRing()
-        val jn = t2W(t2Frame(i, dz + 0.05f), mx + 0.62f, my + 0.72f).copyOf()
+        val jn = t2W(t2Frame(i, dz + 0.05f), mx - 0.62f, my + 0.72f).copyOf()
         for (h in 0..1) {
             val hz = dz + h * 0.12f + 0.05f * sin(seconds * (2.6f + h * 0.7f) + h * 2f)
             val fr = t2Frame(i, hz)
-            val mtbd = t2W(fr, mx + 0.12f, my + 0.12f).copyOf()
-            val rc = t2W(fr, mx + 0.38f, my + 0.38f + 0.05f * h).copyOf()
+            val mtbd = t2W(fr, mx - 0.12f, my + 0.12f).copyOf()
+            val rc = t2W(fr, mx - 0.38f, my + 0.38f + 0.05f * h).copyOf()
             t2Basis(rc, fr[6], fr[7], fr[8], fr[9], fr[10], fr[11], 1f, 1f, 1f, ring, T2_DYNEIN, COL_LAMP, dfade, 0.1f)
             drawStrut(rc[0], rc[1], rc[2], mtbd[0], mtbd[1], mtbd[2], 0.014f, T2_DYNEIN, T2_DYNEIN)
             t2Basis(mtbd, 0f, 0f, 1f, 0f, 1f, 0f, 0.035f, 0.035f, 0.035f, sphere, T2_DYNEIN, COL_LAMP, dfade)
             drawStrut(rc[0], rc[1], rc[2], jn[0], jn[1], jn[2], 0.022f, T2_DYNEIN, T2_DYNEIN)
         }
-        val lyso = t2W(t2Frame(i, dz + 0.05f), mx + 0.95f, my + 1.35f).copyOf()
+        val lyso = t2W(t2Frame(i, dz + 0.05f), mx - 1.25f, my + 1.1f).copyOf()
         drawStrut(jn[0], jn[1], jn[2], lyso[0], lyso[1], lyso[2], 0.03f, T2_DYNEIN, T2_DYNEIN)
         t2Basis(lyso, 0f, 0f, 1f, 0f, 1f, 0f, 0.6f, 0.6f, 0.6f, sphere, T2_LYSOSOME, T2_LYSO_CORE, 0.8f * dfade, 0.1f)
         t2LinesEnd(2f)
