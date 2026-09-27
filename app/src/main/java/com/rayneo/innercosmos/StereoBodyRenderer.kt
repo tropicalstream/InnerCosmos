@@ -836,10 +836,13 @@ class StereoBodyRenderer(
             val y = f.cy + (f.sy * ca + f.uy * sa) * rr
             val z = f.cz + (f.sz * ca + f.uz * sa) * rr
             if ((x - camNowX) * dirX + (y - camNowY) * dirY + (z - camNowZ) * dirZ < -1f) continue
-            // A body almost touching the lens fills the frame with a meaningless blur: skip it.
+            // A body close to the lens fills the frame with a meaningless blur. Limit its apparent size
+            // (half-angle ~12 degrees) and fade it out as it approaches the limit, so it never pops.
             val cdx = x - camNowX; val cdy = y - camNowY; val cdz = z - camNowZ
-            if (cdx * cdx + cdy * cdy + cdz * cdz < (rad * 2.2f + 0.45f) * (rad * 2.2f + 0.45f)) continue
-            val al = bodies.fade
+            val dist = sqrt(cdx * cdx + cdy * cdy + cdz * cdz)
+            val lim = 0.22f * (dist - 0.2f)
+            if (rad >= lim) continue
+            val al = bodies.fade * ((lim - rad) / (0.15f * lim)).coerceIn(0f, 1f)
             val tb = bodies.tumble[i]
             when (kind) {
                 BodyField.RED_CELL -> {
