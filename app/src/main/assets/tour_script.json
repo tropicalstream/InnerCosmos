@@ -91,7 +91,15 @@
    8
   ],
   [
+   1306500,
+   8.25
+  ],
+  [
    1313500,
+   8.4
+  ],
+  [
+   1320500,
    9
   ],
   [
@@ -210,12 +218,7 @@
    "view": 2,
    "role": "ENGINEERING",
    "clip": "eng_drop_to_airway",
-   "text": "[tense] Three, two, one, drop. [dry] One power of ten, twelve millimetres down to one point two. Mucus on the hull, lovely, I'll be scraping that off for a week. Mind the hairs, Pilot, and steer for whichever passage isn't coughing."
-  },
-  {
-   "t": 197000,
-   "view": 1,
-   "sfx": "shrink"
+   "text": "[dry] No drop for this one: the windpipe's two centimetres across, and at twelve millimetres she fits it as she is. Mucus on the hull, lovely, I'll be scraping that off for a week. Mind the hairs, Pilot, and steer for whichever passage isn't coughing."
   },
   {
    "t": 219200,
@@ -246,14 +249,14 @@
    "text": "[awe] Right bronchus, the Pilot's pick, and watch it fork. And fork again. Counting from the trachea it's about twenty-three splits to the deepest sacs, ending in three to five hundred million alveoli. [emphasis] Spread it flat: fifty to a hundred square metres of gas-exchange surface, depending who's counting. Call it a badminton court, folded into your chest."
   },
   {
-   "t": 333600,
+   "t": 339200,
    "view": 2,
    "role": "ENGINEERING",
    "clip": "eng_drop_to_alveolus",
-   "text": "[tense] Three, two, one, drop. [dry] One power of ten: a hundred and twenty micrometres, about the width of a coarse hair. This bronchiole's tighter than my budget. Sacs ahead, Pilot. Find us a pretty one."
+   "text": "[tense] Three, two, one, drop. [dry] Two powers of ten: a hundred and twenty micrometres, about the width of a coarse hair. This bronchiole's tighter than my budget. Sacs ahead, Pilot. Find us a pretty one."
   },
   {
-   "t": 335600,
+   "t": 341500,
    "view": 1,
    "sfx": "shrink"
   },
@@ -330,8 +333,13 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "nav_vein_widening_heart",
-   "text": "[warm] Vein's widening out, and I'm starting to feel something through the deck. A thump. Every second, a little less. [awe] That's the heart, five litres a minute, and we're not shrinking for this one. I've flown a lot of people, and I've never met one whose heart sounded foreign. Hold the rail.",
+   "text": "[warm] Vein's widening out, and I'm starting to feel something through the deck. A thump. Every second, a little less. [awe] That's the heart, five litres a minute, and for this one we grow, three powers of ten, back to twelve millimetres. I've flown a lot of people, and I've never met one whose heart sounded foreign. Hold the rail.",
    "sfx": "heartbeat"
+  },
+  {
+   "t": 614000,
+   "view": 1,
+   "sfx": "grow"
   },
   {
    "t": 621900,
@@ -379,14 +387,19 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "nav_sentinel_contact",
-   "text": "[warm] Approaching a quieter vessel, off the main flow. Nice and easy. [tense] Wait. Doc, that big pale cell to starboard, rolling along the vessel wall. It just stopped and started crawling toward us. Is it supposed to do that?"
+   "text": "[dry] Three, two, one, drop: three powers of ten, back to twelve micrometres. [warm] Approaching a quieter vessel, off the main flow. Nice and easy. [tense] Wait. Doc, that big pale cell to starboard, rolling along the vessel wall. It just stopped and started crawling toward us. Is it supposed to do that?"
+  },
+  {
+   "t": 727500,
+   "view": 1,
+   "sfx": "shrink"
   },
   {
    "t": 737700,
    "sfx": "klaxon"
   },
   {
-   "t": 743800,
+   "t": 747011,
    "view": 1,
    "role": "SCIENCE",
    "clip": "sci_neutrophil_identify",
@@ -426,26 +439,21 @@
    "view": 3,
    "role": "SCIENCE",
    "clip": "sci_antibodies_macrophage",
-   "text": "[reflective] Look what drifts past now we wear the right colours. Those tiny Y shapes are antibodies, ten nanometres, each built to grip one stranger. That slow cell, twenty micrometres, is a monocyte; once it climbs out into tissue it becomes a macrophage and eats whatever the antibodies tag, whole. [wonder] This army asks one question of everything: are you me? It never asks where you're from."
+   "text": "[reflective] Look what drifts past now we wear the right colours. Those tiny glints on the bacteria are antibodies, Y-shaped molecules ten nanometres long, far too small to see the Y from here, each built to grip one stranger. That slow cell, twenty micrometres, is a monocyte; once it climbs out into tissue it becomes a macrophage and eats whatever the antibodies tag, whole. [wonder] This army asks one question of everything: are you me? It never asks where you're from."
   },
   {
-   "t": 870600,
+   "t": 871594,
    "view": 2,
    "role": "ENGINEERING",
    "clip": "eng_drop_to_neuron",
-   "text": "[dry] Three, two, one, drop. One power of ten: one point two micrometres, about the size of a small bacterium. [chuckle] Heart rate's back to normal. Mine, I mean. Coat's coming off, it drinks power and the drive's thirsty. Good lie while it lasted. [dry] Only dishonest reading on this whole tour, and Doc's still sore about it."
-  },
-  {
-   "t": 872600,
-   "view": 1,
-   "sfx": "shrink"
+   "text": "[dry] No drop this time; at twelve micrometres the whole neuron fits in the window. [chuckle] Heart rate's back to normal. Mine, I mean. Coat's coming off, it drinks power and the drive's thirsty. Good lie while it lasted. [dry] Only dishonest reading on this whole tour, and Doc's still sore about it."
   },
   {
    "t": 903000,
    "view": 0,
    "role": "NAVIGATION",
    "clip": "nav_blood_brain_barrier",
-   "text": "[warm] Approaching the blood-brain barrier. See how the cells lining this capillary are stitched together, no gaps, like a zipper? Tight junctions. Most of what's dissolved in the blood stops right here. Only what the brain orders in gets through: oxygen, glucose, a few small fat-soluble molecules. [hushed] We're going to thread the needle, and on the other side is the cortex. We're going into the mind."
+   "text": "[warm] Approaching the blood-brain barrier. See how the cells lining this vessel are stitched together, no gaps, like a zipper? Tight junctions. Most of what's dissolved in the blood stops right here. Only what the brain orders in gets through: oxygen, glucose, a few small fat-soluble molecules. [hushed] We're going to thread the needle, and on the other side is the cortex. We're going into the mind."
   },
   {
    "t": 931500,
@@ -459,7 +467,7 @@
    "view": 1,
    "role": "ENGINEERING",
    "clip": "eng_axon_overtaken",
-   "text": "[tense] Big pyramidal cell, thick axon, one of the few we'd fit down, and something's coming up behind us. Fast. [excited] There it goes! Right past us, that flash along the wall, sodium pouring in, that's the shout, an action potential, an electrical wave, and it's not slowing down. Pilot, we can't catch that. Nothing on this boat catches that."
+   "text": "[tense] Big pyramidal cell, and we're riding alongside its axon, and something's coming up behind us. Fast. [excited] There it goes! Right past us, that flash along the axon, sodium pouring in, that's the shout, an action potential, an electrical wave, and it's not slowing down. Pilot, we can't catch that. Nothing on this boat catches that."
   },
   {
    "t": 964000,
@@ -485,7 +493,7 @@
    "view": 2,
    "role": "ENGINEERING",
    "clip": "eng_drop_to_synapse",
-   "text": "[tense] Three, two, one, drop. [dry] One power of ten: a hundred and twenty nanometres. About the size of a virus, and I'm not thrilled about the company. Small enough to see the end of this wire, and the end of a wire is where things get interesting."
+   "text": "[tense] Three, two, one, drop. [dry] Two powers of ten: a hundred and twenty nanometres. About the size of a virus, and I'm not thrilled about the company. Small enough to see the end of this wire, and the end of a wire is where things get interesting."
   },
   {
    "t": 1015500,
@@ -548,10 +556,15 @@
    "view": 0,
    "role": "NAVIGATION",
    "clip": "nav_mitochondrion_approach",
-   "text": "[warm] Mitochondrion dead ahead, a micrometre across and a few long. Its outer skin is riddled with porin channels, and we're taking one, then squeezing the inner membrane, [chuckle] don't ask how. [awe] Look at those folds, the cristae, like the bellows of an accordion. And those little spinning things studding every fold: that's the turbine the Engineer promised us back in the scale bay."
+   "text": "[warm] Mitochondrion dead ahead, a micrometre across and a few long. [dry] Dropping half a power of ten, to forty nanometres, so we can see her engines. Its outer skin is riddled with porin channels, and we're taking one, then squeezing the inner membrane, [chuckle] don't ask how. [awe] Look at those folds, the cristae, like the bellows of an accordion. And those little spinning things studding every fold: that's the turbine the Engineer promised us back in the scale bay."
   },
   {
-   "t": 1208500,
+   "t": 1185500,
+   "view": 1,
+   "sfx": "shrink"
+  },
+  {
+   "t": 1209978,
    "view": 1,
    "role": "ENGINEERING",
    "clip": "eng_atp_synthase_love",
@@ -576,7 +589,7 @@
    "view": 2,
    "role": "ENGINEERING",
    "clip": "eng_drop_to_nucleus",
-   "text": "[tense] Three, two, one, drop. [dry] One power of ten: twelve nanometres, the last step this drive was ever rated for. Doc's been grinning since the turbines, which means the next stop is the one she came for. Pilot, find us a pore."
+   "text": "[tense] Three, two, one, drop. [dry] Half a power of ten: twelve nanometres, the last step this drive was ever rated for. Doc's been grinning since the turbines, which means the next stop is the one she came for. Pilot, find us a pore."
   },
   {
    "t": 1306000,

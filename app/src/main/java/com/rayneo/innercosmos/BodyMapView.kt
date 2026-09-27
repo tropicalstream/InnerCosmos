@@ -68,8 +68,8 @@ class BodyMapView(context: Context) : View(context) {
         body.moveTo(X(45f), Y(24f)); body.lineTo(X(55f), Y(24f)); body.lineTo(X(56f), Y(31f)); body.lineTo(X(44f), Y(31f)); body.close()
         body.moveTo(X(30f), Y(33f)); body.quadTo(X(50f), Y(28f), X(70f), Y(33f))
         body.lineTo(X(66f), Y(84f)); body.quadTo(X(50f), Y(89f), X(34f), Y(84f)); body.close()
-        body.moveTo(X(30f), Y(34f)); body.lineTo(X(17f), Y(74f)); body.lineTo(X(24f), Y(76f)); body.lineTo(X(35f), Y(46f)); body.close()
-        body.moveTo(X(70f), Y(34f)); body.lineTo(X(83f), Y(74f)); body.lineTo(X(76f), Y(76f)); body.lineTo(X(65f), Y(46f)); body.close()
+        body.moveTo(X(30f), Y(34f)); body.lineTo(X(16f), Y(87f)); body.lineTo(X(23f), Y(89f)); body.lineTo(X(35f), Y(46f)); body.close()   // fingertips at ~40% of height
+        body.moveTo(X(70f), Y(34f)); body.lineTo(X(84f), Y(87f)); body.lineTo(X(77f), Y(89f)); body.lineTo(X(65f), Y(46f)); body.close()
         body.moveTo(X(36f), Y(86f)); body.lineTo(X(33f), Y(146f)); body.lineTo(X(44f), Y(146f)); body.lineTo(X(48f), Y(94f))
         body.lineTo(X(52f), Y(94f)); body.lineTo(X(56f), Y(146f)); body.lineTo(X(67f), Y(146f)); body.lineTo(X(64f), Y(86f)); body.close()
         canvas.drawPath(body, fill)

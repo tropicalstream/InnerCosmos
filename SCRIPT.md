@@ -67,9 +67,7 @@
 > **DOC:** [wonder] Feel that pull? An adult breathes twelve to twenty times a minute, and every nose breath comes through here first; mouth breathing skips it. The nose warms the air, wets it, then swerves it round these ridges, the turbinates. Anything over ten micrometres can't take the corner and sticks in the mucus. [gentle] We're a thousand times bigger, so we fly the gaps on purpose.
 
 **03:15** · look: *SCALE DRIVE CORE*
-> **ENGINEERING:** [tense] Three, two, one, drop. [dry] One power of ten, twelve millimetres down to one point two. Mucus on the hull, lovely, I'll be scraping that off for a week. Mind the hairs, Pilot, and steer for whichever passage isn't coughing.
-
-**03:17** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
+> **ENGINEERING:** [dry] No drop for this one: the windpipe's two centimetres across, and at twelve millimetres she fits it as she is. Mucus on the hull, lovely, I'll be scraping that off for a week. Mind the hairs, Pilot, and steer for whichever passage isn't coughing.
 
 
 ### 2. The Airway
@@ -86,10 +84,10 @@
 **05:05** · look: *BRIDGE (helm)*
 > **DOC:** [awe] Right bronchus, the Pilot's pick, and watch it fork. And fork again. Counting from the trachea it's about twenty-three splits to the deepest sacs, ending in three to five hundred million alveoli. [emphasis] Spread it flat: fifty to a hundred square metres of gas-exchange surface, depending who's counting. Call it a badminton court, folded into your chest.
 
-**05:33** · look: *SCALE DRIVE CORE*
-> **ENGINEERING:** [tense] Three, two, one, drop. [dry] One power of ten: a hundred and twenty micrometres, about the width of a coarse hair. This bronchiole's tighter than my budget. Sacs ahead, Pilot. Find us a pretty one.
+**05:39** · look: *SCALE DRIVE CORE*
+> **ENGINEERING:** [tense] Three, two, one, drop. [dry] Two powers of ten: a hundred and twenty micrometres, about the width of a coarse hair. This bronchiole's tighter than my budget. Sacs ahead, Pilot. Find us a pretty one.
 
-**05:35** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
+**05:41** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 
 
 ### 3. The Alveolus
@@ -127,7 +125,9 @@
 > **ENGINEERING:** [dry] Not so long ago, American blood banks kept donations sorted by the donor's race. Separate shelves. [grave] No measurement ever backed that, and the Red Cross dropped it in nineteen fifty. Blood services still ask particular communities to donate, but that's hunting rare antigens: matching molecules, not sorting people. [chuckle] The cells never noticed. Only the people did.
 
 **10:10** · look: *BRIDGE (helm)* · SFX: `heartbeat`
-> **HELM:** [warm] Vein's widening out, and I'm starting to feel something through the deck. A thump. Every second, a little less. [awe] That's the heart, five litres a minute, and we're not shrinking for this one. I've flown a lot of people, and I've never met one whose heart sounded foreign. Hold the rail.
+> **HELM:** [warm] Vein's widening out, and I'm starting to feel something through the deck. A thump. Every second, a little less. [awe] That's the heart, five litres a minute, and for this one we grow, three powers of ten, back to twelve millimetres. I've flown a lot of people, and I've never met one whose heart sounded foreign. Hold the rail.
+
+**10:14** · look: *EXTERNAL (chase, the Mote)* · SFX: `grow`
 
 
 ### 5. The Heart
@@ -152,14 +152,16 @@
 **11:55** · SFX: `heartbeat`
 
 **12:05** · look: *BRIDGE (helm)*
-> **HELM:** [warm] Approaching a quieter vessel, off the main flow. Nice and easy. [tense] Wait. Doc, that big pale cell to starboard, rolling along the vessel wall. It just stopped and started crawling toward us. Is it supposed to do that?
+> **HELM:** [dry] Three, two, one, drop: three powers of ten, back to twelve micrometres. [warm] Approaching a quieter vessel, off the main flow. Nice and easy. [tense] Wait. Doc, that big pale cell to starboard, rolling along the vessel wall. It just stopped and started crawling toward us. Is it supposed to do that?
+
+**12:07** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 
 
 ### 6. The Sentinel
 
 **12:17** · SFX: `klaxon`
 
-**12:23** · look: *EXTERNAL (chase, the Mote)*
+**12:27** · look: *EXTERNAL (chase, the Mote)*
 > **DOC:** [urgent] That's a neutrophil. Most common white cell in your blood, half to two thirds of them, roughly ten to fifteen micrometres across, bigger than a red cell, lives a few hours to a few days and spends all of it hunting. [tense] It reads the surface of anything it touches. Self, or not self. And we, my friends, are not self.
 
 **12:45** · SFX: `alarm`
@@ -176,24 +178,22 @@
 > **ENGINEERING:** [chuckle] It sniffed us and decided we were family. Somebody write that down; that's the nicest thing anything in here has done for us. [dry] Coat holds. Ship's fine. [softly] I'm fine.
 
 **13:56** · look: *OBSERVATION DECK*
-> **DOC:** [reflective] Look what drifts past now we wear the right colours. Those tiny Y shapes are antibodies, ten nanometres, each built to grip one stranger. That slow cell, twenty micrometres, is a monocyte; once it climbs out into tissue it becomes a macrophage and eats whatever the antibodies tag, whole. [wonder] This army asks one question of everything: are you me? It never asks where you're from.
+> **DOC:** [reflective] Look what drifts past now we wear the right colours. Those tiny glints on the bacteria are antibodies, Y-shaped molecules ten nanometres long, far too small to see the Y from here, each built to grip one stranger. That slow cell, twenty micrometres, is a monocyte; once it climbs out into tissue it becomes a macrophage and eats whatever the antibodies tag, whole. [wonder] This army asks one question of everything: are you me? It never asks where you're from.
 
-**14:30** · look: *SCALE DRIVE CORE*
-> **ENGINEERING:** [dry] Three, two, one, drop. One power of ten: one point two micrometres, about the size of a small bacterium. [chuckle] Heart rate's back to normal. Mine, I mean. Coat's coming off, it drinks power and the drive's thirsty. Good lie while it lasted. [dry] Only dishonest reading on this whole tour, and Doc's still sore about it.
-
-**14:32** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
+**14:31** · look: *SCALE DRIVE CORE*
+> **ENGINEERING:** [dry] No drop this time; at twelve micrometres the whole neuron fits in the window. [chuckle] Heart rate's back to normal. Mine, I mean. Coat's coming off, it drinks power and the drive's thirsty. Good lie while it lasted. [dry] Only dishonest reading on this whole tour, and Doc's still sore about it.
 
 
 ### 7. The Neuron
 
 **15:03** · look: *BRIDGE (helm)*
-> **HELM:** [warm] Approaching the blood-brain barrier. See how the cells lining this capillary are stitched together, no gaps, like a zipper? Tight junctions. Most of what's dissolved in the blood stops right here. Only what the brain orders in gets through: oxygen, glucose, a few small fat-soluble molecules. [hushed] We're going to thread the needle, and on the other side is the cortex. We're going into the mind.
+> **HELM:** [warm] Approaching the blood-brain barrier. See how the cells lining this vessel are stitched together, no gaps, like a zipper? Tight junctions. Most of what's dissolved in the blood stops right here. Only what the brain orders in gets through: oxygen, glucose, a few small fat-soluble molecules. [hushed] We're going to thread the needle, and on the other side is the cortex. We're going into the mind.
 
 **15:31** · look: *EXTERNAL (chase, the Mote)*
 > **DOC:** [awe] And there she is. A neuron. That body ahead is the soma, and those branches are dendrites, a tree grown to listen. Eighty-six billion of these in one head, give or take. [wonder] Right now it's resting at about minus seventy millivolts, a tiny charged battery, waiting for enough whispers to add up to a shout.
 
 **15:59** · look: *EXTERNAL (chase, the Mote)*
-> **ENGINEERING:** [tense] Big pyramidal cell, thick axon, one of the few we'd fit down, and something's coming up behind us. Fast. [excited] There it goes! Right past us, that flash along the wall, sodium pouring in, that's the shout, an action potential, an electrical wave, and it's not slowing down. Pilot, we can't catch that. Nothing on this boat catches that.
+> **ENGINEERING:** [tense] Big pyramidal cell, and we're riding alongside its axon, and something's coming up behind us. Fast. [excited] There it goes! Right past us, that flash along the axon, sodium pouring in, that's the shout, an action potential, an electrical wave, and it's not slowing down. Pilot, we can't catch that. Nothing on this boat catches that.
 
 **16:04** · SFX: `spark`
 
@@ -205,7 +205,7 @@
 **16:33** · SFX: `spark`
 
 **16:53** · look: *SCALE DRIVE CORE*
-> **ENGINEERING:** [tense] Three, two, one, drop. [dry] One power of ten: a hundred and twenty nanometres. About the size of a virus, and I'm not thrilled about the company. Small enough to see the end of this wire, and the end of a wire is where things get interesting.
+> **ENGINEERING:** [tense] Three, two, one, drop. [dry] Two powers of ten: a hundred and twenty nanometres. About the size of a virus, and I'm not thrilled about the company. Small enough to see the end of this wire, and the end of a wire is where things get interesting.
 
 **16:55** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 
@@ -236,12 +236,14 @@
 **19:24** · SFX: `squelch`
 
 **19:41** · look: *BRIDGE (helm)*
-> **HELM:** [warm] Mitochondrion dead ahead, a micrometre across and a few long. Its outer skin is riddled with porin channels, and we're taking one, then squeezing the inner membrane, [chuckle] don't ask how. [awe] Look at those folds, the cristae, like the bellows of an accordion. And those little spinning things studding every fold: that's the turbine the Engineer promised us back in the scale bay.
+> **HELM:** [warm] Mitochondrion dead ahead, a micrometre across and a few long. [dry] Dropping half a power of ten, to forty nanometres, so we can see her engines. Its outer skin is riddled with porin channels, and we're taking one, then squeezing the inner membrane, [chuckle] don't ask how. [awe] Look at those folds, the cristae, like the bellows of an accordion. And those little spinning things studding every fold: that's the turbine the Engineer promised us back in the scale bay.
+
+**19:45** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 
 
 ### 9. The Mitochondrion
 
-**20:08** · look: *EXTERNAL (chase, the Mote)*
+**20:09** · look: *EXTERNAL (chase, the Mote)*
 > **ENGINEERING:** [excited] ATP synthase. Look at her go! A turbine ten nanometres across, spinning about a hundred times a second, and every turn presses out about three molecules of ATP. [heartfelt] Best engine ever built, and nobody built it. I've spent my life on the scale drive, and that thing makes me feel like an amateur. Look at it. Just look at it.
 
 **20:39** · look: *EXTERNAL (chase, the Mote)*
@@ -251,7 +253,7 @@
 > **DOC:** [reflective] This power station has its own DNA, a small loop of sixteen thousand five hundred and sixty-nine base pairs, and you got every copy from your mother. A mitochondrion was once a free-living bacterium, taken in by an ancestor cell one and a half to two billion years ago, and never digested. [tender] Every breath you take is finishing that meal.
 
 **21:44** · look: *SCALE DRIVE CORE*
-> **ENGINEERING:** [tense] Three, two, one, drop. [dry] One power of ten: twelve nanometres, the last step this drive was ever rated for. Doc's been grinning since the turbines, which means the next stop is the one she came for. Pilot, find us a pore.
+> **ENGINEERING:** [tense] Three, two, one, drop. [dry] Half a power of ten: twelve nanometres, the last step this drive was ever rated for. Doc's been grinning since the turbines, which means the next stop is the one she came for. Pilot, find us a pore.
 
 **21:46** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 
