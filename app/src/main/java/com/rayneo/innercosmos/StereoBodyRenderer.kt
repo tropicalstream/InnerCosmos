@@ -45,145 +45,149 @@ import kotlin.math.sqrt
  * shrink-burst / scale-jump effects and the on-screen telemetry text.
  */
 class StereoBodyRenderer(
-    private val audioEngine: BodyAudioEngine,
-    private val context: Context? = null
+    internal val audioEngine: BodyAudioEngine,
+    internal val context: Context? = null
 ) : GLSurfaceView.Renderer {
-    private val projection = FloatArray(16)
-    private val view = FloatArray(16)
-    private val model = FloatArray(16)
-    private val mv = FloatArray(16)
-    private val mvp = FloatArray(16)
-    private val normalM = FloatArray(16)
-    private val invM = FloatArray(16)
-    private val identityM = FloatArray(16).also { Matrix.setIdentityM(it, 0) }
+    internal val projection = FloatArray(16)
+    internal val view = FloatArray(16)
+    internal val model = FloatArray(16)
+    internal val mv = FloatArray(16)
+    internal val mvp = FloatArray(16)
+    internal val normalM = FloatArray(16)
+    internal val invM = FloatArray(16)
+    internal val identityM = FloatArray(16).also { Matrix.setIdentityM(it, 0) }
 
-    private lateinit var sphere: SphereMesh
-    private lateinit var blob: SphereMesh
-    private lateinit var tunnel: TubeMesh
-    private lateinit var moteMesh: TriMesh
-    private lateinit var cockpitMesh: LineMesh
-    private lateinit var routeMesh: LineMesh
-    private lateinit var routeNodes: PointMesh
-    private lateinit var hairMesh: LineMesh
-    private lateinit var capillaryMesh: LineMesh
-    private lateinit var trabeculaeMesh: LineMesh
-    private lateinit var dendriteMesh: LineMesh
-    private lateinit var lipidMesh: PointMesh
-    private lateinit var tailMesh: LineMesh
-    private lateinit var chromatinMesh: LineMesh
-    private lateinit var helixMesh: LineMesh
-    private lateinit var mrnaMesh: LineMesh
-    private lateinit var electronMesh: PointMesh
-    private lateinit var shellMesh: LineMesh
-    private lateinit var cellCosmos: PointMesh
-    private lateinit var antibodyMesh: LineMesh
-    private lateinit var microtubuleMesh: LineMesh
-    private lateinit var canaliculiMesh: LineMesh
-    private lateinit var glomerulusMesh: LineMesh
-    private lateinit var boneMesh: LineMesh
-    private lateinit var floorLipidMesh: PointMesh
-    private lateinit var floorTailMesh: LineMesh
-    private lateinit var fibrinMesh: LineMesh
-    private lateinit var scarMesh: LineMesh
-    private var plateShader: PlateShader? = null
+    internal lateinit var sphere: SphereMesh
+    internal lateinit var blob: SphereMesh
+    internal lateinit var rbc: ParamMesh          // biconcave red cell
+    internal lateinit var capsule: ParamMesh      // rod (bacteria, organelles)
+    internal lateinit var cylinder: ParamMesh     // filaments, tubes, stalks
+    internal lateinit var cone: ParamMesh
+    internal lateinit var tunnel: TubeMesh
+    internal lateinit var moteMesh: TriMesh
+    internal lateinit var cockpitMesh: LineMesh
+    internal lateinit var routeMesh: LineMesh
+    internal lateinit var routeNodes: PointMesh
+    internal lateinit var hairMesh: LineMesh
+    internal lateinit var capillaryMesh: LineMesh
+    internal lateinit var trabeculaeMesh: LineMesh
+    internal lateinit var dendriteMesh: LineMesh
+    internal lateinit var lipidMesh: PointMesh
+    internal lateinit var tailMesh: LineMesh
+    internal lateinit var chromatinMesh: LineMesh
+    internal lateinit var helixMesh: LineMesh
+    internal lateinit var mrnaMesh: LineMesh
+    internal lateinit var electronMesh: PointMesh
+    internal lateinit var shellMesh: LineMesh
+    internal lateinit var cellCosmos: PointMesh
+    internal lateinit var antibodyMesh: LineMesh
+    internal lateinit var microtubuleMesh: LineMesh
+    internal lateinit var canaliculiMesh: LineMesh
+    internal lateinit var glomerulusMesh: LineMesh
+    internal lateinit var boneMesh: LineMesh
+    internal lateinit var floorLipidMesh: PointMesh
+    internal lateinit var floorTailMesh: LineMesh
+    internal lateinit var fibrinMesh: LineMesh
+    internal lateinit var scarMesh: LineMesh
+    internal var plateShader: PlateShader? = null
     /** Chapter III's pictures, loaded from assets/plates on the GL thread; empty if absent. */
-    private val plates = HashMap<String, Plate>()
-    private lateinit var litShader: LitShader
-    private lateinit var colorShader: ColorShader
-    private lateinit var wallShader: WallShader
-    private val drift = DriftField(150)
-    private val air = AirField(96)
-    private var airFlow = 0f       // signed airspeed along the rail: + = inhale (deeper), - = exhale
-    private val bodies = BodyField(20)
-    private val dynTris = DynMesh(24)          // valve leaflets
-    private val dynLines = DynMesh(64)         // action-potential ring, spindle fibres, misc
+    internal val plates = HashMap<String, Plate>()
+    internal lateinit var litShader: LitShader
+    internal lateinit var colorShader: ColorShader
+    internal lateinit var wallShader: WallShader
+    internal val drift = DriftField(150)
+    internal val air = AirField(96)
+    internal var airFlow = 0f       // signed airspeed along the rail: + = inhale (deeper), - = exhale
+    internal val bodies = BodyField(20)
+    internal val dynTris = DynMesh(24)          // valve leaflets
+    internal val dynLines = DynMesh(64)         // action-potential ring, spindle fibres, misc
 
     // The tour being rendered: its rail, wall colours, scenes and ambience families. A switch is
     // requested from any thread and applied on the GL thread (the passage meshes are rebuilt there).
-    private var map: TourMap = Tours.DESCENT
-    private var nodes: List<TourNode> = map.nodes
-    private val pendingMap = java.util.concurrent.atomic.AtomicReference<TourMap?>(null)
-    private var sentinelIdx = nodes.indexOfFirst { it.scene == Scene.SENTINEL }
+    internal var map: TourMap = Tours.DESCENT
+    internal var nodes: List<TourNode> = map.nodes
+    internal val pendingMap = java.util.concurrent.atomic.AtomicReference<TourMap?>(null)
+    internal var sentinelIdx = nodes.indexOfFirst { it.scene == Scene.SENTINEL }
 
-    private var width = 1
-    private var height = 1
-    private var nowSeconds = 0f
-    private var fpsFrames = 0
-    private var fpsWindowStart = 0L
-    @Volatile private var fpsNow = 0f
-    private val startNanos = System.nanoTime()
-    private var lastFrameNanos = startNanos
-    private var routeProgress = 0f
-    @Volatile private var railTarget = 0f          // written by the director (10 Hz); followed on the GL thread
-    private var viewMode = VIEW_CHASE
-    private var prevViewMode = VIEW_CHASE
-    private var viewBlend = 1f
-    private var craftYaw = 0f
-    private var craftPitch = 0f
-    private var viewListener: ((Int) -> Unit)? = null
-    @Volatile private var scripted = false
+    internal var width = 1
+    internal var height = 1
+    internal var nowSeconds = 0f
+    internal var fpsFrames = 0
+    internal var fpsWindowStart = 0L
+    @Volatile internal var fpsNow = 0f
+    internal val startNanos = System.nanoTime()
+    internal var lastFrameNanos = startNanos
+    internal var routeProgress = 0f
+    @Volatile internal var railTarget = 0f          // written by the director (10 Hz); followed on the GL thread
+    internal var viewMode = VIEW_CHASE
+    internal var prevViewMode = VIEW_CHASE
+    internal var viewBlend = 1f
+    internal var craftYaw = 0f
+    internal var craftPitch = 0f
+    internal var viewListener: ((Int) -> Unit)? = null
+    @Volatile internal var scripted = false
     /** Two eye viewports (the X3 Pro) or one full-width view (emulator / phone testing). */
     @Volatile var stereo = true
     /** 0 = full detail, 1 = reduced (fewer bodies, no wall veins), 2 = minimal (thermal throttling). */
     @Volatile var quality = 0
     /** Title-card mode: the Mote idles outside the nose with a slow orbit and a gentle bob. */
     @Volatile var showcase = false
-    private var maxLineWidth = 1f
+    internal var maxLineWidth = 1f
 
     // Ship: rail position + flow sway, smoothed velocity for heading.
-    private var shipX = 0f; private var shipY = 0f; private var shipZ = 0f
-    private var velX = 0f; private var velY = 0f; private var velZ = -1f
-    private var latX = 0f; private var latY = 0f; private var latZ = 0f
-    private var flightInit = false
-    private var dirX = 0f; private var dirY = 0f; private var dirZ = -1f
-    private var sideX = 1f; private var sideY = 0f; private var sideZ = 0f
-    private var upX = 0f; private var upY = 1f; private var upZ = 0f
-    private var railCx = 0f; private var railCy = 0f; private var railCz = 0f   // rail centre at routeProgress
+    internal var shipX = 0f; internal var shipY = 0f; internal var shipZ = 0f
+    internal var velX = 0f; internal var velY = 0f; internal var velZ = -1f
+    internal var latX = 0f; internal var latY = 0f; internal var latZ = 0f
+    internal var flightInit = false
+    internal var dirX = 0f; internal var dirY = 0f; internal var dirZ = -1f
+    internal var sideX = 1f; internal var sideY = 0f; internal var sideZ = 0f
+    internal var upX = 0f; internal var upY = 1f; internal var upZ = 0f
+    internal var railCx = 0f; internal var railCy = 0f; internal var railCz = 0f   // rail centre at routeProgress
 
     // Camera + fx.
-    private var camNowX = 0f; private var camNowY = 0f; private var camNowZ = 1f
-    private var lookNowX = 0f; private var lookNowY = 0f; private var lookNowZ = 0f
-    private var beat = 0f
+    internal var camNowX = 0f; internal var camNowY = 0f; internal var camNowZ = 1f
+    internal var lookNowX = 0f; internal var lookNowY = 0f; internal var lookNowZ = 0f
+    internal var beat = 0f
     // Scale-drop feel: the world inflates about the ship for a beat while the hull dwindles.
-    private var inflateT = 99f
-    private var inflate = 1f
-    private var shipScale = 1f
-    private var growing = false            // the current scale step is a rise (tour II), not a drop
-    private var lysisClock = 0f            // the phage stop's burst cycle (seconds)
-    private val viewWorld = FloatArray(16)
-    private val inflM = FloatArray(16)
+    internal var inflateT = 99f
+    internal var inflate = 1f
+    internal var shipScale = 1f
+    internal var growing = false            // the current scale step is a rise (tour II), not a drop
+    internal var lysisClock = 0f            // the phage stop's burst cycle (seconds)
+    internal val viewWorld = FloatArray(16)
+    internal val inflM = FloatArray(16)
     /** Head look-around (IMU), applied to the look direction only. */
     @Volatile var gaze: GazeCamera? = null
-    private var shakeX = 0f; private var shakeY = 0f
-    private var shakeTX = 0f; private var shakeTY = 0f; private var shakeTimer = 0f
-    private var shrinkBurst = 0f
-    @Volatile private var jumpOn = false
-    private var jumpIntensity = 0f
-    private var heartPhase = 0f
-    private var heartKick = 0f
-    private var wallPulse = 0f
-    private val camA = FloatArray(6)
-    private val camB = FloatArray(6)
-    private val wallCol = FloatArray(3)
+    internal var shakeX = 0f; internal var shakeY = 0f
+    internal var shakeTX = 0f; internal var shakeTY = 0f; internal var shakeTimer = 0f
+    internal var shrinkBurst = 0f
+    @Volatile internal var jumpOn = false
+    internal var jumpIntensity = 0f
+    internal var heartPhase = 0f
+    internal var heartKick = 0f
+    internal var wallPulse = 0f
+    internal val camA = FloatArray(6)
+    internal val camB = FloatArray(6)
+    internal val wallCol = FloatArray(3)
 
     // Arm probes (0 = folded along the hull, 1 = reaching ahead).
-    private var armReach = 0f
-    private var armKick = 0f
-    private val tmpW = FloatArray(3)
-    private val tmpS = FloatArray(3)
-    private val tmpE = FloatArray(3)
-    private val tmpT = FloatArray(3)
+    internal var armReach = 0f
+    internal var armKick = 0f
+    internal val tmpW = FloatArray(3)
+    internal val tmpS = FloatArray(3)
+    internal val tmpE = FloatArray(3)
+    internal val tmpT = FloatArray(3)
 
     // Alpha multiplier for the landmark being drawn (distance fade-in).
-    private var landmarkFade = 1f
+    internal var landmarkFade = 1f
 
     // Sentinel (neutrophil) chase state.
-    private var sentX = 0f; private var sentY = 0f; private var sentZ = 0f
-    private var sentInit = false
+    internal var sentX = 0f; internal var sentY = 0f; internal var sentZ = 0f
+    internal var sentInit = false
 
-    private val beaconData = FloatArray(7)
-    private val beaconBuf = ByteBuffer.allocateDirect(28).order(ByteOrder.nativeOrder()).asFloatBuffer()
-    private val flashData = floatArrayOf(
+    internal val beaconData = FloatArray(7)
+    internal val beaconBuf = ByteBuffer.allocateDirect(28).order(ByteOrder.nativeOrder()).asFloatBuffer()
+    internal val flashData = floatArrayOf(
         -1f, -1f, 0f, 1f, 0.55f, 0.45f, 0f,
         1f, -1f, 0f, 1f, 0.55f, 0.45f, 0f,
         1f, 1f, 0f, 1f, 0.55f, 0.45f, 0f,
@@ -191,11 +195,11 @@ class StereoBodyRenderer(
         1f, 1f, 0f, 1f, 0.55f, 0.45f, 0f,
         -1f, 1f, 0f, 1f, 0.55f, 0.45f, 0f
     )
-    private val flashBuf = ByteBuffer.allocateDirect(flashData.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
-    private val streakCount = 46
-    private val streakSeeds = FloatArray(streakCount * 2) { Math.random().toFloat() }
-    private val streakData = FloatArray(streakCount * 2 * 7)
-    private val streakBuf = ByteBuffer.allocateDirect(streakData.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
+    internal val flashBuf = ByteBuffer.allocateDirect(flashData.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
+    internal val streakCount = 46
+    internal val streakSeeds = FloatArray(streakCount * 2) { Math.random().toFloat() }
+    internal val streakData = FloatArray(streakCount * 2 * 7)
+    internal val streakBuf = ByteBuffer.allocateDirect(streakData.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
 
     // ------------------------------------------------------------------ API
     fun setViewListener(listener: (Int) -> Unit) { viewListener = listener }
@@ -246,7 +250,7 @@ class StereoBodyRenderer(
     /** A scripted touch (spark / squelch cues): the arm probes reach out for a few seconds. */
     fun triggerProbe() { armKick = 1f }
 
-    private fun armReachTarget(p: Float): Float {
+    internal fun armReachTarget(p: Float): Float {
         var r = 0f
         for (c in map.armStops) { val d = p - c; r = max(r, exp(-(d * d) / 0.02f)) }
         return max(r, armKick)
@@ -290,7 +294,7 @@ class StereoBodyRenderer(
      * neuron drop at the synapse sub-stop (6.5), the three-decade drop into the atom, and the
      * twelve-decade re-expansion spread across the whole Look Back leg.
      */
-    private fun shipLengthM(p: Float): Double {
+    internal fun shipLengthM(p: Float): Double {
         val pc = p.coerceIn(map.lengthKeys.first(), map.lengthKeys.last())
         var i = 1
         while (i < map.lengthKeys.size - 1 && map.lengthKeys[i] < pc) i++
@@ -300,7 +304,7 @@ class StereoBodyRenderer(
         return 10.0.pow(a + (b - a) * t)
     }
 
-    private fun fmtLength(m: Double): String {
+    internal fun fmtLength(m: Double): String {
         val (v, unit) = when {
             m >= 1.0 -> m to "m"
             m >= 1e-3 -> m * 1e3 to "mm"
@@ -314,12 +318,12 @@ class StereoBodyRenderer(
     }
 
     /** Magnification to two significant figures with thousands separators: 1,000,000× not 999,999×. */
-    private fun fmtMag(mag: Double): String {
+    internal fun fmtMag(mag: Double): String {
         if (mag < 10.0) return "%.1f×".format(Locale.US, mag)
         return "%,d×".format(Locale.US, Math.round(roundSig(mag, 2)))
     }
 
-    private fun roundSig(v: Double, sig: Int): Double {
+    internal fun roundSig(v: Double, sig: Int): Double {
         if (v <= 0.0) return 0.0
         val digits = floor(log10(v)).toInt() - (sig - 1)
         val unit = 10.0.pow(digits)
@@ -327,7 +331,7 @@ class StereoBodyRenderer(
     }
 
     /** The powers-of-ten ladder with the current rung bracketed. */
-    private fun scaleLadder(lenM: Double): String {
+    internal fun scaleLadder(lenM: Double): String {
         val cur = log10(lenM)
         var best = 0; var bestD = Double.MAX_VALUE
         LADDER_EXP.forEachIndexed { i, e -> val d = abs(e - cur); if (d < bestD) { bestD = d; best = i } }
@@ -353,6 +357,10 @@ class StereoBodyRenderer(
         wallShader = WallShader()
         sphere = SphereMesh(22, 16)
         blob = SphereMesh(12, 8)
+        rbc = ParamMesh.biconcave()
+        capsule = ParamMesh.capsule(0.45f)
+        cylinder = ParamMesh.cylinder()
+        cone = ParamMesh.cone()
         tunnel = TubeMesh(buildTunnel())
         moteMesh = TriMesh(buildMote())
         cockpitMesh = LineMesh(buildCockpitLines())
@@ -391,7 +399,7 @@ class StereoBodyRenderer(
     }
 
     /** GL thread: adopt a new tour — rebuild the passage and the route, forget the old chase state. */
-    private fun applyMap(m: TourMap) {
+    internal fun applyMap(m: TourMap) {
         map = m; nodes = m.nodes
         sentinelIdx = nodes.indexOfFirst { it.scene == Scene.SENTINEL }
         tunnel.release(); routeMesh.release(); routeNodes.release()
@@ -448,7 +456,7 @@ class StereoBodyRenderer(
         }
     }
 
-    private fun drawEye(x: Int, viewportWidth: Int, eyeOffset: Float, seconds: Float) {
+    internal fun drawEye(x: Int, viewportWidth: Int, eyeOffset: Float, seconds: Float) {
         GLES20.glViewport(x, 0, viewportWidth, height)
         val ex = camNowX + sideX * eyeOffset; val ey = camNowY + sideY * eyeOffset; val ez = camNowZ + sideZ * eyeOffset
         val lx = lookNowX + sideX * eyeOffset * 0.35f
@@ -488,7 +496,7 @@ class StereoBodyRenderer(
     }
 
     // ---------------------------------------------------------- simulation
-    private fun flowSpeed(amb: Amb): Float = when (amb) {
+    internal fun flowSpeed(amb: Amb): Float = when (amb) {
         Amb.AIR -> 2.2f
         Amb.BLOOD -> 3.2f
         Amb.NEURAL -> 1.6f
@@ -500,7 +508,7 @@ class StereoBodyRenderer(
         Amb.MOTOR -> 0.7f
     }
 
-    private fun updateFlight(dt: Float, seconds: Float) {
+    internal fun updateFlight(dt: Float, seconds: Float) {
         if (!scripted) {
             // Free drift for testing without the director: ~25 s per node.
             routeProgress = (routeProgress + dt / 25f).coerceIn(0f, nodes.lastIndex.toFloat())
@@ -611,9 +619,9 @@ class StereoBodyRenderer(
         sentX += (tgtX - sentX) * sk; sentY += (tgtY - sentY) * sk; sentZ += (tgtZ - sentZ) * sk
     }
 
-    private fun smooth01(x: Float): Float { val t = x.coerceIn(0f, 1f); return t * t * (3f - 2f * t) }
+    internal fun smooth01(x: Float): Float { val t = x.coerceIn(0f, 1f); return t * t * (3f - 2f * t) }
 
-    private fun updateFx(dt: Float) {
+    internal fun updateFx(dt: Float) {
         beat = (beat - dt * 3.2f).coerceAtLeast(0f)
         shrinkBurst = (shrinkBurst - dt / SHRINK_SEC).coerceAtLeast(0f)
         // The drop: everything around the ship swells to ~2.6x within half a second, then the
@@ -644,7 +652,7 @@ class StereoBodyRenderer(
     }
 
     /** Camera position (0..2) and look-at (3..5) for a view mode. */
-    private fun camForMode(mode: Int, out: FloatArray) {
+    internal fun camForMode(mode: Int, out: FloatArray) {
         val px = shipX; val py = shipY; val pz = shipZ
         when (mode) {
             VIEW_CHASE -> {
@@ -681,7 +689,7 @@ class StereoBodyRenderer(
     }
 
     /** Keep a camera inside the passage: limit its lateral distance from the rail centre. */
-    private fun clampToTube(out: FloatArray) {
+    internal fun clampToTube(out: FloatArray) {
         val r = tunnelRadius(routeProgress) * 0.72f
         val vx = out[0] - railCx; val vy = out[1] - railCy; val vz = out[2] - railCz
         val along = vx * dirX + vy * dirY + vz * dirZ
@@ -695,7 +703,7 @@ class StereoBodyRenderer(
         }
     }
 
-    private fun updateCamera(dt: Float) {
+    internal fun updateCamera(dt: Float) {
         viewBlend = (viewBlend + dt / VIEW_TRANSITION_SEC).coerceAtMost(1f)
         val t = viewBlend * viewBlend * (3f - 2f * viewBlend)
         camForMode(prevViewMode, camA)
@@ -727,12 +735,12 @@ class StereoBodyRenderer(
     }
 
     // The Mote's bow lamp lights the world: just ahead of the ship.
-    private fun lampX() = shipX + dirX * 0.7f
-    private fun lampY() = shipY + dirY * 0.7f
-    private fun lampZ() = shipZ + dirZ * 0.7f
+    internal fun lampX() = shipX + dirX * 0.7f
+    internal fun lampY() = shipY + dirY * 0.7f
+    internal fun lampZ() = shipZ + dirZ * 0.7f
 
     // ---------------------------------------------------------- draw: world
-    private fun drawTunnel(seconds: Float) {
+    internal fun drawTunnel(seconds: Float) {
         Matrix.setIdentityM(model, 0)
         Matrix.multiplyMM(mv, 0, view, 0, model, 0)
         Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
@@ -744,7 +752,7 @@ class StereoBodyRenderer(
         GLES20.glEnable(GLES20.GL_CULL_FACE)
     }
 
-    private fun drawRoute() {
+    internal fun drawRoute() {
         Matrix.setIdentityM(model, 0)
         Matrix.multiplyMM(mv, 0, view, 0, model, 0)
         Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
@@ -754,7 +762,7 @@ class StereoBodyRenderer(
         routeNodes.draw(colorShader.positionHandle, colorShader.colorHandle)
     }
 
-    private fun drawDrift() {
+    internal fun drawDrift() {
         GLES20.glDepthMask(false)
         Matrix.setIdentityM(model, 0)
         Matrix.multiplyMM(mv, 0, view, 0, model, 0)
@@ -765,7 +773,7 @@ class StereoBodyRenderer(
     }
 
     /** Airflow streaks (nodes 0-2), fading out as the ride leaves the lungs. */
-    private fun drawAir() {
+    internal fun drawAir() {
         val fade = ((map.airEnd - routeProgress) / 0.5f).coerceIn(0f, 1f)
         if (fade <= 0f) return
         GLES20.glDepthMask(false)
@@ -781,7 +789,7 @@ class StereoBodyRenderer(
         GLES20.glDepthMask(true)
     }
 
-    private fun drawBodies(seconds: Float) {
+    internal fun drawBodies(seconds: Float) {
         val n = when (quality) { 0 -> bodies.count; 1 -> bodies.count / 2; else -> bodies.count / 3 }
         for (i in 0 until n) {
             val kind = bodies.kind[i]
@@ -804,7 +812,7 @@ class StereoBodyRenderer(
         }
     }
 
-    private fun drawBeacon(seconds: Float) {
+    internal fun drawBeacon(seconds: Float) {
         val idx = (routeProgress.toInt() + 1).coerceIn(0, nodes.lastIndex)
         val frac = routeProgress - routeProgress.toInt()
         if (frac < 0.45f || idx == routeProgress.toInt()) return        // only once we are truly under way
@@ -831,7 +839,7 @@ class StereoBodyRenderer(
     }
 
     // ----------------------------------------------------- draw: landmarks
-    private fun drawLandmarks(seconds: Float) {
+    internal fun drawLandmarks(seconds: Float) {
         for (i in nodes.indices) {
             val n = nodes[i]
             // Reveal each stop's landmark only as the Mote gets close (full at 0.8 node away,
@@ -886,719 +894,47 @@ class StereoBodyRenderer(
         colorShader.globalFade = 1f
     }
 
-    /** Node 0: the nostril as a cave mouth (a ring of flesh) with a forest of nasal hairs behind a warm bay glow. */
-    private fun drawThreshold(n: TourNode, i: Int, seconds: Float) {
-        val f = frameAt(i + 0.55f)
-        // The bay light: a big warm sphere behind the start.
-        drawSphereAt(n.x, n.y + 2.5f, n.z + 14f, 5f, 5f, 5f, COL_BAY, COL_LAMP, 0.35f, 0f, 0f, 1f, 0f, sphere, 0f, 0.8f)
-        for (k in 0 until 12) {
-            val a = 2f * PI.toFloat() * k / 12f
-            val ox = f.sx * cos(a) + f.ux * sin(a); val oy = f.sy * cos(a) + f.uy * sin(a); val oz = f.sz * cos(a) + f.uz * sin(a)
-            val rr = 3.1f + 0.25f * sin(k * 1.7f + seconds * 0.6f)
-            drawSphereAt(f.cx + ox * rr, f.cy + oy * rr, f.cz + oz * rr, 1.0f, 0.78f, 1.0f, COL_SKIN, COL_SKIN_DARK, 1f, 0f, 0f, 1f, 0f, blob, 1f)
-        }
-        drawLinesAt(hairMesh, f.cx, f.cy, f.cz, 2.5f, 0f, 0f, 1f, 0f)
-    }
 
-    /** Node 1: C-shaped cartilage rings down the trachea (beaded), open at the back. */
-    private fun drawAirway(n: TourNode, i: Int, seconds: Float) {
-        for (ring in 0 until 5) {
-            val p = i - 0.28f + ring * 0.13f
-            val f = frameAt(p)
-            val rr = tunnelRadius(p) * 0.88f
-            for (k in 0 until 10) {
-                if (k in 7..8) continue                      // the C's gap: a quarter turn, centred at -up (the oesophagus side)
-                val a = 2f * PI.toFloat() * k / 10f
-                val ox = f.sx * cos(a) + f.ux * sin(a); val oy = f.sy * cos(a) + f.uy * sin(a); val oz = f.sz * cos(a) + f.uz * sin(a)
-                drawSphereAt(f.cx + ox * rr, f.cy + oy * rr, f.cz + oz * rr, 0.46f, 0.46f, 0.55f, COL_CARTILAGE, COL_SKIN, 1f, 0f, 0f, 1f, 0f, blob)
-            }
-        }
-    }
 
-    /** Node 2: a cluster of translucent air sacs wrapped in capillaries. */
-    private fun drawAlveolus(n: TourNode, i: Int, seconds: Float) {
-        val f = frameAt(i.toFloat())
-        GLES20.glDepthMask(false)
-        for (k in 0 until 7) {
-            val a = 2f * PI.toFloat() * k / 7f + 0.4f
-            val d = 3.4f + 0.6f * sin(k * 2.1f)
-            val ox = f.sx * cos(a) + f.ux * sin(a); val oy = f.sy * cos(a) + f.uy * sin(a); val oz = f.sz * cos(a) + f.uz * sin(a)
-            val breathe = 1f + 0.08f * sin(seconds * 1.3f + k)
-            val r = (1.3f + 0.35f * (k % 3)) * breathe
-            drawSphereAt(f.cx + ox * d + f.dx * (k - 3) * 0.9f, f.cy + oy * d + f.dy * (k - 3) * 0.9f, f.cz + oz * d + f.dz * (k - 3) * 0.9f,
-                r, r, r, COL_ALVEOLUS, COL_RED_CELL, 0.42f, 0f, 0f, 1f, 0f, sphere, 0f, 0.25f)
-        }
-        GLES20.glDepthMask(true)
-        drawLinesAt(capillaryMesh, f.cx, f.cy, f.cz, 1f, seconds * 4f, 0f, 1f, 0f)
-    }
 
-    /** Node 4: the mitral valve slamming with every beat inside a chamber laced with trabeculae. */
-    private fun drawHeart(n: TourNode, i: Int, seconds: Float) {
-        val f = frameAt(i.toFloat())
-        drawLinesAt(trabeculaeMesh, f.cx, f.cy, f.cz, 1f, seconds * 2f, 0f, 0f, 1f)
-        // Mitral valve: shut at S1 (heartPhase 0, the "lub" = mitral closure, start of systole),
-        // swings open just after S2 for diastole. Leaflets are hinged on the wall and open DOWNSTREAM.
-        val open = ((heartPhase - 0.36f) / 0.14f).coerceIn(0f, 1f)
-        val ang = (6f + open * open * 78f) * PI.toFloat() / 180f
-        val rr = tunnelRadius(i.toFloat()) * 0.98f
-        // Fade the leaflets out as the camera passes through the valve plane (no full-screen flashes).
-        val dAlong = (camNowX - f.cx) * f.dx + (camNowY - f.cy) * f.dy + (camNowZ - f.cz) * f.dz
-        val leafAlpha = ((abs(dAlong) - 0.6f) / 1.2f).coerceIn(0f, 1f) * 0.92f
-        if (leafAlpha < 0.02f) return
-        val l = rr * 0.95f
-        for (side in 0 until 2) {
-            val sgn = if (side == 0) 1f else -1f
-            // Frame-local (x = side, y = up, z = back): hinge on the wall, leaflet swinging from the
-            // axis (closed) toward down-flow (open) about the side axis.
-            val cxL = 0f; val cyL = sgn * (rr - 0.5f * l * cos(ang)); val czL = -0.5f * l * sin(ang)
-            Matrix.setIdentityM(model, 0)
-            Matrix.translateM(model, 0, f.cx, f.cy, f.cz)
-            applyFrameRotation(f)
-            Matrix.translateM(model, 0, cxL, cyL, czL)
-            Matrix.rotateM(model, 0, sgn * ang * 180f / PI.toFloat(), 1f, 0f, 0f)
-            Matrix.scaleM(model, 0, rr * 0.9f, l * 0.5f, 0.07f)
-            drawLitModel(sphere, COL_VALVE, COL_VALVE_EDGE, leafAlpha, 1f, 0f)
-        }
-    }
 
-    /** Node 5: a neutrophil that notices the Mote (pulsing blob + pseudopods reaching for the ship), antibodies and a macrophage. */
-    private fun drawSentinel(n: TourNode, i: Int, seconds: Float) {
-        val pulse = 1f + 0.08f * sin(seconds * 2.7f)
-        drawSphereAt(sentX, sentY, sentZ, 1.35f * pulse, 1.2f * pulse, 1.35f * pulse, COL_NEUTROPHIL, COL_NEUTROPHIL_DARK, 0.96f, seconds * 15f, 0.2f, 1f, 0.3f, sphere, 1f)
-        // Pseudopods: elongated lobes pointing at the ship.
-        var tx = shipX - sentX; var ty = shipY - sentY; var tz = shipZ - sentZ
-        val dl = sqrt(tx * tx + ty * ty + tz * tz).coerceAtLeast(0.001f); tx /= dl; ty /= dl; tz /= dl
-        for (k in 0 until 5) {
-            val wob = sin(seconds * 1.9f + k * 1.3f)
-            val reach = 1.1f + 0.5f * wob
-            val ax = tx + 0.35f * sin(k * 2.1f + seconds * 0.7f); val ay = ty + 0.35f * cos(k * 1.7f + seconds * 0.5f); val az = tz + 0.3f * sin(k * 1.1f)
-            val al = sqrt(ax * ax + ay * ay + az * az).coerceAtLeast(0.001f)
-            val cx = sentX + ax / al * reach * 0.8f; val cy = sentY + ay / al * reach * 0.8f; val cz = sentZ + az / al * reach * 0.8f
-            val yaw = atan2(ax, az) * 180f / PI.toFloat()
-            drawSphereAt(cx, cy, cz, 0.28f, 0.28f, reach * 0.6f, COL_NEUTROPHIL, COL_NEUTROPHIL_DARK, 0.9f, yaw, 0f, 1f, 0f, blob)
-        }
-        // Antibodies (Y shapes) drifting near the node, and a macrophage waiting further on.
-        val f = frameAt(i + 0.4f)
-        drawLinesAt(antibodyMesh, f.cx, f.cy, f.cz, 1f, seconds * 9f, 0.3f, 1f, 0.2f)
-        drawSphereAt(f.cx + f.sx * 2.0f, f.cy + f.sy * 2.0f - 0.4f, f.cz + f.sz * 2.0f, 2.0f, 1.7f, 2.1f, COL_MACROPHAGE, COL_NEUTROPHIL_DARK, 0.95f, seconds * 6f, 0f, 1f, 0f, sphere, 1f)
-    }
 
-    /** Node 6: soma + dendrite tree beside the axon, myelin beads, an action potential racing past, then vesicles at the synapse. */
-    private fun drawNeuron(n: TourNode, i: Int, seconds: Float) {
-        val f = frameAt(i.toFloat())
-        val somaX = f.cx + f.sx * 3.6f + f.ux * 1.2f; val somaY = f.cy + f.sy * 3.6f + f.uy * 1.2f; val somaZ = f.cz + f.sz * 3.6f + f.uz * 1.2f
-        drawSphereAt(somaX, somaY, somaZ, 1.5f, 1.3f, 1.5f, COL_SOMA, COL_SOMA_LIGHT, 1f, 0f, 0f, 1f, 0f, sphere, 1f)
-        drawLinesAt(dendriteMesh, somaX, somaY, somaZ, 1f, 0f, 0f, 1f, 0f)
-        // Myelin sheaths: pale beaded rings with gaps (nodes of Ranvier).
-        for (ring in 0 until 4) {
-            val p = i + 0.15f + ring * 0.16f
-            val fr = frameAt(p); val rr = tunnelRadius(p) * 0.9f
-            for (k in 0 until 8) {
-                val a = 2f * PI.toFloat() * k / 8f
-                val ox = fr.sx * cos(a) + fr.ux * sin(a); val oy = fr.sy * cos(a) + fr.uy * sin(a); val oz = fr.sz * cos(a) + fr.uz * sin(a)
-                drawSphereAt(fr.cx + ox * rr, fr.cy + oy * rr, fr.cz + oz * rr, 0.5f, 0.5f, 1.0f, COL_MYELIN, COL_SOMA_LIGHT, 0.9f, 0f, 0f, 1f, 0f, blob)
-            }
-        }
-        // Action potential: a bright ring sweeping along the axon every 2.4 s.
-        val ap = ((seconds / 2.4f) % 1f)
-        val fp = frameAt(i - 0.25f + ap * 1.15f)
-        val arr = dynLines.data
-        var k = 0
-        val rr = tunnelRadius(i - 0.25f + ap * 1.15f) * 0.96f
-        for (s in 0 until 24) {
-            val a0 = 2f * PI.toFloat() * s / 24f; val a1 = 2f * PI.toFloat() * (s + 1) / 24f
-            for (a in floatArrayOf(a0, a1)) {
-                val ox = fp.sx * cos(a) + fp.ux * sin(a); val oy = fp.sy * cos(a) + fp.uy * sin(a); val oz = fp.sz * cos(a) + fp.uz * sin(a)
-                arr[k++] = fp.cx + ox * rr; arr[k++] = fp.cy + oy * rr; arr[k++] = fp.cz + oz * rr
-                arr[k++] = 0.85f; arr[k++] = 0.9f; arr[k++] = 1f; arr[k++] = 0.9f
-            }
-        }
-        Matrix.setIdentityM(model, 0)
-        Matrix.multiplyMM(mv, 0, view, 0, model, 0)
-        Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
-        colorShader.use(mvp, 1f)
-        lineWidth(3f)
-        dynLines.draw(colorShader.positionHandle, colorShader.colorHandle, GLES20.GL_LINES, 48)
-        lineWidth(1f)
-        // Synapse: vesicles at the terminal, popping toward the cleft.
-        val fs = frameAt(i + 0.8f)
-        for (v in 0 until 8) {
-            val a = 2f * PI.toFloat() * v / 8f
-            val pop = ((seconds * 0.7f + v * 0.37f) % 1f)
-            val rad = tunnelRadius(i + 0.8f) * (0.85f - pop * 0.5f)
-            val ox = fs.sx * cos(a) + fs.ux * sin(a); val oy = fs.sy * cos(a) + fs.uy * sin(a); val oz = fs.sz * cos(a) + fs.uz * sin(a)
-            val s = 0.22f * (1f - pop * 0.6f)
-            drawSphereAt(fs.cx + ox * rad + fs.dx * pop * 1.5f, fs.cy + oy * rad + fs.dy * pop * 1.5f, fs.cz + oz * rad + fs.dz * pop * 1.5f,
-                s, s, s, COL_VESICLE, COL_TRANSMITTER, 0.8f, 0f, 0f, 1f, 0f, blob, 0f, 0.4f)
-        }
-    }
 
-    /** Node 7: the bilayer as two sheets of lipid heads with tails between, a channel protein ringing the gap the Mote slips through. */
-    private fun drawMembrane(n: TourNode, i: Int, seconds: Float) {
-        val f = frameAt(i.toFloat())
-        // Sheets are built in a local frame (x=side, y=up, z=dir); rotate to match the rail.
-        Matrix.setIdentityM(model, 0)
-        Matrix.translateM(model, 0, f.cx, f.cy, f.cz)
-        applyFrameRotation(f)
-        Matrix.multiplyMM(mv, 0, view, 0, model, 0)
-        Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
-        colorShader.use(mvp, 7f, points = true)
-        lipidMesh.draw(colorShader.positionHandle, colorShader.colorHandle)
-        colorShader.use(mvp, 1f)
-        tailMesh.draw(colorShader.positionHandle, colorShader.colorHandle)
-        // Channel protein: six columns around the opening.
-        for (k in 0 until 6) {
-            val a = 2f * PI.toFloat() * k / 6f + seconds * 0.15f
-            val rr = 1.25f
-            val ox = f.sx * cos(a) + f.ux * sin(a); val oy = f.sy * cos(a) + f.uy * sin(a); val oz = f.sz * cos(a) + f.uz * sin(a)
-            drawSphereAt(f.cx + ox * rr, f.cy + oy * rr, f.cz + oz * rr, 0.3f, 0.3f, 0.75f, COL_CHANNEL, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 1f)
-        }
-    }
 
-    /** Node 8: cristae ridges and ATP synthase rotors turning on the inner membrane. */
-    private fun drawMitochondrion(n: TourNode, i: Int, seconds: Float) {
-        for (ridge in 0 until 5) {
-            val p = i - 0.3f + ridge * 0.14f
-            val fr = frameAt(p); val rr = tunnelRadius(p)
-            val sgn = if (ridge % 2 == 0) 1f else -1f
-            // A folded shelf reaching from one wall toward the middle, leaving the passage open.
-            drawSphereAt(fr.cx + fr.sx * sgn * rr * 0.55f, fr.cy + fr.sy * sgn * rr * 0.55f, fr.cz + fr.sz * sgn * rr * 0.55f,
-                rr * 0.5f, rr * 0.95f, 0.12f, COL_CRISTAE, COL_LAMP, 0.9f, 90f - yawOf(fr), 0f, 1f, 0f, sphere, 1f)
-            // ATP synthase: sits perpendicular to the crista membrane, stalk through it and the
-            // F1 head protruding into the matrix (toward the passage centre).
-            val px0 = fr.cx + fr.sx * sgn * rr * 0.55f + fr.ux * 0.35f; val py0 = fr.cy + fr.sy * sgn * rr * 0.55f + fr.uy * 0.35f; val pz0 = fr.cz + fr.sz * sgn * rr * 0.55f + fr.uz * 0.35f
-            val plateYaw = 90f - yawOf(fr)
-            drawSphereAt(px0 - fr.sx * sgn * 0.17f, py0 - fr.sy * sgn * 0.17f, pz0 - fr.sz * sgn * 0.17f, 0.06f, 0.06f, 0.35f, COL_ATP_STALK, COL_LAMP, 1f, plateYaw, 0f, 1f, 0f, blob)
-            drawSphereAt(px0 - fr.sx * sgn * 0.42f, py0 - fr.sy * sgn * 0.42f, pz0 - fr.sz * sgn * 0.42f, 0.32f, 0.32f, 0.16f, COL_ATP_HEAD, COL_LAMP, 1f, plateYaw, 0f, 1f, 0f, blob, 1f)
-            // Three knobs turning around the head: the rotor at ~100 revolutions a second, slowed to be seen.
-            for (kn in 0 until 3) {
-                val a = seconds * 6.5f + kn * 2.094f
-                val kx = px0 - fr.sx * sgn * 0.42f + fr.ux * 0.30f * cos(a) + fr.dx * 0.30f * sin(a)
-                val ky = py0 - fr.sy * sgn * 0.42f + fr.uy * 0.30f * cos(a) + fr.dy * 0.30f * sin(a)
-                val kz = pz0 - fr.sz * sgn * 0.42f + fr.uz * 0.30f * cos(a) + fr.dz * 0.30f * sin(a)
-                drawSphereAt(kx, ky, kz, 0.07f, 0.07f, 0.07f, COL_LAMP, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 0f, 0.6f)
-            }
-        }
-    }
 
-    /** Node 9: the nuclear pore, chromatin, and the double helix with a polymerase crawling along it. */
-    private fun drawNucleus(n: TourNode, i: Int, seconds: Float) {
-        val fp = frameAt(i - 0.15f); val rr = tunnelRadius(i - 0.15f) * 0.8f
-        for (k in 0 until 8) {
-            val a = 2f * PI.toFloat() * k / 8f
-            val ox = fp.sx * cos(a) + fp.ux * sin(a); val oy = fp.sy * cos(a) + fp.uy * sin(a); val oz = fp.sz * cos(a) + fp.uz * sin(a)
-            drawSphereAt(fp.cx + ox * rr, fp.cy + oy * rr, fp.cz + oz * rr, 0.42f, 0.42f, 0.55f, COL_PORE, COL_NUCLEUS_LIGHT, 1f, 0f, 0f, 1f, 0f, blob, 1f)
-        }
-        val f = frameAt(i + 0.1f)
-        drawLinesAt(chromatinMesh, f.cx, f.cy, f.cz, 1f, seconds * 1.5f, 0f, 1f, 0f)
-        // The helix lies beside the path, slowly turning.
-        val hx = f.cx + f.sx * 1.6f; val hy = f.cy + f.sy * 1.6f + 0.2f; val hz = f.cz + f.sz * 1.6f
-        Matrix.setIdentityM(model, 0)
-        Matrix.translateM(model, 0, hx, hy, hz)
-        applyFrameRotation(f)
-        Matrix.rotateM(model, 0, seconds * 12f, 0f, 0f, 1f)
-        Matrix.multiplyMM(mv, 0, view, 0, model, 0)
-        Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
-        colorShader.use(mvp, 1f)
-        lineWidth(2f)
-        helixMesh.draw(colorShader.positionHandle, colorShader.colorHandle)
-        lineWidth(1f)
-        // RNA polymerase: a blob sliding along the helix axis.
-        val slide = ((seconds * 0.12f) % 1f) * 8f - 4f
-        drawSphereAt(hx + f.dx * slide, hy + f.dy * slide, hz + f.dz * slide, 0.55f, 0.5f, 0.6f, COL_POLYMERASE, COL_LAMP, 1f, seconds * 30f, 0f, 1f, 0f, blob, 1f)
-    }
 
-    /** Node 10: two ribosomal subunits with mRNA threading through, tRNAs docking, and a polypeptide chain growing out. */
-    private fun drawRibosome(n: TourNode, i: Int, seconds: Float) {
-        val f = frameAt(i.toFloat())
-        val bx = f.cx + f.sx * 1.9f - f.ux * 0.3f; val by = f.cy + f.sy * 1.9f - f.uy * 0.3f; val bz = f.cz + f.sz * 1.9f - f.uz * 0.3f
-        drawSphereAt(bx, by, bz, 1.5f, 1.1f, 1.4f, COL_RIBO_LARGE, COL_RIBO_LIGHT, 1f, 20f, 0f, 1f, 0.4f, sphere, 1f)
-        // Small subunit above the large one; the mRNA threads through the seam between them.
-        drawSphereAt(bx + f.ux * 1.6f, by + f.uy * 1.6f, bz + f.uz * 1.6f, 1.0f, 0.7f, 1.1f, COL_RIBO_SMALL, COL_RIBO_LIGHT, 1f, -15f, 0f, 1f, 0.2f, sphere, 1f)
-        drawLinesAt(mrnaMesh, bx, by, bz, 1f, 0f, 0f, 1f, 0f)
-        // tRNAs shuttling in.
-        for (k in 0 until 3) {
-            val ph = ((seconds * 0.5f + k * 0.33f) % 1f)
-            val tx = bx + f.dx * (3f - ph * 3f) + f.ux * (1.2f + 0.8f * (1f - ph)); val ty = by + f.dy * (3f - ph * 3f) + f.uy * (1.2f + 0.8f * (1f - ph)); val tz = bz + f.dz * (3f - ph * 3f) + f.uz * (1.2f + 0.8f * (1f - ph))
-            drawSphereAt(tx, ty, tz, 0.16f, 0.28f, 0.16f, COL_TRNA, COL_LAMP, 1f, ph * 200f, 0f, 1f, 0f, blob)
-        }
-        // Growing polypeptide: a spiral of beads emerging from the large subunit.
-        val beads = 4 + (((seconds * 0.35f) % 1f) * 10f).toInt()
-        for (k in 0 until beads) {
-            val a = k * 0.9f
-            val px = bx - f.ux * (1.3f + k * 0.14f) + f.sx * 0.35f * cos(a) + f.dx * 0.35f * sin(a)
-            val py = by - f.uy * (1.3f + k * 0.14f) + f.sy * 0.35f * cos(a) + f.dy * 0.35f * sin(a)
-            val pz = bz - f.uz * (1.3f + k * 0.14f) + f.sz * 0.35f * cos(a) + f.dz * 0.35f * sin(a)
-            drawSphereAt(px, py, pz, 0.13f, 0.13f, 0.13f, if (k % 2 == 0) COL_AMINO_A else COL_AMINO_B, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob)
-        }
-    }
 
-    /** Node 11: the electron cloud (a haze of points), carbon's two shells (2 + 4 electrons), and the nucleus: a bright mote in a vast emptiness. */
-    private fun drawAtom(n: TourNode, i: Int, seconds: Float) {
-        GLES20.glDepthMask(false)
-        Matrix.setIdentityM(model, 0)
-        Matrix.translateM(model, 0, n.x, n.y, n.z)
-        Matrix.rotateM(model, 0, seconds * 9f, 0.3f, 1f, 0.2f)
-        Matrix.multiplyMM(mv, 0, view, 0, model, 0)
-        Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
-        colorShader.use(mvp, 2.6f + 1.2f * sin(seconds * 5f), points = true)
-        electronMesh.draw(colorShader.positionHandle, colorShader.colorHandle)
-        colorShader.use(mvp, 1f)
-        shellMesh.draw(colorShader.positionHandle, colorShader.colorHandle)
-        GLES20.glDepthMask(true)
-        val pulse = 0.85f + 0.15f * sin(seconds * 7f)
-        drawSphereAt(n.x, n.y, n.z, 0.09f * pulse, 0.09f * pulse, 0.09f * pulse, COL_NUCLEON, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 0f, 1.5f)
-    }
 
-    /** Node 12: the body as a cosmos of cells (a starfield of points) around a warm world ahead. */
-    private fun drawLookBack(n: TourNode, i: Int, seconds: Float) {
-        GLES20.glDepthMask(false)
-        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
-        Matrix.setIdentityM(model, 0)
-        Matrix.translateM(model, 0, n.x, n.y, n.z)
-        Matrix.rotateM(model, 0, seconds * 1.5f, 0f, 1f, 0f)
-        Matrix.multiplyMM(mv, 0, view, 0, model, 0)
-        Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
-        colorShader.use(mvp, 3.6f, points = true)
-        cellCosmos.draw(colorShader.positionHandle, colorShader.colorHandle)
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
-        GLES20.glDepthMask(true)
-        // Chapter III closes on the man himself: the scroll portrait, out among the cells.
-        if (map.id == 3) drawPlate("portrait", frameAt(i + 0.12f), tunnelRadius(i + 0.12f) * 0.34f, tunnelRadius(i + 0.12f) * 0.10f, 3.6f, seconds)
-        // The warm world ahead appears only once the re-expansion is under way (not from inside the atom).
-        if (routeProgress > i - 0.4f) drawSphereAt(n.x, n.y + 0.4f, n.z - 9f, 3.2f, 3.2f, 3.2f, COL_WORLD, COL_LAMP, 1f, seconds * 4f, 0f, 1f, 0f, sphere, 1f, 0.35f)
-    }
 
 
     // ------------------------------------------------ draw: tour II landmarks
     // Frame-relative helpers: (along, side, up) offsets from a rail frame; along > 0 is deeper.
-    private fun ca(f: Frame) = f.ux
-    private fun sa(f: Frame) = f.uz
-    private fun fx(f: Frame, a: Float, s: Float, u: Float) = f.cx + f.dx * a + f.sx * s + f.ux * u
-    private fun fy(f: Frame, a: Float, s: Float, u: Float) = f.cy + f.dy * a + f.sy * s + f.uy * u
-    private fun fz(f: Frame, a: Float, s: Float, u: Float) = f.cz + f.dz * a + f.sz * s + f.uz * u
+    internal fun ca(f: Frame) = f.ux
+    internal fun sa(f: Frame) = f.uz
+    internal fun fx(f: Frame, a: Float, s: Float, u: Float) = f.cx + f.dx * a + f.sx * s + f.ux * u
+    internal fun fy(f: Frame, a: Float, s: Float, u: Float) = f.cy + f.dy * a + f.sy * s + f.uy * u
+    internal fun fz(f: Frame, a: Float, s: Float, u: Float) = f.cz + f.dz * a + f.sz * s + f.uz * u
 
-    private fun blobAt(
+    internal fun blobAt(
         f: Frame, a: Float, s: Float, u: Float, sx: Float, sy: Float, sz: Float, base: FloatArray, accent: FloatArray,
         alpha: Float = 1f, rotDeg: Float = 0f, ax: Float = 0f, ay: Float = 1f, az: Float = 0f,
-        mesh: SphereMesh = blob, pattern: Float = 0f, glow: Float = 0f
+        mesh: LitMesh = blob, pattern: Float = 0f, glow: Float = 0f
     ) = drawSphereAt(fx(f, a, s, u), fy(f, a, s, u), fz(f, a, s, u), sx, sy, sz, base, accent, alpha, rotDeg, ax, ay, az, mesh, pattern, glow)
 
-    private fun strutAt(f: Frame, a0: Float, s0: Float, u0: Float, a1: Float, s1: Float, u1: Float, radius: Float, base: FloatArray, accent: FloatArray, glow: Float = 0f) =
+    internal fun strutAt(f: Frame, a0: Float, s0: Float, u0: Float, a1: Float, s1: Float, u1: Float, radius: Float, base: FloatArray, accent: FloatArray, glow: Float = 0f) =
         drawStrut(fx(f, a0, s0, u0), fy(f, a0, s0, u0), fz(f, a0, s0, u0), fx(f, a1, s1, u1), fy(f, a1, s1, u1), fz(f, a1, s1, u1), radius, base, accent, glow)
 
-    /** Tour II stop 1: the lips as a wide oval of flesh, an upper and a lower arch of teeth with a
-     *  dark gape between them, the tongue below, the uvula above, daylight behind. */
-    private fun drawMouth(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b + 0.55f); val rr = tunnelRadius(b + 0.55f)
-        drawSphereAt(n.x, n.y + 2.5f, n.z + 14f, 5f, 5f, 5f, COL_BAY, COL_LAMP, 0.35f, 0f, 0f, 1f, 0f, sphere, 0f, 0.8f)
-        // A mouth is far wider than it is tall: the lips ring an oval, not a circle.
-        for (k in 0 until 16) {
-            val a = 2f * PI.toFloat() * k / 16f
-            blobAt(f, 0f, cos(a) * rr * 0.98f, sin(a) * rr * 0.52f, 0.95f, 0.6f, 1.0f, COL_LIP, COL_SKIN_DARK, 1f, 0f, 0f, 1f, 0f, blob, 1f)
-        }
-        // Two dental arches, each a U curving away from us in the horizontal plane, with a dark
-        // gape between them the Mote flies through — never a ring of teeth around the opening.
-        val ft = frameAt(b + 0.72f)
-        val gape = rr * (0.36f + 0.03f * sin(seconds * 0.5f))
-        val halfWidth = rr * 0.66f
-        for (row in 0 until 2) {
-            val sgn = if (row == 0) 1f else -1f
-            for (k in 0 until 7) {
-                val a = (k - 3f) / 3f * 1.0f
-                val h = if (k in 2..4) 0.44f else 0.32f        // incisors at the front, shorter teeth at the sides
-                blobAt(ft, (1f - cos(a)) * 1.2f, sin(a) * halfWidth, sgn * (gape + h * 0.5f), 0.20f, h, 0.16f, COL_TOOTH, COL_TOOTH)
-            }
-        }
-        val fg = frameAt(b + 0.85f)
-        blobAt(fg, 0f, 0f, -rr * 0.66f, rr * 0.52f, 0.45f, 2.4f, COL_TONGUE, COL_LIP, 1f, yawOf(fg), 0f, 1f, 0f, sphere, 1f)
-        blobAt(fg, 0.9f, 0f, rr * 0.55f - 0.2f * sin(seconds * 0.7f), 0.22f, 0.5f, 0.22f, COL_LIP, COL_SKIN_DARK)
-    }
 
-    /** Tour II stop 2: villi (finger-like folds waving in the flow) lining the small intestine; the microbiome drifts by from the BodyField. */
-    private fun drawGut(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val rings = if (quality == 0) 4 else 2
-        for (ring in 0 until rings) {
-            val p = b - 0.32f + ring * 0.2f
-            val f = frameAt(p); val rr = tunnelRadius(p)
-            for (k in 0 until 8) {
-                val a = 2f * PI.toFloat() * (k + 0.5f * (ring % 2)) / 8f
-                val sway = 0.12f * sin(seconds * 1.1f + k * 1.7f + ring)
-                val len = 0.34f * rr
-                val cs = cos(a); val sn = sin(a)
-                strutAt(f, 0f, cs * rr * 0.98f, sn * rr * 0.98f, sway, cs * (rr - len), sn * (rr - len), 0.14f, COL_VILLUS, COL_VILLUS_TIP)
-                blobAt(f, sway, cs * (rr - len), sn * (rr - len), 0.16f, 0.16f, 0.16f, COL_VILLUS_TIP, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 0f, 0.2f)
-            }
-        }
-    }
 
-    /** Tour II stop 3: phages landing on a bacterium (head, tail, splayed fibres) and a second host bursting on a cycle (or on the "lysis" cue). */
-    private fun drawPhage(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b + 0.25f); val rr = tunnelRadius(b + 0.25f)
-        val hs = rr * 0.48f; val hu = -rr * 0.15f
-        strutAt(f, -1.4f, hs, hu, 1.4f, hs, hu, 0.55f, COL_BACTERIUM, COL_BACTERIUM_DARK)
-        if (quality == 0) for (seg in 0 until 6) {   // a flagellum whipping behind the rod
-            val t0 = seg / 6f; val t1 = (seg + 1) / 6f
-            strutAt(f, 1.4f + t0 * 2.2f, hs + 0.25f * sin(t0 * 9f - seconds * 6f), hu + 0.25f * cos(t0 * 9f - seconds * 6f),
-                    1.4f + t1 * 2.2f, hs + 0.25f * sin(t1 * 9f - seconds * 6f), hu + 0.25f * cos(t1 * 9f - seconds * 6f), 0.03f, COL_BACTERIUM_DARK, COL_BACTERIUM)
-        }
-        for (k in 0 until 4) {   // phages: three landed, one still descending
-            val along = -0.9f + k * 0.6f
-            val land = if (k == 3) ((seconds * 0.08f) % 1f) else 1f
-            val lift = 0.55f + (1f - land) * 1.6f
-            // Landed phages ride the wall-facing half of the rod (top, outer flank, underside) so
-            // none reaches into the Mote's lane; the one still descending keeps its approach.
-            val a = if (k == 3) 3.9f else 1.2f - k * 1.25f
-            val ds = cos(a); val du = sin(a)
-            val tailLen = 0.36f
-            val bx = hs + ds * lift; val bu = hu + du * lift
-            strutAt(f, along, bx, bu, along, bx + ds * tailLen, bu + du * tailLen, 0.05f, COL_PHAGE_TAIL, COL_LAMP)
-            blobAt(f, along, bx + ds * (tailLen + 0.16f), bu + du * (tailLen + 0.16f), 0.17f, 0.2f, 0.17f, COL_PHAGE, COL_PHAGE_LIGHT, 1f, seconds * 20f + k * 50f, ds, 0f, du, blob, 1f,
-                if (k == 1) 0.4f * (0.5f + 0.5f * sin(seconds * 8f)) else 0f)
-            if (quality > 1) continue
-            for (leg in 0 until 6) {
-                val la = 2f * PI.toFloat() * leg / 6f
-                val spread = 0.22f * land
-                val sa = cos(la) * spread; val su = sin(la) * spread
-                strutAt(f, along, bx, bu, along + sa, bx + du * su * 0.5f - ds * 0.05f, bu - ds * su * 0.5f - du * 0.05f, 0.02f, COL_PHAGE_TAIL, COL_LAMP)
-            }
-        }
-        // Lysis: across the passage a hijacked host swells, bursts into debris and new phages, and reforms.
-        val ph = lysisClock / LYSIS_PERIOD
-        val f2 = frameAt(b + 0.75f); val r2 = tunnelRadius(b + 0.75f)
-        val s2 = -r2 * 0.5f; val u2 = r2 * 0.2f
-        if (ph < 0.62f) {
-            val swell = 1f + 0.35f * smooth01((ph - 0.3f) / 0.32f)
-            strutAt(f2, -1.2f * swell, s2, u2, 1.2f * swell, s2, u2, 0.5f * swell, COL_BACTERIUM, COL_BACTERIUM_DARK, 0.6f * smooth01((ph - 0.5f) / 0.12f))
-        } else {
-            val t = (ph - 0.62f) / 0.38f
-            val alpha = (1f - t).coerceIn(0f, 1f)
-            if (alpha > 0.03f) for (k in 0 until (if (quality == 0) 14 else 7)) {
-                val a = k * 2.4f; val el = k * 1.1f
-                val d = 0.4f + t * 3.2f
-                val ds = cos(a) * cos(el); val du = sin(a) * cos(el); val da = sin(el)
-                val sz = if (k % 3 == 0) 0.13f else 0.07f
-                blobAt(f2, da * d, s2 + ds * d, u2 + du * d, sz, sz, sz, if (k % 3 == 0) COL_PHAGE else COL_BACTERIUM, COL_LAMP, alpha, 0f, 0f, 1f, 0f, blob, 0f, 0.5f * alpha)
-            }
-        }
-    }
 
-    /** Tour II stop 4: plates of hepatocytes walling a sinusoid, bile canaliculi glowing between them, a Kupffer cell on the wall. */
-    private fun drawLiver(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val rows = if (quality == 0) 7 else 4
-        for (row in 0 until rows) {
-            val p = b - 0.36f + row * (0.84f / rows)
-            val f = frameAt(p); val rr = tunnelRadius(p)
-            for (side in 0 until 2) {
-                val sgn = if (side == 0) 1f else -1f
-                for (k in 0 until 2) {
-                    val u = (k - 0.5f) * 0.9f
-                    blobAt(f, 0f, sgn * rr * 0.86f, u, 0.44f, 0.42f, 0.5f, COL_HEPATOCYTE, COL_HEPATOCYTE_DARK, 1f, row * 37f, 0f, 1f, 0f, blob, 1f)
-                }
-            }
-        }
-        val fc = frameAt(b)
-        drawLinesAt(canaliculiMesh, fc.cx, fc.cy, fc.cz, 1f, 0f, 0f, 1f, 0f)
-        val fk = frameAt(b + 0.2f); val rk = tunnelRadius(b + 0.2f)
-        blobAt(fk, 0f, 0f, rk * 0.72f, 0.8f, 0.45f, 0.9f, COL_MACROPHAGE, COL_NEUTROPHIL_DARK, 1f, seconds * 5f, 0f, 1f, 0f, sphere, 1f)
-    }
 
-    /** Tour II stop 5: the glomerulus — a knot of capillaries inside Bowman's capsule, podocytes wrapping it — with filtrate dripping into the tubule. */
-    private fun drawKidney(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b + 0.15f); val rr = tunnelRadius(b + 0.15f)
-        // The knot sits low on the wall: the Mote's sway lane (about 1.0 from the rail) and the
-        // chase camera's band both stay outside Bowman's capsule, so nothing flies through it.
-        val gs = rr * 0.72f; val gu = -rr * 0.22f
-        val gx = fx(f, 0f, gs, gu); val gy = fy(f, 0f, gs, gu); val gz = fz(f, 0f, gs, gu)
-        drawLinesAt(glomerulusMesh, gx, gy, gz, 0.6f, seconds * 6f, 0.2f, 1f, 0.1f)
-        for (k in 0 until 5) {
-            val a = k * 1.26f + seconds * 0.1f
-            drawSphereAt(gx + f.sx * cos(a) * 0.65f + f.ux * sin(a) * 0.65f, gy + f.sy * cos(a) * 0.65f + f.uy * sin(a) * 0.65f, gz + f.sz * cos(a) * 0.65f + f.uz * sin(a) * 0.65f,
-                0.18f, 0.13f, 0.18f, COL_PODOCYTE, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 1f)
-        }
-        GLES20.glDepthMask(false)
-        drawSphereAt(gx, gy, gz, 0.85f, 0.85f, 0.85f, COL_CAPSULE, COL_LAMP, 0.2f, 0f, 0f, 1f, 0f, sphere, 0f, 0.2f)
-        GLES20.glDepthMask(true)
-        for (k in 0 until 10) {   // filtrate dripping out of the capsule and down the tubule ahead
-            val t = ((seconds * 0.35f + k * 0.1f) % 1f)
-            val s = gs * (1f - t) - rr * 0.3f * t; val u = gu * (1f - t) - rr * 0.5f * t
-            blobAt(f, 0.4f * sin(k * 1.9f) + t * 2.5f, s, u, 0.09f, 0.09f, 0.09f, COL_FILTRATE, COL_LAMP, 0.9f, 0f, 0f, 1f, 0f, blob, 0f, 0.6f)
-        }
-    }
 
-    /** Tour II stop 6: sarcomeres — thick myosin and thin actin filaments in bands along the fibre, sliding together on every twitch. */
-    private fun drawMuscle(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val contract = 0.5f + 0.5f * sin(seconds * 1.6f)
-        val pitch = 0.9f - 0.28f * contract
-        val bands = if (quality == 0) 4 else 2
-        for (k in 0 until bands) {
-            val z0 = (k - bands / 2f) * pitch
-            val p = b + z0 * 0.03f
-            val f = frameAt(p); val rr = tunnelRadius(p)
-            for (m in 0 until 6) {
-                val a = 2f * PI.toFloat() * m / 6f
-                val cs = cos(a) * rr * 0.8f; val sn = sin(a) * rr * 0.8f
-                // Z-disc bead, a thin actin filament spanning the sarcomere, the thick myosin in its middle.
-                blobAt(f, z0, cs, sn, 0.09f, 0.09f, 0.09f, COL_ZDISC, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 0f, 0.4f)
-                strutAt(f, z0, cs, sn, z0 + pitch, cs, sn, 0.022f, COL_ACTIN, COL_LAMP)
-                strutAt(f, z0 + pitch * 0.25f, cs * 0.94f, sn * 0.94f, z0 + pitch * 0.75f, cs * 0.94f, sn * 0.94f, 0.06f, COL_MYOSIN, COL_MYOSIN_HEAD)
-            }
-        }
-    }
 
-    /** Tour II stop 7: bone marrow — a lattice of trabecular bone around the space, a megakaryocyte shedding platelets, a stem cell dividing. */
-    private fun drawMarrow(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b); val rr = tunnelRadius(b)
-        drawLinesAt(boneMesh, f.cx, f.cy, f.cz, 1f, 0f, 0f, 1f, 0f)
-        val fm = frameAt(b - 0.15f)
-        val ms = rr * 0.55f; val mu = -rr * 0.35f
-        blobAt(fm, 0f, ms, mu, 1.3f, 1.0f, 1.4f, COL_MEGAKARYO, COL_MEGAKARYO_DARK, 1f, seconds * 4f, 0f, 1f, 0f, sphere, 1f)
-        for (k in 0 until 3) blobAt(fm, (k - 1) * 0.5f, ms + 0.3f * cos(k * 2.1f), mu + 0.45f, 0.42f, 0.42f, 0.42f, COL_MEGAKARYO_DARK, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 1f)
-        for (k in 0 until (if (quality == 0) 8 else 4)) {   // proplatelet beads streaming off into the flow
-            val t = ((seconds * 0.25f + k * 0.125f) % 1f)
-            val a = k * 0.8f
-            blobAt(fm, t * 3.5f, ms - t * ms * 0.8f + 0.3f * sin(a), mu - t * mu * 0.9f + 0.3f * cos(a), 0.12f, 0.06f, 0.12f, COL_PLATELET, COL_LAMP, 1f, seconds * 90f + k * 40f, 0f, 1f, 0f, blob)
-        }
-        val fs = frameAt(b + 0.3f)
-        val cyc = ((seconds * 0.06f) % 1f)
-        val sep = smooth01((cyc - 0.4f) / 0.4f) * 0.9f
-        blobAt(fs, -sep * 0.5f, -rr * 0.55f, rr * 0.3f, 0.55f, 0.55f, 0.55f, COL_STEM, COL_STEM_LIGHT, 1f, 0f, 0f, 1f, 0f, sphere, 1f)
-        blobAt(fs, sep * 0.5f, -rr * 0.55f, rr * 0.3f, 0.55f, 0.55f, 0.55f, COL_STEM, COL_STEM_LIGHT, 1f, 0f, 0f, 1f, 0f, sphere, 1f)
-    }
 
-    /** Tour II stop 8: V(D)J recombination — gene segments as coloured beads on a chromatin thread; RAG picks one V, one D, one J, loops out the rest and stitches them. */
-    private fun drawVdj(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b); val rr = tunnelRadius(b)
-        val side = rr * 0.4f; val up = 0.1f
-        val cyc = ((seconds / 30f) % 1f)
-        val round = (seconds / 30f).toInt()
-        val nV = 12; val nD = 6; val nJ = 4
-        val total = nV + nD + nJ + 1
-        val span = 8.6f
-        val pickV = (round * 7) % nV; val pickD = nV + (round * 5) % nD; val pickJ = nV + nD + (round * 3) % nJ
-        val join = smooth01((cyc - 0.45f) / 0.35f)
-        val flash = if (cyc > 0.8f) 1f - (cyc - 0.8f) / 0.2f else 0f
-        val alongJ = -span / 2f + pickJ / (total - 1f) * span            // the chosen J stays put; V and D come to it
-        var prevX = 0f; var prevY = 0f; var prevZ = 0f
-        for (k in 0 until total) {
-            val t = k / (total - 1f)
-            var along = -span / 2f + t * span
-            val col = when { k < nV -> COL_SEG_V; k < nV + nD -> COL_SEG_D; k < nV + nD + nJ -> COL_SEG_J; else -> COL_SEG_C }
-            val chosen = k == pickV || k == pickD || k == pickJ
-            var loopOut = 0f
-            if (k >= pickV && k <= pickJ) {
-                // The stretch from the chosen V to the chosen J is drawn together: the unchosen
-                // segments bulge out as a loop (later cut away) while V, D and J meet in a row.
-                val u = (k - pickV).toFloat() / (pickJ - pickV).coerceAtLeast(1)
-                val dest = when (k) { pickV -> alongJ - 0.8f; pickD -> alongJ - 0.4f; pickJ -> alongJ; else -> alongJ - 0.4f }
-                along += (dest - along) * join
-                if (!chosen) loopOut = join * 1.5f * sin(u * PI.toFloat())
-            }
-            val sz = if (chosen) 0.17f + 0.05f * flash else 0.12f
-            val glow = if (chosen) 0.5f + 1.2f * flash else 0f
-            val px = fx(f, along, side + loopOut * 0.4f, up + loopOut * 0.8f); val py = fy(f, along, side + loopOut * 0.4f, up + loopOut * 0.8f); val pz = fz(f, along, side + loopOut * 0.4f, up + loopOut * 0.8f)
-            drawSphereAt(px, py, pz, sz, sz, sz, col, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 0f, glow)
-            if (k > 0) drawStrut(prevX, prevY, prevZ, px, py, pz, 0.022f, COL_THREAD, COL_THREAD)
-            prevX = px; prevY = py; prevZ = pz
-        }
-        // RAG1/2: a two-lobed enzyme riding the thread, parked on the joint while it cuts and the cell pastes.
-        val ragAlong = -span / 2f + span * (0.15f + 0.65f * smooth01(cyc / 0.45f))
-        blobAt(f, ragAlong, side, up + 0.28f, 0.3f, 0.24f, 0.3f, COL_RAG, COL_LAMP, 1f, seconds * 30f, 0f, 1f, 0f, blob, 1f, 0.3f * flash)
-        blobAt(f, ragAlong + 0.25f, side + 0.1f, up + 0.24f, 0.24f, 0.2f, 0.24f, COL_RAG_B, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 1f)
-    }
 
-    /**
-     * Tour II stop 9: kinesin walking a microtubule, hauling a vesicle many times its size, with the
-     * cell's organelles lining the road. Each step is 8 nm (0.1 here); the walk runs at ~2 steps a
-     * second, slowed ~50x so the hand-over-hand gait reads: the rear foot lifts, swings past the
-     * planted one and lands 16 nm ahead.
-     */
-    private fun drawHighway(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b); val rr = tunnelRadius(b)
-        val ts = rr * 0.42f; val tu = -rr * 0.38f
-        Matrix.setIdentityM(model, 0)
-        Matrix.translateM(model, 0, fx(f, 0f, ts, tu), fy(f, 0f, ts, tu), fz(f, 0f, ts, tu))
-        applyFrameRotation(f)
-        Matrix.multiplyMM(mv, 0, view, 0, model, 0)
-        Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
-        colorShader.use(mvp, 1f)
-        lineWidth(2f)
-        microtubuleMesh.draw(colorShader.positionHandle, colorShader.colorHandle)
-        lineWidth(1f)
-        val stepLen = 0.1f
-        val walk = (seconds * 2f) % 1f
-        val stepNo = (seconds * 2f).toInt()
-        val head = (stepNo * stepLen + 4f) % 9f - 4.5f
-        val swing = smooth01(walk)
-        val lift = sin(swing * PI.toFloat()) * 0.06f
-        val footA = head; val footB = head - stepLen + 2f * stepLen * swing
-        val bodyAlong = (footA + footB) * 0.5f
-        val trackTop = tu + 0.15f
-        blobAt(f, footA, ts, trackTop, 0.09f, 0.08f, 0.11f, COL_KINESIN, COL_KINESIN_LIGHT, 1f, 0f, 0f, 1f, 0f, blob, 0f, 0.25f)
-        blobAt(f, footB, ts, trackTop + lift, 0.09f, 0.08f, 0.11f, COL_KINESIN, COL_KINESIN_LIGHT, 1f, 0f, 0f, 1f, 0f, blob, 0f, 0.25f)
-        val hip = trackTop + 0.26f
-        strutAt(f, footA, ts, trackTop, bodyAlong, ts, hip, 0.03f, COL_KINESIN, COL_KINESIN_LIGHT)
-        strutAt(f, footB, ts, trackTop + lift, bodyAlong, ts, hip, 0.03f, COL_KINESIN, COL_KINESIN_LIGHT)
-        val sway = 0.03f * sin(seconds * 2f * PI.toFloat())
-        val cargoAlong = bodyAlong - 0.6f; val cargoUp = hip + 1.05f; val cargoSide = ts + sway
-        strutAt(f, bodyAlong, ts, hip, cargoAlong + 0.1f, cargoSide, cargoUp - 0.7f, 0.03f, COL_KINESIN, COL_KINESIN_LIGHT)
-        blobAt(f, cargoAlong + 0.1f, cargoSide, cargoUp - 0.7f, 0.08f, 0.08f, 0.08f, COL_KINESIN_LIGHT, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 0f, 0.4f)
-        for (k in 0 until (if (quality == 0) 6 else 3)) {   // the cargo inside the vesicle
-            val a = k * 1.05f + seconds * 0.3f
-            blobAt(f, cargoAlong + 0.35f * cos(a), cargoSide + 0.35f * sin(a), cargoUp + 0.3f * sin(a * 1.7f), 0.07f, 0.07f, 0.07f, COL_PROTEIN, COL_LAMP)
-        }
-        GLES20.glDepthMask(false)
-        blobAt(f, cargoAlong, cargoSide, cargoUp, 0.8f, 0.8f, 0.8f, COL_CARGO, COL_LAMP, 0.5f, seconds * 10f, 0f, 1f, 0f, sphere, 0f, 0.25f)
-        GLES20.glDepthMask(true)
-        // Dynein hauling the other way on the far side of the track: a smaller walker heading for the nucleus.
-        val dyn = 4.5f - ((seconds * 0.15f + 0.5f) % 1f) * 9f
-        blobAt(f, dyn, ts + 0.22f, trackTop + 0.1f, 0.09f, 0.12f, 0.09f, COL_DYNEIN, COL_KINESIN_LIGHT, 1f, 0f, 0f, 1f, 0f, blob, 1f)
-        blobAt(f, dyn + 0.25f, ts + 0.3f, trackTop + 0.55f, 0.3f, 0.3f, 0.3f, COL_CARGO, COL_LAMP, 0.6f, 0f, 0f, 1f, 0f, sphere, 0f, 0.15f)
-        // The road's landmarks: a mitochondrion, a Golgi stack, rough ER sheets studded with ribosomes.
-        blobAt(f, 2.6f, -rr * 0.68f, -rr * 0.45f, 0.4f, 0.4f, 1.0f, COL_CRISTAE, COL_LAMP, 1f, yawOf(f), 0f, 1f, 0f, sphere, 1f)
-        // (kept close to the wall: the chase camera swings ±1.9 to the side and lifts ~1 above the rail)
-        for (k in 0 until 5) blobAt(f, 3.0f + k * 0.16f, -rr * 0.74f, rr * 0.12f, 0.6f - 0.05f * k, 0.5f, 0.05f, COL_GOLGI, COL_LAMP, 0.95f, yawOf(f), 0f, 1f, 0f, sphere)
-        for (k in 0 until 3) blobAt(f, 0.4f + k * 0.9f, rr * 0.78f, rr * 0.1f, 0.1f, 0.45f, 0.6f, COL_ER, COL_LAMP, 0.95f, 0f, 0f, 1f, 0f, sphere)
-        if (quality == 0) for (k in 0 until 8) blobAt(f, 0.2f + k * 0.34f, rr * 0.78f - 0.14f, rr * 0.1f + 0.35f * sin(k * 1.3f), 0.07f, 0.07f, 0.07f, COL_RIBO_LARGE, COL_RIBO_LIGHT, 1f, 0f, 0f, 1f, 0f, blob, 1f)
-    }
 
-    /** Tour II stop 10: the protein factory — a ribosome on the rough ER threading a chain into the lumen, vesicles budding to the Golgi and out through the membrane. */
-    private fun drawFactory(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b); val rr = tunnelRadius(b)
-        val es = -rr * 0.7f
-        for (k in 0 until 4) blobAt(f, -2.4f + k * 1.3f, es, 0.2f * sin(k * 2f), 0.12f, 0.75f, 0.7f, COL_ER, COL_LAMP, 0.95f, 0f, 0f, 1f, 0f, sphere)
-        for (k in 0 until (if (quality == 0) 10 else 4)) blobAt(f, -2.6f + k * 0.55f, es + 0.18f, 0.5f * sin(k * 1.3f), 0.09f, 0.09f, 0.09f, COL_RIBO_LARGE, COL_RIBO_LIGHT, 1f, 0f, 0f, 1f, 0f, blob, 1f)
-        val bx = fx(f, -0.5f, es + 0.35f, 0.3f); val by = fy(f, -0.5f, es + 0.35f, 0.3f); val bz = fz(f, -0.5f, es + 0.35f, 0.3f)
-        drawSphereAt(bx, by, bz, 0.55f, 0.42f, 0.5f, COL_RIBO_LARGE, COL_RIBO_LIGHT, 1f, 20f, 0f, 1f, 0.4f, sphere, 1f)
-        drawSphereAt(bx + f.ux * 0.55f, by + f.uy * 0.55f, bz + f.uz * 0.55f, 0.38f, 0.28f, 0.4f, COL_RIBO_SMALL, COL_RIBO_LIGHT, 1f, -15f, 0f, 1f, 0.2f, sphere, 1f)
-        val beads = 5 + (((seconds * 0.3f) % 1f) * 9f).toInt()
-        for (k in 0 until beads) {   // the chain threads through the ER membrane and folds inside
-            val a = k * 0.9f + seconds * 0.5f
-            blobAt(f, -0.5f + 0.18f * sin(a), es - 0.1f - k * 0.05f, 0.3f + 0.16f * cos(a), 0.06f, 0.06f, 0.06f, if (k % 2 == 0) COL_AMINO_A else COL_AMINO_B, COL_LAMP)
-        }
-        val gs = rr * 0.55f
-        for (k in 0 until 5) blobAt(f, 0.6f + k * 0.16f, gs, -0.2f, 0.85f - 0.09f * k, 0.6f, 0.05f, COL_GOLGI, COL_LAMP, 0.95f, yawOf(f), 0f, 1f, 0f, sphere)
-        for (k in 0 until 3) {   // vesicles: ER -> Golgi -> the outer membrane (the wall ahead), then the payload spills out
-            val t = ((seconds * 0.05f + k / 3f) % 1f)
-            val alongV: Float; val sideV: Float; val upV: Float; val size: Float; var glowV = 0f
-            when {
-                t < 0.35f -> { val u = t / 0.35f; alongV = -0.2f + u * 0.9f; sideV = es + 0.3f + (gs - es - 0.3f) * u; upV = 0.2f; size = 0.12f + 0.1f * smooth01(u * 3f) }
-                t < 0.7f -> { val u = (t - 0.35f) / 0.35f; alongV = 0.7f + u * 1.2f; sideV = gs; upV = -0.2f + u * (rr * 0.85f + 0.2f); size = 0.22f }
-                else -> { val u = (t - 0.7f) / 0.3f; alongV = 1.9f + u * 0.3f; sideV = gs; upV = rr * 0.85f; size = 0.22f * (1f - u); glowV = 1.5f * u }
-            }
-            blobAt(f, alongV, sideV, upV, size, size, size, COL_VESICLE, COL_LAMP, 0.7f, 0f, 0f, 1f, 0f, blob, 0f, glowV)
-            if (t > 0.7f) for (m in 0 until 5) {
-                val u = (t - 0.7f) / 0.3f; val a = m * 1.26f
-                blobAt(f, alongV + 0.5f * u * cos(a), sideV + 0.5f * u * sin(a), upV + 0.2f * u, 0.05f, 0.05f, 0.05f, COL_AMINO_A, COL_LAMP, 1f - u, 0f, 0f, 1f, 0f, blob, 0f, 0.8f)
-            }
-        }
-    }
 
-    /** Tour II stop 11: one ATP synthase, big as a building — the c-ring turning in the membrane below, the stalk, the F1 head, protons pouring through, ATP spat out. */
-    private fun drawMotor(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b); val rr = tunnelRadius(b)
-        val ms = -rr * 0.55f; val cu = -rr * 0.65f
-        Matrix.setIdentityM(model, 0)
-        Matrix.translateM(model, 0, fx(f, 0f, 0f, cu), fy(f, 0f, 0f, cu), fz(f, 0f, 0f, cu))
-        applyFrameRotation(f)
-        Matrix.rotateM(model, 0, 90f, 1f, 0f, 0f)        // the sheet is built in x/y with z its normal: lay it flat
-        Matrix.multiplyMM(mv, 0, view, 0, model, 0)
-        Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
-        GLES20.glDepthMask(false)
-        colorShader.use(mvp, 6f, points = true)
-        floorLipidMesh.draw(colorShader.positionHandle, colorShader.colorHandle)
-        colorShader.use(mvp, 1f)
-        floorTailMesh.draw(colorShader.positionHandle, colorShader.colorHandle)
-        GLES20.glDepthMask(true)
-        val ang = seconds * 4.2f
-        for (k in 0 until 10) {   // the c-ring: ten subunits turning in the membrane
-            val a = ang + 2f * PI.toFloat() * k / 10f
-            blobAt(f, 0.42f * cos(a), ms + 0.42f * sin(a), cu, 0.12f, 0.36f, 0.12f, COL_ATP_STALK, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 0f, if (k == 0) 0.6f else 0f)
-        }
-        strutAt(f, 0f, ms, cu + 0.3f, 0.08f * cos(ang), ms + 0.08f * sin(ang), cu + 1.25f, 0.07f, COL_ATP_STALK, COL_LAMP, 0.3f)     // central stalk, turning
-        strutAt(f, 0.55f, ms, cu + 0.1f, 0.55f, ms, cu + 1.5f, 0.05f, COL_STATOR, COL_LAMP)                                          // stator arm
-        strutAt(f, 0.55f, ms, cu + 1.5f, 0.15f, ms, cu + 1.6f, 0.05f, COL_STATOR, COL_LAMP)
-        val hu = cu + 1.45f
-        for (k in 0 until 3) {   // F1 head: three αβ pairs, the site under load glowing
-            val a = 2f * PI.toFloat() * k / 3f + 0.3f
-            val hot = 0.5f + 0.5f * cos(ang - a)
-            blobAt(f, 0.34f * cos(a), ms + 0.34f * sin(a), hu, 0.26f, 0.32f, 0.26f, COL_ATP_HEAD, COL_LAMP, 1f, 0f, 0f, 1f, 0f, sphere, 1f, 0.5f * hot)
-            blobAt(f, 0.34f * cos(a + 1.05f), ms + 0.34f * sin(a + 1.05f), hu + 0.05f, 0.24f, 0.3f, 0.24f, COL_ATP_HEAD_B, COL_LAMP, 1f, 0f, 0f, 1f, 0f, sphere, 1f)
-        }
-        for (k in 0 until (if (quality == 0) 12 else 6)) {   // protons pouring down through the ring
-            val t = ((seconds * 0.9f + k * 0.083f) % 1f)
-            val a = k * 0.52f
-            blobAt(f, (1.6f - t * 1.2f) * cos(a), ms + (1.6f - t * 1.2f) * sin(a), cu + 0.9f - t * 1.4f, 0.04f, 0.04f, 0.04f, COL_PROTON, COL_PROTON, 1f, 0f, 0f, 1f, 0f, blob, 0f, 1.5f)
-        }
-        val atpT = (ang / 2.094f) % 1f
-        val atpA = floor(ang / 2.094f) * 2.094f + 0.3f
-        blobAt(f, (0.5f + atpT * 1.6f) * cos(atpA), ms + (0.5f + atpT * 1.6f) * sin(atpA), hu + atpT * 0.8f, 0.09f, 0.09f, 0.09f, COL_ATP, COL_LAMP, 1f - atpT * 0.6f, seconds * 200f, 0f, 1f, 0f, blob, 0f, 1.2f)
-    }
 
-    /** Tour II stop 12: a cell dividing — chromosomes line up, split, ride the spindle to the poles, and the cell pinches in two (a 36 s cycle). */
-    private fun drawDivision(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b); val rr = tunnelRadius(b)
-        val cs = rr * 0.6f; val cu = rr * 0.1f
-        val cyc = ((seconds / 36f) % 1f)
-        val poleD = 1.6f
-        val line = smooth01(cyc / 0.3f)
-        val split = smooth01((cyc - 0.5f) / 0.25f)
-        val pinch = smooth01((cyc - 0.72f) / 0.28f)
-        var v = 0
-        val arr = dynLines.data
-        for (k in 0 until 6) {   // six chromosomes, each two sister chromatids until anaphase
-            val a = k * 1.047f + 0.5f
-            val scS = 0.9f * cos(a * 2.3f); val scU = 0.9f * sin(a * 1.7f); val scA = 0.8f * sin(a * 3.1f)
-            val plS = 0.85f * cos(a); val plU = 0.85f * sin(a)
-            val s = cs + scS + (plS - scS) * line; val u = cu + scU + (plU - scU) * line; val a0 = scA * (1f - line)
-            for (half in 0 until 2) {
-                val sgn = if (half == 0) 1f else -1f
-                val along = a0 + sgn * (0.06f + split * poleD * (1f - 0.15f * pinch))
-                val tilt = 0.18f * (1f - split)
-                strutAt(f, along, s - tilt * sgn, u - 0.2f, along - sgn * 0.12f * split, s + tilt * sgn, u + 0.2f, 0.055f, COL_CHROMOSOME, COL_CHROMOSOME_LIGHT, 0.2f)
-                if (line > 0.6f && pinch < 0.5f) {
-                    arr[v++] = fx(f, along, s, u); arr[v++] = fy(f, along, s, u); arr[v++] = fz(f, along, s, u)
-                    arr[v++] = 0.8f; arr[v++] = 0.95f; arr[v++] = 0.9f; arr[v++] = 0.45f * (line - 0.6f) / 0.4f
-                    arr[v++] = fx(f, sgn * poleD, cs, cu); arr[v++] = fy(f, sgn * poleD, cs, cu); arr[v++] = fz(f, sgn * poleD, cs, cu)
-                    arr[v++] = 0.8f; arr[v++] = 0.95f; arr[v++] = 0.9f; arr[v++] = 0.1f
-                }
-            }
-        }
-        if (v > 0) {
-            Matrix.setIdentityM(model, 0)
-            Matrix.multiplyMM(mv, 0, view, 0, model, 0)
-            Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
-            colorShader.use(mvp, 1f)
-            dynLines.draw(colorShader.positionHandle, colorShader.colorHandle, GLES20.GL_LINES, v / 7)
-        }
-        for (sgn in SIGNS) blobAt(f, sgn * poleD * (0.6f + 0.4f * line), cs, cu, 0.14f, 0.14f, 0.14f, COL_CENTROSOME, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 0f, 0.5f)
-        GLES20.glDepthMask(false)
-        if (pinch < 0.55f) {
-            val q = pinch / 0.55f
-            blobAt(f, 0f, cs, cu, 2.0f * (1f - 0.25f * q), 2.0f * (1f - 0.25f * q), 2.0f * (1f + 0.3f * q), COL_CELL, COL_CELL_EDGE, 0.2f, yawOf(f), 0f, 1f, 0f, sphere, 0f, 0.15f)
-            if (q > 0.02f) for (k in 0 until (if (quality == 0) 12 else 6)) {   // the contractile ring tightening at the equator
-                val a = 2f * PI.toFloat() * k / 12f
-                val r = 2.0f * (1f - 0.25f * q) * (1f - 0.75f * q)
-                blobAt(f, 0f, cs + r * cos(a), cu + r * sin(a), 0.07f, 0.07f, 0.07f, COL_ACTIN, COL_LAMP, q, 0f, 0f, 1f, 0f, blob, 0f, 0.6f)
-            }
-        } else {
-            val q = (pinch - 0.55f) / 0.45f
-            for (sgn in SIGNS) blobAt(f, sgn * (1.0f + 0.5f * q), cs, cu, 1.5f, 1.5f, 1.5f, COL_CELL, COL_CELL_EDGE, 0.2f, 0f, 0f, 1f, 0f, sphere, 0f, 0.15f)
-        }
-        GLES20.glDepthMask(true)
-    }
 
 
     // ---------------------------------------------------------- picture plates
@@ -1607,7 +943,7 @@ class StereoBodyRenderer(
      * app — everything else is procedural — so the loader is deliberately forgiving: if the
      * assets are missing (or a device refuses them) the chapter simply runs without them.
      */
-    private fun loadPlates() {
+    internal fun loadPlates() {
         val ctx = context ?: return
         plateShader = PlateShader()
         for (name in PLATE_FILES) {
@@ -1630,13 +966,13 @@ class StereoBodyRenderer(
         }
     }
 
-    private class Plate(val texture: Int, val aspect: Float)
+    internal class Plate(val texture: Int, val aspect: Float)
 
     /**
      * Hang one picture in the passage: a lit frame around it, square to the rail and turned a
      * little toward the lane, so the crew fly past it the way you walk past a picture on a wall.
      */
-    private fun drawPlate(name: String, f: Frame, side: Float, up: Float, height: Float, seconds: Float) {
+    internal fun drawPlate(name: String, f: Frame, side: Float, up: Float, height: Float, seconds: Float) {
         val plate = plates[name] ?: return
         val sh = plateShader ?: return
         val h = height; val w = height * plate.aspect
@@ -1663,10 +999,10 @@ class StereoBodyRenderer(
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
     }
 
-    private val plateBuf = ByteBuffer.allocateDirect(6 * 5 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
-    private val frameBuf = ByteBuffer.allocateDirect(8 * 7 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
+    internal val plateBuf = ByteBuffer.allocateDirect(6 * 5 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
+    internal val frameBuf = ByteBuffer.allocateDirect(8 * 7 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
 
-    private fun plateQuad(hw: Float, hh: Float, sh: PlateShader) {
+    internal fun plateQuad(hw: Float, hh: Float, sh: PlateShader) {
         val d = floatArrayOf(
             -hw, -hh, 0f, 0f, 1f,   hw, -hh, 0f, 1f, 1f,   hw, hh, 0f, 1f, 0f,
             -hw, -hh, 0f, 0f, 1f,   hw, hh, 0f, 1f, 0f,   -hw, hh, 0f, 0f, 0f)
@@ -1681,7 +1017,7 @@ class StereoBodyRenderer(
         GLES20.glDisableVertexAttribArray(sh.uvHandle)
     }
 
-    private fun plateFrame(hw: Float, hh: Float) {
+    internal fun plateFrame(hw: Float, hh: Float) {
         val c = COL_LAMP
         val d = FloatArray(8 * 7)
         val pts = floatArrayOf(-hw, -hh, hw, -hh, hw, -hh, hw, hh, hw, hh, -hw, hh, -hw, hh, -hw, -hh)
@@ -1703,249 +1039,15 @@ class StereoBodyRenderer(
         lineWidth(1f)
     }
 
-    // ------------------------------------------- draw: chapter III landmarks
-    /**
-     * Stop 1: a tuberculous lung. Air sacs on every side, and eaten out of the wall a cavity —
-     * the hole Bethune had in his own lung in 1926, ringed by the fibrous scar that walls it off,
-     * with caseous nodules scattered around the rim.
-     */
-    private fun drawCavity(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b); val rr = tunnelRadius(b)
-        // Healthy alveoli around the passage, breathing.
-        GLES20.glDepthMask(false)
-        for (k in 0 until (if (quality == 0) 7 else 4)) {
-            val a = 2f * PI.toFloat() * k / 7f + 0.4f
-            val breathe = 1f + 0.07f * sin(seconds * 1.2f + k)
-            val r = (0.9f + 0.3f * (k % 3)) * breathe
-            blobAt(f, (k - 3) * 0.8f, cos(a) * rr * 0.95f, sin(a) * rr * 0.95f, r, r, r,
-                COL_ALVEOLUS, COL_RED_CELL, 0.38f, 0f, 0f, 1f, 0f, sphere, 0f, 0.22f)
-        }
-        GLES20.glDepthMask(true)
-        // The cavity itself: a dark bowl set into the wall, ringed with fibrous scar.
-        val fc = frameAt(b + 0.3f); val rc = tunnelRadius(b + 0.3f)
-        val cs = -rc * 0.92f; val cu = rc * 0.18f
-        val cx = fx(fc, 0f, cs, cu); val cy = fy(fc, 0f, cs, cu); val cz = fz(fc, 0f, cs, cu)
-        drawSphereAt(cx, cy, cz, 1.85f, 1.85f, 1.85f, COL_CAVITY, COL_CAVITY, 1f, 0f, 0f, 1f, 0f, sphere, 0f, 0f)
-        drawLinesAt(scarMesh, cx, cy, cz, 1f, yawOf(fc), 0f, 1f, 0f)
-        for (k in 0 until 9) {   // caseous nodules on the rim: the cheesy debris that names the lesion
-            val a = 2f * PI.toFloat() * k / 9f + 0.3f
-            val d = 1.9f + 0.18f * sin(k * 2.3f)
-            drawSphereAt(cx + fc.dx * cos(a) * d + fc.ux * sin(a) * d,
-                cy + fc.dy * cos(a) * d + fc.uy * sin(a) * d,
-                cz + fc.dz * cos(a) * d + fc.uz * sin(a) * d,
-                0.3f, 0.26f, 0.3f, COL_CASEUM, COL_SKIN, 1f, k * 40f, 0f, 1f, 0f, blob, 1f)
-        }
-    }
 
-    /**
-     * Stop 2: a donor's vein from the inside. A cannula comes through the wall on a bevel and red
-     * cells stream into it — Madrid, 1936, where Bethune's people took the blood that his trucks
-     * carried to the front. A pair of venous valve leaflets sits downstream.
-     */
-    private fun drawDonor(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b); val rr = tunnelRadius(b)
-        val ts = rr * 0.98f; val tu = -rr * 0.25f
-        // The needle: shaft through the wall, bevelled tip in the lumen, bright rim.
-        strutAt(f, -2.6f, ts + 1.5f, tu + 0.9f, 0.2f, ts * 0.42f, tu * 0.42f, 0.17f, COL_STEEL, COL_LAMP, 0.15f)
-        blobAt(f, 0.2f, ts * 0.42f, tu * 0.42f, 0.19f, 0.19f, 0.34f, COL_STEEL_BRIGHT, COL_LAMP, 1f,
-            yawOf(f), 0f, 1f, 0f, blob, 0f, 0.35f)
-        // Cells drawn out of the flow and into the bore.
-        for (k in 0 until (if (quality == 0) 12 else 6)) {
-            val t = ((seconds * 0.5f + k * 0.083f) % 1f)
-            val a = k * 0.9f
-            val start = 2.4f + 1.2f * sin(a)
-            val alongV = start - t * (start - 0.2f)
-            val sp = ts * 0.42f + (1f - t) * (1.1f * cos(a))
-            val up = tu * 0.42f + (1f - t) * (1.1f * sin(a))
-            val sz = 0.2f * (1f - 0.45f * t)
-            blobAt(f, alongV, sp, up, sz, sz * 0.34f, sz, COL_RED_CELL, COL_RED_CELL_DARK, 1f,
-                seconds * 60f + k * 30f, 0.4f, 1f, 0.2f, blob, 1f)
-        }
-        // A venous valve downstream: two cusps that keep the blood going one way.
-        val fv = frameAt(b + 0.62f); val rv = tunnelRadius(b + 0.62f)
-        for (side in 0 until 2) {
-            val sgn = if (side == 0) 1f else -1f
-            val open = 0.55f + 0.25f * sin(seconds * 0.8f)
-            Matrix.setIdentityM(model, 0)
-            Matrix.translateM(model, 0, fx(fv, 0f, sgn * rv * open, 0f), fy(fv, 0f, sgn * rv * open, 0f), fz(fv, 0f, sgn * rv * open, 0f))
-            applyFrameRotation(fv)
-            Matrix.rotateM(model, 0, sgn * 24f, 0f, 1f, 0f)
-            Matrix.scaleM(model, 0, rv * 0.5f, rv * 0.85f, 0.07f)
-            drawLitModel(sphere, COL_VALVE, COL_VALVE_EDGE, 0.8f, 1f, 0f)
-        }
-    }
 
-    /**
-     * Stop 3: blood in store. Bethune's service is remembered for the refrigerated truck: citrated
-     * blood, settled, cold, waiting. The cells lie packed in a layer with clear plasma above, the
-     * glass of the bottle curving away, and nothing moving fast.
-     */
-    private fun drawStored(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b); val rr = tunnelRadius(b)
-        // The glass: a ring of faint pillars around the passage, and the cold light between them.
-        for (k in 0 until 12) {
-            val a = 2f * PI.toFloat() * k / 12f
-            strutAt(f, -3.5f, cos(a) * rr * 1.02f, sin(a) * rr * 1.02f, 3.5f, cos(a) * rr * 1.02f, sin(a) * rr * 1.02f,
-                0.05f, COL_GLASS, COL_COLD, 0.25f)
-        }
-        // Packed cells: a settled layer along the floor, barely stirring.
-        val settle = -rr * 0.55f
-        for (k in 0 until (if (quality == 0) 26 else 12)) {
-            val a = k * 2.399f
-            val d = 0.35f + 0.65f * sqrt((k + 1f) / 26f)
-            val drift = 0.06f * sin(seconds * 0.25f + k)
-            blobAt(f, (k % 7 - 3) * 0.85f + drift, cos(a) * rr * d, settle + 0.22f * sin(a * 2.1f),
-                0.24f, 0.09f, 0.24f, COL_STORED_CELL, COL_RED_CELL_DARK, 1f, a * 57f, 0.2f, 1f, 0.1f, blob, 1f)
-        }
-        // Plasma above: a few slow motes and the straw-coloured light.
-        for (k in 0 until 8) {
-            val a = k * 1.7f
-            blobAt(f, (k - 4) * 0.9f, cos(a) * rr * 0.5f, rr * 0.45f + 0.3f * sin(seconds * 0.2f + k),
-                0.07f, 0.07f, 0.07f, COL_PLASMA, COL_LAMP, 0.7f, 0f, 0f, 1f, 0f, blob, 0f, 0.25f)
-        }
-    }
 
-    /**
-     * Stops 4 and 8: a wound from the inside. Torn muscle fibres with ragged ends, fibrin strands
-     * bridging the gap, dirt and debris driven in with it. This is what Bethune cut away — dead
-     * tissue is where the bacteria breed — and, later, the nick in his own finger.
-     */
-    private fun drawWound(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b); val rr = tunnelRadius(b)
-        // The breach: a ragged hole torn through one wall, with the dark of the tissue behind it.
-        val ws = -rr * 0.95f; val wu = rr * 0.12f
-        val wx = fx(f, 0f, ws, wu); val wy = fy(f, 0f, ws, wu); val wz = fz(f, 0f, ws, wu)
-        drawSphereAt(wx, wy, wz, 1.6f, 1.6f, 1.6f, COL_CLOT, COL_CLOT, 1f, 0f, 0f, 1f, 0f, sphere, 0f, 0f)
-        // Torn muscle fibres standing out of the rim at every angle, their ends frayed.
-        val fibres = if (quality == 0) 11 else 6
-        for (k in 0 until fibres) {
-            val a = 2f * PI.toFloat() * k / fibres + 0.35f
-            val ca = cos(a); val sa = sin(a)
-            val r0 = 1.45f; val len = 0.75f + 0.5f * sin(k * 2.1f)
-            val lean = 0.35f * sin(k * 1.7f)
-            drawStrut(wx + f.dx * ca * r0 + f.ux * sa * r0, wy + f.dy * ca * r0 + f.uy * sa * r0, wz + f.dz * ca * r0 + f.uz * sa * r0,
-                wx + f.dx * ca * (r0 + len) + f.ux * sa * (r0 + len) - f.sx * lean,
-                wy + f.dy * ca * (r0 + len) + f.uy * sa * (r0 + len) - f.sy * lean,
-                wz + f.dz * ca * (r0 + len) + f.uz * sa * (r0 + len) - f.sz * lean,
-                0.17f, COL_FIBRE, COL_FIBRE_DARK)
-            for (m in 0 until 2) {   // the frayed end: a couple of loose threads
-                val fr = r0 + len + 0.16f + m * 0.14f
-                drawSphereAt(wx + f.dx * ca * fr + f.ux * sa * fr - f.sx * lean * 1.3f,
-                    wy + f.dy * ca * fr + f.uy * sa * fr - f.sy * lean * 1.3f,
-                    wz + f.dz * ca * fr + f.uz * sa * fr - f.sz * lean * 1.3f,
-                    0.07f, 0.07f, 0.07f, COL_FIBRE_DARK, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob)
-            }
-        }
-        // Fibrin: the veil the blood throws across the gap within minutes of the wound.
-        drawLinesAt(fibrinMesh, wx, wy, wz, 0.55f, seconds * 0.8f, ca(f), 0f, sa(f))
-        // Dirt driven in with the wound — the reason a wound has to be cut clean.
-        for (k in 0 until (if (quality == 0) 6 else 3)) {
-            val a = k * 1.9f
-            val d = 0.5f + 0.55f * ((k * 31 % 10) / 10f)
-            blobAt(f, 0.35f * sin(a * 1.3f), ws + cos(a) * d + 0.5f, wu + sin(a) * d,
-                0.15f, 0.12f, 0.17f, COL_DEBRIS, COL_FIBRE_DARK, 1f, k * 51f, 0.3f, 1f, 0.5f, blob, 1f)
-        }
-        // Yan'an, spring 1938: the night he sat down with Mao Zedong, hung where the crew pass it.
-        drawPlate("yanan", frameAt(b + 0.45f), tunnelRadius(b + 0.45f) * 0.62f, tunnelRadius(b + 0.45f) * 0.30f, 2.6f, seconds)
-        // Blood seeping out of the breach and turning down the passage.
-        for (k in 0 until (if (quality == 0) 9 else 4)) {
-            val t = ((seconds * 0.28f + k * 0.111f) % 1f)
-            val a = k * 1.4f
-            val out = 0.6f + t * 2.6f
-            blobAt(f, t * 3.4f - 0.6f, ws + out + 0.25f * cos(a), wu + 0.45f * sin(a) * (1f - t),
-                0.19f, 0.07f, 0.19f, COL_RED_CELL, COL_RED_CELL_DARK, 1f - 0.35f * t,
-                seconds * 40f + k * 44f, 0.4f, 1f, 0.2f, blob, 1f)
-        }
-    }
 
-    /**
-     * Stop 6: the table. Two banks of tissue drawn together and held: forceps at the edges,
-     * sutures arcing across the gap, the wound closing over a slow cycle and opening again for the
-     * next casualty. Bethune's rule was that no wounded man should wait more than eight hours.
-     */
-    private fun drawSuture(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b); val rr = tunnelRadius(b)
-        val cyc = ((seconds / 26f) % 1f)
-        val close = smooth01((cyc - 0.15f) / 0.55f)          // the edges come together, then reset
-        val gap = rr * (0.86f - 0.34f * close)     // the edges never close across the Mote's lane
-        for (side in 0 until 2) {
-            val sgn = if (side == 0) 1f else -1f
-            for (k in 0 until (if (quality == 0) 6 else 3)) {
-                val along = (k - 2.5f) * 0.95f
-                blobAt(f, along, sgn * (gap + 0.45f), -rr * 0.2f, 0.45f, 0.34f, 0.5f,
-                    COL_TISSUE, COL_TISSUE_EDGE, 1f, k * 33f, 0f, 1f, 0f, blob, 1f)
-            }
-        }
-        // Sutures: arcs of thread crossing the gap, tightening as the edges meet.
-        for (k in 0 until 5) {
-            val along = (k - 2f) * 1.15f
-            val lift = 0.5f * (1f - close) + 0.12f
-            strutAt(f, along, -gap - 0.15f, -rr * 0.2f, along, -gap * 0.45f, -rr * 0.2f - lift, 0.05f, COL_THREAD_S, COL_LAMP, 0.25f)
-            strutAt(f, along, -gap * 0.45f, -rr * 0.2f - lift, along, gap * 0.45f, -rr * 0.2f - lift, 0.05f, COL_THREAD_S, COL_LAMP, 0.25f)
-            strutAt(f, along, gap * 0.45f, -rr * 0.2f - lift, along, gap + 0.15f, -rr * 0.2f, 0.05f, COL_THREAD_S, COL_LAMP, 0.25f)
-            blobAt(f, along, 0f, -rr * 0.2f - lift - 0.05f, 0.09f, 0.09f, 0.09f, COL_THREAD_S, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 0f, 0.35f)
-        }
-        // Forceps: two bright jaws holding the near edge steady.
-        for (sgn in SIGNS) {
-            strutAt(f, 3.4f, sgn * (gap + 0.7f), rr * 0.45f, 0.9f, sgn * (gap + 0.2f), -rr * 0.05f, 0.09f, COL_STEEL, COL_STEEL_BRIGHT, 0.2f)
-        }
-    }
 
-    /**
-     * Stop 9: septicaemia. Rods multiplying in the bloodstream faster than the neutrophils can
-     * clear them — what killed Bethune on 12 November 1939, in the last year before penicillin
-     * became a usable medicine. The count doubles on a cycle, and the white cells lose.
-     */
-    private fun drawSepsis(n: TourNode, i: Int, seconds: Float) {
-        val b = i.toFloat()
-        val f = frameAt(b); val rr = tunnelRadius(b)
-        val cyc = ((seconds / 18f) % 1f)                     // one doubling every eighteen seconds
-        val cap = if (quality == 0) 22 else 10
-        val live = 4 + (cap - 4) * cyc
-        for (k in 0 until cap) {
-            if (k > live) continue
-            val split = (live - k).coerceIn(0f, 1f)          // the newest rods are still pulling apart
-            val a = k * 2.399f + seconds * 0.06f
-            val d = rr * (0.34f + 0.60f * ((k * 37 % 100) / 100f))
-            val along = ((k * 53 % 100) / 100f - 0.5f) * 7f + 0.5f * sin(seconds * 0.4f + k)
-            val sp = cos(a) * d; val up = sin(a) * d
-            // Broadside to the lane (the rod's long axis across the passage, not down it) so a rod
-            // reads as a rod and not as a disc seen end-on.
-            val yaw = yawOf(f) + 90f + (k * 37 % 60) - 30f
-            blobAt(f, along, sp - 0.17f * split, up, 0.10f, 0.10f, 0.30f, COL_MICROBE, COL_MICROBE_DARK, 1f, yaw, 0f, 1f, 0f, blob, 1f)
-            if (split > 0.05f) blobAt(f, along + 0.05f, sp + 0.17f * split, up, 0.10f, 0.10f, 0.30f,
-                COL_MICROBE, COL_MICROBE_DARK, split, yaw, 0f, 1f, 0f, blob, 1f)
-        }
-        // Two neutrophils still working, and losing: pseudopods out, rods slipping past them.
-        for (w in 0 until 2) {
-            val ph = seconds * 0.2f + w * 3.1f
-            val a = ph * 0.7f + w * 2f
-            val d = rr * 0.55f
-            val along = 2.2f - w * 3.4f + 0.6f * sin(ph)
-            val sp = cos(a) * d; val up = sin(a) * d
-            val pulse = 1f + 0.09f * sin(seconds * 2.4f + w)
-            blobAt(f, along, sp, up, 0.40f * pulse, 0.36f * pulse, 0.40f * pulse,
-                COL_WHITE_CELL, COL_WHITE_CELL_DARK, 0.92f, seconds * 12f, 0.2f, 1f, 0.3f, sphere, 1f)
-            for (m in 0 until 4) {
-                val pa = m * 1.57f + ph
-                blobAt(f, along + 0.28f * cos(pa), sp + 0.28f * sin(pa), up + 0.14f * sin(pa * 1.7f),
-                    0.11f, 0.11f, 0.17f, COL_WHITE_CELL, COL_WHITE_CELL_DARK, 0.85f, pa * 57f, 0f, 1f, 0f, blob)
-            }
-        }
-        // The fever: the wall itself running hot on the heartbeat.
-        val glow = 0.35f + 0.3f * exp(-heartPhase * 5f)
-        blobAt(f, 0f, 0f, 0f, rr * 1.04f, rr * 1.04f, 4.5f, COL_FEVER, COL_FEVER, 0.10f + 0.05f * glow,
-            yawOf(f), 0f, 1f, 0f, sphere, 0f, glow)
-    }
 
     // ------------------------------------------------------- draw: the ship
     /** Local hull coordinates (x right, y up, -z forward) to world, through the hull's yaw and pitch. */
-    private fun shipToWorld(lx0: Float, ly0: Float, lz0: Float, out: FloatArray) {
+    internal fun shipToWorld(lx0: Float, ly0: Float, lz0: Float, out: FloatArray) {
         val lx = lx0 * shipScale; val ly = ly0 * shipScale; val lz = lz0 * shipScale
         val cp = cos(craftPitch * DEG); val sp = sin(craftPitch * DEG)
         val cy = cos(craftYaw * DEG); val sy = sin(craftYaw * DEG)
@@ -1955,7 +1057,7 @@ class StereoBodyRenderer(
     }
 
     /** A rod between two world points (an elongated sphere aligned with the segment). */
-    private fun drawStrut(ax: Float, ay: Float, az: Float, bx: Float, by: Float, bz: Float, radius: Float, base: FloatArray, accent: FloatArray, glow: Float = 0f) {
+    internal fun drawStrut(ax: Float, ay: Float, az: Float, bx: Float, by: Float, bz: Float, radius: Float, base: FloatArray, accent: FloatArray, glow: Float = 0f) {
         val dx = bx - ax; val dy = by - ay; val dz = bz - az
         val len = sqrt(dx * dx + dy * dy + dz * dz).coerceAtLeast(1e-4f)
         val nx = dx / len; val ny = dy / len; val nz = dz / len
@@ -1967,7 +1069,7 @@ class StereoBodyRenderer(
         else drawSphereAt((ax + bx) * 0.5f, (ay + by) * 0.5f, (az + bz) * 0.5f, radius, radius, len * 0.5f, base, accent, 1f, ang, axX / al, axY / al, 0f, blob, 0f, glow)
     }
 
-    private fun drawMote(seconds: Float) {
+    internal fun drawMote(seconds: Float) {
         Matrix.setIdentityM(model, 0)
         Matrix.translateM(model, 0, shipX, shipY, shipZ)
         Matrix.rotateM(model, 0, craftYaw, 0f, 1f, 0f)
@@ -2002,7 +1104,7 @@ class StereoBodyRenderer(
     }
 
     /** Two articulated probes: shoulder at the bow mounts, elbow, and a glowing sensor tip. */
-    private fun drawArms(seconds: Float) {
+    internal fun drawArms(seconds: Float) {
         val r = armReach * armReach * (3f - 2f * armReach)
         val wob = sin(seconds * 1.7f) * 0.03f
         for (sgn in floatArrayOf(-1f, 1f)) {
@@ -2019,7 +1121,7 @@ class StereoBodyRenderer(
     }
 
     /** The engine room: inside the hull, the scale drive core with its rotor ring and stator struts. */
-    private fun drawDriveCore(seconds: Float) {
+    internal fun drawDriveCore(seconds: Float) {
         // The hull around us (its inner faces), without the outboard fittings that would show
         // through the near-plane gap in the roof.
         Matrix.setIdentityM(model, 0)
@@ -2052,7 +1154,7 @@ class StereoBodyRenderer(
         }
     }
 
-    private fun drawCockpit() {
+    internal fun drawCockpit() {
         // A head-locked frame: drawn at the eye, facing the heading, proportioned so the porthole
         // (0.55 x 0.40 at 1.0 ahead) and the console sit inside the 58-degree frustum. A stable
         // foreground frame is the comfort anchor the build guide asks for.
@@ -2073,7 +1175,7 @@ class StereoBodyRenderer(
     }
 
     // --------------------------------------------------------- draw: overlays
-    private fun drawStreaks(seconds: Float) {
+    internal fun drawStreaks(seconds: Float) {
         val burst = sin(shrinkBurst * PI.toFloat())
         val intensity = max(jumpIntensity, burst)
         if (intensity < 0.02f) return
@@ -2109,9 +1211,9 @@ class StereoBodyRenderer(
         GLES20.glEnable(GLES20.GL_DEPTH_TEST); GLES20.glDepthMask(true)
     }
 
-    private fun lineWidth(w: Float) = GLES20.glLineWidth(min(w, maxLineWidth))
+    internal fun lineWidth(w: Float) = GLES20.glLineWidth(min(w, maxLineWidth))
 
-    private fun drawFlash() {
+    internal fun drawFlash() {
         if (beat < 0.01f) return
         val a = beat * 0.28f
         var i = 6
@@ -2132,11 +1234,11 @@ class StereoBodyRenderer(
     }
 
     // ------------------------------------------------------------- helpers
-    private fun drawSphereAt(
+    internal fun drawSphereAt(
         x: Float, y: Float, z: Float, sx: Float, sy: Float, sz: Float,
         base: FloatArray, accent: FloatArray, alpha: Float = 1f,
         rotDeg: Float = 0f, ax: Float = 0f, ay: Float = 1f, az: Float = 0f,
-        mesh: SphereMesh = sphere, pattern: Float = 0f, glow: Float = 0f
+        mesh: LitMesh = sphere, pattern: Float = 0f, glow: Float = 0f
     ) {
         Matrix.setIdentityM(model, 0)
         Matrix.translateM(model, 0, x, y, z)
@@ -2146,7 +1248,7 @@ class StereoBodyRenderer(
     }
 
     /** Draw [mesh] with the current model matrix through the lit shader. */
-    private fun drawLitModel(mesh: SphereMesh, base: FloatArray, accent: FloatArray, alpha: Float, pattern: Float, glow: Float) {
+    internal fun drawLitModel(mesh: LitMesh, base: FloatArray, accent: FloatArray, alpha: Float, pattern: Float, glow: Float) {
         Matrix.multiplyMM(mv, 0, view, 0, model, 0)
         Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
         // Normal matrix = transpose(inverse(model)). transposeM must not run in place (it would
@@ -2157,7 +1259,7 @@ class StereoBodyRenderer(
         mesh.draw(litShader.positionHandle, litShader.normalHandle)
     }
 
-    private fun drawLinesAt(mesh: LineMesh, x: Float, y: Float, z: Float, scale: Float, rotDeg: Float, ax: Float, ay: Float, az: Float) {
+    internal fun drawLinesAt(mesh: LineMesh, x: Float, y: Float, z: Float, scale: Float, rotDeg: Float, ax: Float, ay: Float, az: Float) {
         Matrix.setIdentityM(model, 0)
         Matrix.translateM(model, 0, x, y, z)
         if (rotDeg != 0f) Matrix.rotateM(model, 0, rotDeg, ax, ay, az)
@@ -2169,7 +1271,7 @@ class StereoBodyRenderer(
     }
 
     /** Rotate the model matrix so local +x = side, +y = up, +z = -dir (rail forward). */
-    private fun applyFrameRotation(f: Frame) {
+    internal fun applyFrameRotation(f: Frame) {
         val rot = FloatArray(16)
         rot[0] = f.sx; rot[1] = f.sy; rot[2] = f.sz; rot[3] = 0f
         rot[4] = f.ux; rot[5] = f.uy; rot[6] = f.uz; rot[7] = 0f
@@ -2180,9 +1282,9 @@ class StereoBodyRenderer(
         System.arraycopy(tmp, 0, model, 0, 16)
     }
 
-    private fun yawOf(f: Frame): Float = atan2(-f.dx, -f.dz) * 180f / PI.toFloat()
+    internal fun yawOf(f: Frame): Float = atan2(-f.dx, -f.dz) * 180f / PI.toFloat()
 
-    private class Frame(
+    internal class Frame(
         val cx: Float, val cy: Float, val cz: Float,
         val dx: Float, val dy: Float, val dz: Float,
         val sx: Float, val sy: Float, val sz: Float,
@@ -2190,7 +1292,7 @@ class StereoBodyRenderer(
     )
 
     /** Catmull-Rom position on the rail at node-units p. */
-    private fun curvePoint(p: Float, out: FloatArray) {
+    internal fun curvePoint(p: Float, out: FloatArray) {
         val n = nodes.size
         val pc = p.coerceIn(0f, (n - 1).toFloat())
         val i = min(pc.toInt(), n - 2)
@@ -2201,9 +1303,9 @@ class StereoBodyRenderer(
         out[0] = cr(p0.x, p1.x, p2.x, p3.x); out[1] = cr(p0.y, p1.y, p2.y, p3.y); out[2] = cr(p0.z, p1.z, p2.z, p3.z)
     }
 
-    private val tmpA = FloatArray(3)
-    private val tmpB = FloatArray(3)
-    private fun frameAt(p: Float): Frame {
+    internal val tmpA = FloatArray(3)
+    internal val tmpB = FloatArray(3)
+    internal fun frameAt(p: Float): Frame {
         curvePoint(p, tmpA)
         val cx = tmpA[0]; val cy = tmpA[1]; val cz = tmpA[2]
         curvePoint(p - 0.02f, tmpA); curvePoint(p + 0.02f, tmpB)
@@ -2220,7 +1322,7 @@ class StereoBodyRenderer(
         return Frame(cx, cy, cz, dx, dy, dz, sx, sy, sz, ux, uy, uz)
     }
 
-    private fun nodeLerp(p: Float, f: (TourNode) -> Float): Float {
+    internal fun nodeLerp(p: Float, f: (TourNode) -> Float): Float {
         val pc = p.coerceIn(0f, nodes.lastIndex.toFloat())
         val i = min(pc.toInt(), nodes.lastIndex - 1)
         val t = pc - i
@@ -2228,10 +1330,10 @@ class StereoBodyRenderer(
         return f(nodes[i]) + (f(nodes[i + 1]) - f(nodes[i])) * s
     }
 
-    private fun tunnelRadius(p: Float): Float = nodeLerp(p) { it.radius }
+    internal fun tunnelRadius(p: Float): Float = nodeLerp(p) { it.radius }
 
     // ------------------------------------------------------ mesh builders
-    private fun buildTunnel(): FloatArray {
+    internal fun buildTunnel(): FloatArray {
         val segs = 14
         val step = 0.08f
         val rings = ArrayList<FloatArray>()
@@ -2267,19 +1369,19 @@ class StereoBodyRenderer(
         return out
     }
 
-    private fun buildRouteLines(): FloatArray = buildList {
+    internal fun buildRouteLines(): FloatArray = buildList {
         val color = floatArrayOf(1f, 0.6f, 0.55f, 0.22f)
         nodes.zipWithNext().forEach { (a, b) -> addLine(a.x, a.y, a.z, b.x, b.y, b.z, color) }
     }.toFloatArray()
 
-    private fun buildRouteNodes(): FloatArray = buildList {
+    internal fun buildRouteNodes(): FloatArray = buildList {
         nodes.forEach { addPoint(it.x, it.y, it.z, 1f, 0.77f, 0.42f, 0.45f) }
     }.toFloatArray()
 
     // The M.S.V. Mote: an original industrial hovercraft. Faceted, wider-than-tall hull, a raised
     // cockpit pod forward, a dorsal spine with antenna masts, side pontoons that carry the hover
     // pads, an aft engine block, and two arm-probe mounts at the bow. Faces -Z. Length 1.5.
-    private fun buildMote(): FloatArray = buildList {
+    internal fun buildMote(): FloatArray = buildList {
         val top = floatArrayOf(0.64f, 0.67f, 0.74f, 1f)
         val flank = floatArrayOf(0.50f, 0.53f, 0.60f, 1f)
         val belly = floatArrayOf(0.32f, 0.34f, 0.40f, 1f)
@@ -2330,7 +1432,7 @@ class StereoBodyRenderer(
         box(0.24f, -0.06f, -0.60f, 0.05f, 0.05f, 0.06f, rust, dark)
     }.toFloatArray()
 
-    private fun buildCockpitLines(): FloatArray = buildList {
+    internal fun buildCockpitLines(): FloatArray = buildList {
         val glass = floatArrayOf(0.98f, 0.78f, 0.66f, 0.75f)
         // Porthole: an octagonal frame 1.0 ahead of the eye (about 23 x 17 degrees of view).
         for (k in 0 until 8) {
@@ -2348,7 +1450,7 @@ class StereoBodyRenderer(
         addLine(0f, -0.02f, -1.0f, 0f, 0.06f, -1.0f, floatArrayOf(1f, 0.77f, 0.42f, 0.55f))
     }.toFloatArray()
 
-    private fun buildHairs(): FloatArray = buildList {
+    internal fun buildHairs(): FloatArray = buildList {
         val rnd = java.util.Random(3)
         val c = floatArrayOf(0.30f, 0.16f, 0.12f, 0.9f)
         for (i in 0 until 52) {
@@ -2361,7 +1463,7 @@ class StereoBodyRenderer(
         }
     }.toFloatArray()
 
-    private fun buildCapillaries(): FloatArray = buildList {
+    internal fun buildCapillaries(): FloatArray = buildList {
         val c = floatArrayOf(0.85f, 0.15f, 0.2f, 0.85f)
         for (k in 0 until 7) {
             val a = 2f * PI.toFloat() * k / 7f + 0.4f
@@ -2378,7 +1480,7 @@ class StereoBodyRenderer(
         }
     }.toFloatArray()
 
-    private fun buildTrabeculae(): FloatArray = buildList {
+    internal fun buildTrabeculae(): FloatArray = buildList {
         val rnd = java.util.Random(9)
         val c = floatArrayOf(0.85f, 0.35f, 0.4f, 0.6f)
         for (i in 0 until 30) {
@@ -2389,7 +1491,7 @@ class StereoBodyRenderer(
         }
     }.toFloatArray()
 
-    private fun buildDendrites(): FloatArray {
+    internal fun buildDendrites(): FloatArray {
         val list = ArrayList<Float>()
         val c = floatArrayOf(0.75f, 0.65f, 1f, 0.8f)
         val rnd = java.util.Random(21)
@@ -2411,7 +1513,7 @@ class StereoBodyRenderer(
     }
 
     /** Two sheets of lipid heads (points) with tails (lines), a hole in the middle for the passage. Local frame: x side, y up, z back. */
-    private fun buildLipids(): Pair<FloatArray, FloatArray> {
+    internal fun buildLipids(): Pair<FloatArray, FloatArray> {
         val heads = ArrayList<Float>(); val tails = ArrayList<Float>()
         val headC = floatArrayOf(1f, 0.78f, 0.45f, 0.95f)
         val tailC = floatArrayOf(0.35f, 0.85f, 0.8f, 0.6f)
@@ -2428,7 +1530,7 @@ class StereoBodyRenderer(
         return heads.toFloatArray() to tails.toFloatArray()
     }
 
-    private fun buildChromatin(): FloatArray = buildList {
+    internal fun buildChromatin(): FloatArray = buildList {
         val rnd = java.util.Random(5)
         val c = floatArrayOf(0.8f, 0.75f, 1f, 0.55f)
         for (f in 0 until 6) {
@@ -2442,7 +1544,7 @@ class StereoBodyRenderer(
     }.toFloatArray()
 
     /** Double helix along local z: two strands 3.4 units per turn, 10 rungs per turn. */
-    private fun buildHelix(): FloatArray {
+    internal fun buildHelix(): FloatArray {
         val list = ArrayList<Float>()
         val strandA = floatArrayOf(0.95f, 0.55f, 0.75f, 0.95f)
         val strandB = floatArrayOf(0.55f, 0.75f, 1f, 0.95f)
@@ -2462,7 +1564,7 @@ class StereoBodyRenderer(
         return list.toFloatArray()
     }
 
-    private fun buildMrna(): FloatArray = buildList {
+    internal fun buildMrna(): FloatArray = buildList {
         val c = floatArrayOf(1f, 0.6f, 0.5f, 0.9f)
         for (s in 0 until 80) {
             val t0 = s / 80f; val t1 = (s + 1) / 80f
@@ -2473,7 +1575,7 @@ class StereoBodyRenderer(
         }
     }.toFloatArray()
 
-    private fun buildElectronCloud(): FloatArray = buildList {
+    internal fun buildElectronCloud(): FloatArray = buildList {
         val rnd = java.util.Random(77)
         for (i in 0 until 700) {
             // Radial density ~ shells: most points near r=2.2 and r=4.2.
@@ -2486,7 +1588,7 @@ class StereoBodyRenderer(
         }
     }.toFloatArray()
 
-    private fun buildShells(): FloatArray = buildList {
+    internal fun buildShells(): FloatArray = buildList {
         val c = floatArrayOf(0.5f, 0.65f, 1f, 0.22f)
         // Carbon: two occupied shells (K: 2 electrons, L: 4), matching the two cloud densities.
         for (sh in 0 until 2) {
@@ -2499,7 +1601,7 @@ class StereoBodyRenderer(
         }
     }.toFloatArray()
 
-    private fun buildCellCosmos(): FloatArray = buildList {
+    internal fun buildCellCosmos(): FloatArray = buildList {
         val rnd = java.util.Random(2013)
         for (i in 0 until 1400) {
             val r = 12f + rnd.nextFloat() * 48f
@@ -2510,7 +1612,7 @@ class StereoBodyRenderer(
         }
     }.toFloatArray()
 
-    private fun buildAntibodies(): FloatArray = buildList {
+    internal fun buildAntibodies(): FloatArray = buildList {
         val rnd = java.util.Random(33)
         val c = floatArrayOf(0.85f, 0.95f, 0.75f, 0.9f)
         for (i in 0 until 8) {
@@ -2523,7 +1625,7 @@ class StereoBodyRenderer(
 
 
     /** A microtubule along local z: thirteen protofilament lines around a 0.15 radius with faint tubulin rings. */
-    private fun buildMicrotubule(): FloatArray = buildList {
+    internal fun buildMicrotubule(): FloatArray = buildList {
         val c = floatArrayOf(0.55f, 0.9f, 0.7f, 0.8f)
         val ring = floatArrayOf(0.4f, 0.7f, 0.55f, 0.35f)
         val len = 9.5f; val r = 0.15f
@@ -2542,7 +1644,7 @@ class StereoBodyRenderer(
     }.toFloatArray()
 
     /** Bile canaliculi: thin green channels zigzagging between the hepatocyte plates on both walls. */
-    private fun buildCanaliculi(): FloatArray = buildList {
+    internal fun buildCanaliculi(): FloatArray = buildList {
         val c = floatArrayOf(0.55f, 0.9f, 0.35f, 0.8f)
         val rnd = java.util.Random(41)
         for (side in 0 until 2) {
@@ -2557,7 +1659,7 @@ class StereoBodyRenderer(
     }.toFloatArray()
 
     /** The glomerulus: a knot of capillary loops (random walks kept inside a 1.2 sphere). */
-    private fun buildGlomerulus(): FloatArray = buildList {
+    internal fun buildGlomerulus(): FloatArray = buildList {
         val rnd = java.util.Random(13)
         val c = floatArrayOf(0.9f, 0.2f, 0.25f, 0.9f)
         for (loop in 0 until 5) {
@@ -2573,7 +1675,7 @@ class StereoBodyRenderer(
     }.toFloatArray()
 
     /** Trabecular bone: a cream lattice of struts just inside the marrow cavity wall. */
-    private fun buildBoneLattice(): FloatArray = buildList {
+    internal fun buildBoneLattice(): FloatArray = buildList {
         val rnd = java.util.Random(57)
         val c = floatArrayOf(0.95f, 0.9f, 0.78f, 0.75f)
         for (i in 0 until 60) {
@@ -2586,7 +1688,7 @@ class StereoBodyRenderer(
     }.toFloatArray()
 
     /** A flat bilayer patch (no hole): heads as points either side, tails between. Built in x/y with z the normal. */
-    private fun buildFloorLipids(): Pair<FloatArray, FloatArray> {
+    internal fun buildFloorLipids(): Pair<FloatArray, FloatArray> {
         val heads = ArrayList<Float>(); val tails = ArrayList<Float>()
         val headC = floatArrayOf(1f, 0.78f, 0.45f, 0.95f)
         val tailC = floatArrayOf(0.35f, 0.85f, 0.8f, 0.6f)
@@ -2603,7 +1705,7 @@ class StereoBodyRenderer(
 
 
     /** Fibrin: a tangle of fine strands bridging a wound gap, built in a 3-unit box. */
-    private fun buildFibrin(): FloatArray = buildList {
+    internal fun buildFibrin(): FloatArray = buildList {
         val rnd = java.util.Random(71)
         val c = floatArrayOf(0.95f, 0.9f, 0.85f, 0.55f)
         for (strand in 0 until 26) {
@@ -2619,7 +1721,7 @@ class StereoBodyRenderer(
     }.toFloatArray()
 
     /** The fibrous rim that walls off a tuberculous cavity: a ragged ring of scar in the x/y plane. */
-    private fun buildScarRing(): FloatArray = buildList {
+    internal fun buildScarRing(): FloatArray = buildList {
         val rnd = java.util.Random(83)
         val c = floatArrayOf(0.92f, 0.86f, 0.80f, 0.8f)
         val steps = 60
@@ -2639,140 +1741,18 @@ class StereoBodyRenderer(
         const val VIEW_ENGINEERING = 2   // beside the scale drive core
         const val VIEW_OBSERVATION = 3   // the observation deck, calm and wide
         val VIEW_NAMES = arrayOf("BRIDGE - HELM", "EXTERNAL - CHASE", "SCALE DRIVE CORE", "OBSERVATION DECK")
-        private const val EYE_OFFSET = 0.035f
-        private const val VIEW_TRANSITION_SEC = 1.0f
-        private const val SHRINK_SEC = 3.2f
-        private const val HEART_PERIOD = 0.92f
-        private const val LYSIS_PERIOD = 24f     // the phage stop's burst cycle (seconds)
-        private val SIGNS = floatArrayOf(-1f, 1f)
-        private val PLATE_FILES = arrayOf("yanan", "portrait")
-        private const val TIME_WRAP = (20.0 * PI).toFloat()
 
         // Ladder rungs (log10 of the Mote's length in metres) and their labels, one per decade
-        // the drive can step through (the atom drop passes 1.2 nm and 120 pm on its way to 12 pm).
-        private val LADDER_EXP = doubleArrayOf(1.08, -1.92, -2.92, -3.92, -4.92, -5.92, -6.92, -7.92, -8.92, -9.92, -10.92)
-        private val LADDER_LABELS = arrayOf("12m", "12mm", "1.2mm", "120µ", "12µ", "1.2µ", "120n", "12n", "1.2n", "120p", "12p")
 
-        private const val DEG = (PI / 180.0).toFloat()
-        private val COL_LAMP = floatArrayOf(1f, 0.77f, 0.42f, 1f)
-        private val COL_HULL = floatArrayOf(0.52f, 0.55f, 0.62f, 1f)
-        private val COL_HULL_DARK = floatArrayOf(0.30f, 0.32f, 0.38f, 1f)
-        private val COL_PAD = floatArrayOf(0.55f, 0.75f, 1f, 1f)
-        private val COL_DRIVE = floatArrayOf(0.62f, 0.5f, 1f, 1f)
-        private val COL_DRIVE_DIM = floatArrayOf(0.34f, 0.26f, 0.6f, 1f)
-        private val COL_STATOR = floatArrayOf(0.55f, 0.58f, 0.7f, 1f)
-        private val COL_BAY = floatArrayOf(1f, 0.85f, 0.7f, 1f)
-        private val COL_SKIN = floatArrayOf(0.96f, 0.62f, 0.56f, 1f)
-        private val COL_SKIN_DARK = floatArrayOf(0.72f, 0.38f, 0.36f, 1f)
-        private val COL_CARTILAGE = floatArrayOf(0.93f, 0.9f, 0.85f, 1f)
-        private val COL_ALVEOLUS = floatArrayOf(0.95f, 0.8f, 0.8f, 1f)
-        private val COL_RED_CELL = floatArrayOf(0.85f, 0.12f, 0.14f, 1f)
-        private val COL_RED_CELL_DARK = floatArrayOf(0.45f, 0.05f, 0.07f, 1f)
-        private val COL_PLATELET = floatArrayOf(0.95f, 0.8f, 0.5f, 1f)
-        private val COL_DUST = floatArrayOf(0.7f, 0.68f, 0.62f, 1f)
-        private val COL_POLLEN = floatArrayOf(0.95f, 0.85f, 0.3f, 1f)
-        private val COL_PROTEIN = floatArrayOf(0.35f, 0.8f, 0.75f, 1f)
-        private val COL_VESICLE = floatArrayOf(0.75f, 0.9f, 0.95f, 1f)
-        private val COL_TRANSMITTER = floatArrayOf(0.8f, 0.7f, 1f, 1f)
-        private val COL_WHITE_CELL = floatArrayOf(0.9f, 0.92f, 0.82f, 1f)
-        private val COL_WHITE_CELL_DARK = floatArrayOf(0.6f, 0.62f, 0.5f, 1f)
-        private val COL_VALVE = floatArrayOf(0.85f, 0.45f, 0.5f, 1f)
-        private val COL_VALVE_EDGE = floatArrayOf(1f, 0.75f, 0.7f, 1f)
-        private val COL_NEUTROPHIL = floatArrayOf(0.88f, 0.9f, 0.78f, 1f)
-        private val COL_NEUTROPHIL_DARK = floatArrayOf(0.55f, 0.5f, 0.7f, 1f)
-        private val COL_MACROPHAGE = floatArrayOf(0.78f, 0.82f, 0.7f, 1f)
-        private val COL_SOMA = floatArrayOf(0.5f, 0.38f, 0.85f, 1f)
-        private val COL_SOMA_LIGHT = floatArrayOf(0.8f, 0.72f, 1f, 1f)
-        private val COL_MYELIN = floatArrayOf(0.9f, 0.88f, 0.98f, 1f)
-        private val COL_CHANNEL = floatArrayOf(0.95f, 0.6f, 0.35f, 1f)
-        private val COL_CRISTAE = floatArrayOf(0.95f, 0.55f, 0.25f, 1f)
-        private val COL_ATP_STALK = floatArrayOf(0.9f, 0.9f, 0.7f, 1f)
-        private val COL_ATP_HEAD = floatArrayOf(0.55f, 0.9f, 0.85f, 1f)
-        private val COL_PORE = floatArrayOf(0.6f, 0.55f, 0.95f, 1f)
-        private val COL_NUCLEUS_LIGHT = floatArrayOf(0.85f, 0.8f, 1f, 1f)
-        private val COL_POLYMERASE = floatArrayOf(0.95f, 0.75f, 0.35f, 1f)
-        private val COL_RIBO_LARGE = floatArrayOf(0.3f, 0.65f, 0.7f, 1f)
-        private val COL_RIBO_SMALL = floatArrayOf(0.35f, 0.75f, 0.65f, 1f)
-        private val COL_RIBO_LIGHT = floatArrayOf(0.7f, 0.95f, 0.9f, 1f)
-        private val COL_TRNA = floatArrayOf(0.95f, 0.55f, 0.6f, 1f)
-        private val COL_AMINO_A = floatArrayOf(1f, 0.77f, 0.42f, 1f)
-        private val COL_AMINO_B = floatArrayOf(0.5f, 0.9f, 0.8f, 1f)
-        private val COL_NUCLEON = floatArrayOf(1f, 0.95f, 0.85f, 1f)
-        private val COL_WORLD = floatArrayOf(0.95f, 0.7f, 0.6f, 1f)
-        // Tour II palette.
-        private val COL_LIP = floatArrayOf(0.85f, 0.42f, 0.45f, 1f)
-        private val COL_TOOTH = floatArrayOf(0.97f, 0.95f, 0.88f, 1f)
-        private val COL_TONGUE = floatArrayOf(0.9f, 0.45f, 0.5f, 1f)
-        private val COL_VILLUS = floatArrayOf(0.95f, 0.58f, 0.6f, 1f)
-        private val COL_VILLUS_TIP = floatArrayOf(1f, 0.78f, 0.72f, 1f)
-        private val COL_BACTERIUM = floatArrayOf(0.55f, 0.8f, 0.45f, 1f)
-        private val COL_BACTERIUM_DARK = floatArrayOf(0.3f, 0.5f, 0.25f, 1f)
-        private val COL_CHYLE = floatArrayOf(0.95f, 0.9f, 0.6f, 1f)
-        private val COL_PHAGE = floatArrayOf(0.75f, 0.7f, 1f, 1f)
-        private val COL_PHAGE_LIGHT = floatArrayOf(0.9f, 0.88f, 1f, 1f)
-        private val COL_PHAGE_TAIL = floatArrayOf(0.8f, 0.8f, 0.9f, 1f)
-        private val COL_HEPATOCYTE = floatArrayOf(0.72f, 0.3f, 0.25f, 1f)
-        private val COL_HEPATOCYTE_DARK = floatArrayOf(0.45f, 0.15f, 0.12f, 1f)
-        private val COL_CAPSULE = floatArrayOf(0.9f, 0.75f, 0.7f, 1f)
-        private val COL_FILTRATE = floatArrayOf(0.85f, 0.95f, 1f, 1f)
-        private val COL_PODOCYTE = floatArrayOf(0.8f, 0.55f, 0.75f, 1f)
-        private val COL_ZDISC = floatArrayOf(0.95f, 0.9f, 0.6f, 1f)
-        private val COL_ACTIN = floatArrayOf(0.9f, 0.75f, 0.7f, 1f)
-        private val COL_MYOSIN = floatArrayOf(0.55f, 0.2f, 0.25f, 1f)
-        private val COL_MYOSIN_HEAD = floatArrayOf(0.9f, 0.4f, 0.45f, 1f)
-        private val COL_MEGAKARYO = floatArrayOf(0.85f, 0.7f, 0.85f, 1f)
-        private val COL_MEGAKARYO_DARK = floatArrayOf(0.5f, 0.35f, 0.6f, 1f)
-        private val COL_STEM = floatArrayOf(0.8f, 0.85f, 0.95f, 1f)
-        private val COL_STEM_LIGHT = floatArrayOf(0.95f, 0.97f, 1f, 1f)
-        private val COL_SEG_V = floatArrayOf(0.95f, 0.45f, 0.6f, 1f)
-        private val COL_SEG_D = floatArrayOf(0.5f, 0.9f, 0.55f, 1f)
-        private val COL_SEG_J = floatArrayOf(0.5f, 0.7f, 1f, 1f)
-        private val COL_SEG_C = floatArrayOf(0.75f, 0.55f, 0.95f, 1f)
-        private val COL_THREAD = floatArrayOf(0.7f, 0.65f, 0.9f, 1f)
-        private val COL_RAG = floatArrayOf(0.95f, 0.75f, 0.35f, 1f)
-        private val COL_RAG_B = floatArrayOf(0.95f, 0.6f, 0.3f, 1f)
-        private val COL_KINESIN = floatArrayOf(0.95f, 0.55f, 0.25f, 1f)
-        private val COL_KINESIN_LIGHT = floatArrayOf(1f, 0.8f, 0.5f, 1f)
-        private val COL_DYNEIN = floatArrayOf(0.6f, 0.75f, 0.95f, 1f)
-        private val COL_CARGO = floatArrayOf(0.7f, 0.9f, 1f, 1f)
-        private val COL_GOLGI = floatArrayOf(0.85f, 0.7f, 0.35f, 1f)
-        private val COL_ER = floatArrayOf(0.45f, 0.7f, 0.75f, 1f)
-        private val COL_ATP_HEAD_B = floatArrayOf(0.35f, 0.7f, 0.7f, 1f)
-        private val COL_PROTON = floatArrayOf(1f, 0.95f, 0.6f, 1f)
-        private val COL_ATP = floatArrayOf(1f, 0.85f, 0.3f, 1f)
-        private val COL_CELL = floatArrayOf(0.6f, 0.85f, 0.9f, 1f)
-        private val COL_CELL_EDGE = floatArrayOf(0.8f, 0.95f, 1f, 1f)
-        private val COL_CHROMOSOME = floatArrayOf(0.55f, 0.35f, 0.85f, 1f)
-        private val COL_CHROMOSOME_LIGHT = floatArrayOf(0.85f, 0.75f, 1f, 1f)
-        private val COL_CENTROSOME = floatArrayOf(1f, 0.85f, 0.5f, 1f)
-        // Chapter III palette.
-        private val COL_CAVITY = floatArrayOf(0.06f, 0.03f, 0.04f, 1f)
-        private val COL_CASEUM = floatArrayOf(0.92f, 0.87f, 0.72f, 1f)
-        private val COL_STEEL = floatArrayOf(0.62f, 0.66f, 0.72f, 1f)
-        private val COL_STEEL_BRIGHT = floatArrayOf(0.88f, 0.92f, 0.97f, 1f)
-        private val COL_GLASS = floatArrayOf(0.70f, 0.85f, 0.95f, 1f)
-        private val COL_COLD = floatArrayOf(0.55f, 0.80f, 1f, 1f)
-        private val COL_STORED_CELL = floatArrayOf(0.55f, 0.10f, 0.14f, 1f)
-        private val COL_PLASMA = floatArrayOf(0.95f, 0.88f, 0.60f, 1f)
-        private val COL_FIBRE = floatArrayOf(0.80f, 0.34f, 0.34f, 1f)
-        private val COL_FIBRE_DARK = floatArrayOf(0.48f, 0.18f, 0.20f, 1f)
-        private val COL_DEBRIS = floatArrayOf(0.38f, 0.32f, 0.26f, 1f)
-        private val COL_CLOT = floatArrayOf(0.42f, 0.06f, 0.09f, 1f)
-        private val COL_TISSUE = floatArrayOf(0.88f, 0.48f, 0.46f, 1f)
-        private val COL_TISSUE_EDGE = floatArrayOf(1f, 0.72f, 0.68f, 1f)
-        private val COL_THREAD_S = floatArrayOf(0.95f, 0.93f, 0.85f, 1f)
-        private val COL_MICROBE = floatArrayOf(0.85f, 0.90f, 0.45f, 1f)
-        private val COL_MICROBE_DARK = floatArrayOf(0.45f, 0.52f, 0.20f, 1f)
-        private val COL_FEVER = floatArrayOf(1f, 0.35f, 0.30f, 1f)
     }
 
-    private fun lerp(a: Float, b: Float, t: Float): Float = a + (b - a) * t
+    internal fun lerp(a: Float, b: Float, t: Float): Float = a + (b - a) * t
 
-    private fun MutableList<Float>.addPoint(x: Float, y: Float, z: Float, r: Float, g: Float, b: Float, a: Float) {
+    internal fun MutableList<Float>.addPoint(x: Float, y: Float, z: Float, r: Float, g: Float, b: Float, a: Float) {
         add(x); add(y); add(z); add(r); add(g); add(b); add(a)
     }
 
-    private fun MutableList<Float>.addLine(ax: Float, ay: Float, az: Float, bx: Float, by: Float, bz: Float, c: FloatArray) {
+    internal fun MutableList<Float>.addLine(ax: Float, ay: Float, az: Float, bx: Float, by: Float, bz: Float, c: FloatArray) {
         addPoint(ax, ay, az, c[0], c[1], c[2], c[3])
         addPoint(bx, by, bz, c[0], c[1], c[2], c[3])
     }
@@ -2781,7 +1761,7 @@ class StereoBodyRenderer(
 // =============================================================== meshes
 
 /** Uploads static vertex data once; every draw then binds the VBO instead of copying a client array. */
-private fun makeVbo(data: FloatArray): Int {
+internal fun makeVbo(data: FloatArray): Int {
     val ids = IntArray(1)
     GLES20.glGenBuffers(1, ids, 0)
     GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, ids[0])
@@ -2790,9 +1770,115 @@ private fun makeVbo(data: FloatArray): Int {
     return ids[0]
 }
 
-private class SphereMesh(stacks: Int, slices: Int) {
-    private val vbo: Int
-    private val vertexCount: Int
+/** Anything the lit shader can draw: position(3) + normal(3), one VBO. */
+internal abstract class LitMesh {
+    abstract fun draw(positionHandle: Int, normalHandle: Int)
+}
+
+/**
+ * A parametric surface p(u, v), u,v in [0,1], tessellated as triangle strips with normals taken
+ * from the cross product of the partial derivatives. Drawn double-sided (culling off) so the
+ * winding of an arbitrary parametrisation never matters. This is what lets a schematic have real
+ * shapes — biconcave red cells, C-shaped cartilage, rod-shaped bacteria — instead of squashed
+ * spheres.
+ */
+internal class ParamMesh(stacks: Int, slices: Int, fn: (Float, Float, FloatArray) -> Unit) : LitMesh() {
+    internal val vbo: Int
+    internal val vertexCount: Int
+    internal val stripLen = (slices + 1) * 2
+    internal val strips = stacks
+
+    init {
+        val data = ArrayList<Float>((stacks) * (slices + 1) * 12)
+        val p = FloatArray(3); val pu = FloatArray(3); val pv = FloatArray(3)
+        val e = 1e-3f
+        fun vert(u: Float, v: Float) {
+            fn(u, v, p)
+            val px = p[0]; val py = p[1]; val pz = p[2]
+            fn((u + e).coerceAtMost(1f), v, pu); fn((u - e).coerceAtLeast(0f), v, pv)
+            val ux = pu[0] - pv[0]; val uy = pu[1] - pv[1]; val uz = pu[2] - pv[2]
+            fn(u, (v + e).coerceAtMost(1f), pu); fn(u, (v - e).coerceAtLeast(0f), pv)
+            val vx = pu[0] - pv[0]; val vy = pu[1] - pv[1]; val vz = pu[2] - pv[2]
+            var nx = uy * vz - uz * vy; var ny = uz * vx - ux * vz; var nz = ux * vy - uy * vx
+            val l = sqrt(nx * nx + ny * ny + nz * nz)
+            if (l > 1e-9f) { nx /= l; ny /= l; nz /= l } else { nx = 0f; ny = 1f; nz = 0f }
+            data.add(px); data.add(py); data.add(pz); data.add(nx); data.add(ny); data.add(nz)
+        }
+        for (i in 0 until stacks) {
+            val u0 = i.toFloat() / stacks; val u1 = (i + 1).toFloat() / stacks
+            for (j in 0..slices) { val v = j.toFloat() / slices; vert(u1, v); vert(u0, v) }
+        }
+        vertexCount = data.size / 6
+        vbo = makeVbo(data.toFloatArray())
+    }
+
+    override fun draw(positionHandle: Int, normalHandle: Int) {
+        GLES20.glDisable(GLES20.GL_CULL_FACE)
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbo)
+        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 24, 0)
+        GLES20.glEnableVertexAttribArray(positionHandle)
+        GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT, false, 24, 12)
+        GLES20.glEnableVertexAttribArray(normalHandle)
+        for (k in 0 until strips) GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, k * stripLen, stripLen)
+        GLES20.glDisableVertexAttribArray(positionHandle)
+        GLES20.glDisableVertexAttribArray(normalHandle)
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
+        GLES20.glEnable(GLES20.GL_CULL_FACE)
+    }
+
+    companion object {
+        /** Red blood cell, Evans-Fung profile: a biconcave disc of radius 1 in x/z, thin along y. */
+        fun biconcave(): ParamMesh = ParamMesh(14, 24) { u, v, out ->
+            // u runs rim -> centre on the top face then centre -> rim underneath.
+            val top = u < 0.5f
+            val rr = if (top) 1f - u * 2f else (u - 0.5f) * 2f
+            val r = rr.coerceIn(0f, 0.999f)
+            val q = r * r
+            // Evans & Fung (1972): half-thickness 0.5*sqrt(1-x^2)*(0.81 + 7.83x^2 - 4.39x^4) um for a
+            // 7.82 um cell, divided by its 3.91 um radius: ~0.8 um at the centre, ~2.5 um at the rim.
+            val h = 0.5f * sqrt(1f - q) * (0.81f + 7.83f * q - 4.39f * q * q) / 3.91f
+            val a = v * 2f * PI.toFloat()
+            out[0] = cos(a) * r; out[2] = sin(a) * r; out[1] = if (top) h else -h
+        }
+
+        /** A torus arc of major radius 1 and minor radius [minor] in the x/y plane, sweeping [arc] of a turn. */
+        fun torusArc(minor: Float, arc: Float, stacks: Int = 20): ParamMesh = ParamMesh(stacks, 10) { u, v, out ->
+            val a = (u - 0.5f) * arc * 2f * PI.toFloat() - PI.toFloat() / 2f   // centred on -y
+            val b = v * 2f * PI.toFloat()
+            val rr = 1f + minor * cos(b)
+            out[0] = cos(a) * rr; out[1] = sin(a) * rr; out[2] = minor * sin(b)
+        }
+
+        /** A capsule (rod with hemispherical ends) along z, total length 2, radius [radius]. */
+        fun capsule(radius: Float): ParamMesh = ParamMesh(18, 12) { u, v, out ->
+            val half = 1f - radius
+            val t = u * 2f - 1f                        // -1..1 along the axis
+            val z: Float; val rr: Float
+            val cap = radius / (half + radius)
+            if (t < -1f + cap) { val k = (t + 1f) / cap; val ang = (1f - k) * PI.toFloat() / 2f; z = -half - sin(ang) * radius; rr = cos(ang) * radius }
+            else if (t > 1f - cap) { val k = (1f - t) / cap; val ang = (1f - k) * PI.toFloat() / 2f; z = half + sin(ang) * radius; rr = cos(ang) * radius }
+            else { z = t / (1f - cap) * half; rr = radius }
+            val a = v * 2f * PI.toFloat()
+            out[0] = cos(a) * rr; out[1] = sin(a) * rr; out[2] = z
+        }
+
+        /** An open cylinder of radius 1 along z from -1 to 1 (for filaments, tubes, stalks). */
+        fun cylinder(): ParamMesh = ParamMesh(2, 14) { u, v, out ->
+            val a = v * 2f * PI.toFloat()
+            out[0] = cos(a); out[1] = sin(a); out[2] = u * 2f - 1f
+        }
+
+        /** A cone (apex at z=+1, base radius 1 at z=-1), for teeth cusps, villus tips, pseudopods. */
+        fun cone(): ParamMesh = ParamMesh(6, 14) { u, v, out ->
+            val a = v * 2f * PI.toFloat(); val r = 1f - u
+            out[0] = cos(a) * r; out[1] = sin(a) * r; out[2] = u * 2f - 1f
+        }
+    }
+}
+
+internal class SphereMesh(stacks: Int, slices: Int) : LitMesh() {
+    internal val vbo: Int
+    internal val vertexCount: Int
 
     init {
         val data = mutableListOf<Float>()
@@ -2811,7 +1897,7 @@ private class SphereMesh(stacks: Int, slices: Int) {
         vbo = makeVbo(data.toFloatArray())
     }
 
-    fun draw(positionHandle: Int, normalHandle: Int) {
+    override fun draw(positionHandle: Int, normalHandle: Int) {
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbo)
         GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 24, 0)
         GLES20.glEnableVertexAttribArray(positionHandle)
@@ -2823,7 +1909,7 @@ private class SphereMesh(stacks: Int, slices: Int) {
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
     }
 
-    private fun addSphereVertex(data: MutableList<Float>, phi: Float, theta: Float) {
+    internal fun addSphereVertex(data: MutableList<Float>, phi: Float, theta: Float) {
         val x = sin(phi) * cos(theta)
         val y = cos(phi)
         val z = sin(phi) * sin(theta)
@@ -2833,9 +1919,9 @@ private class SphereMesh(stacks: Int, slices: Int) {
 }
 
 /** Static triangle mesh in a VBO: position(3) normal(3) color(4). */
-private class TubeMesh(data: FloatArray) {
-    private val vbo: Int
-    private val count = data.size / 10
+internal class TubeMesh(data: FloatArray) {
+    internal val vbo: Int
+    internal val count = data.size / 10
 
     init {
         val ids = IntArray(1)
@@ -2865,8 +1951,8 @@ private class TubeMesh(data: FloatArray) {
 }
 
 /** Static coloured vertices (position 3 + colour 4) in a VBO, drawn with one primitive mode. */
-private open class ColorVboMesh(data: FloatArray, private val mode: Int) {
-    private val vbo = makeVbo(data)
+internal open class ColorVboMesh(data: FloatArray, internal val mode: Int) {
+    internal val vbo = makeVbo(data)
     protected val count = data.size / 7
 
     fun release() = GLES20.glDeleteBuffers(1, intArrayOf(vbo), 0)
@@ -2884,14 +1970,14 @@ private open class ColorVboMesh(data: FloatArray, private val mode: Int) {
     }
 }
 
-private class PointMesh(data: FloatArray) : ColorVboMesh(data, GLES20.GL_POINTS)
-private class TriMesh(data: FloatArray) : ColorVboMesh(data, GLES20.GL_TRIANGLES)
-private class LineMesh(data: FloatArray) : ColorVboMesh(data, GLES20.GL_LINES)
+internal class PointMesh(data: FloatArray) : ColorVboMesh(data, GLES20.GL_POINTS)
+internal class TriMesh(data: FloatArray) : ColorVboMesh(data, GLES20.GL_TRIANGLES)
+internal class LineMesh(data: FloatArray) : ColorVboMesh(data, GLES20.GL_LINES)
 
 /** Small per-frame mesh (position + color) for things rebuilt every frame. */
-private class DynMesh(maxVerts: Int) {
+internal class DynMesh(maxVerts: Int) {
     val data = FloatArray(maxVerts * 7)
-    private val buffer = ByteBuffer.allocateDirect(data.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
+    internal val buffer = ByteBuffer.allocateDirect(data.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
 
     fun draw(positionHandle: Int, colorHandle: Int, mode: Int, verts: Int) {
         buffer.position(0); buffer.put(data, 0, verts * 7); buffer.position(0)
@@ -2907,15 +1993,15 @@ private class DynMesh(maxVerts: Int) {
 }
 
 /** Fine drift: plasma proteins, ions, dust, water — points whose colour follows the node. */
-private class DriftField(private val count: Int) {
-    private val px = FloatArray(count); private val py = FloatArray(count); private val pz = FloatArray(count)
-    private val vx = FloatArray(count); private val vy = FloatArray(count); private val vz = FloatArray(count)
-    private val data = FloatArray(count * 7)
-    private val buffer = ByteBuffer.allocateDirect(data.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
-    private val rnd = java.util.Random(7)
-    private var seeded = false
+internal class DriftField(internal val count: Int) {
+    internal val px = FloatArray(count); internal val py = FloatArray(count); internal val pz = FloatArray(count)
+    internal val vx = FloatArray(count); internal val vy = FloatArray(count); internal val vz = FloatArray(count)
+    internal val data = FloatArray(count * 7)
+    internal val buffer = ByteBuffer.allocateDirect(data.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
+    internal val rnd = java.util.Random(7)
+    internal var seeded = false
 
-    private fun respawn(i: Int, cx: Float, cy: Float, cz: Float, spread: Float) {
+    internal fun respawn(i: Int, cx: Float, cy: Float, cz: Float, spread: Float) {
         px[i] = cx + (rnd.nextFloat() - 0.5f) * 2f * spread
         py[i] = cy + (rnd.nextFloat() - 0.5f) * 2f * spread
         pz[i] = cz - 6f - rnd.nextFloat() * 26f
@@ -2980,15 +2066,15 @@ private class DriftField(private val count: Int) {
  * and direction follow the signed airspeed (+ = deeper on the inhale, - = out on the exhale).
  * They live in a window around the camera and respawn on the upstream side.
  */
-private class AirField(private val count: Int) {
-    private val along = FloatArray(count)      // position along the rail, relative to the ship
-    private val lu = FloatArray(count); private val lv = FloatArray(count)   // lateral offsets (side, up)
-    private val data = FloatArray(count * 2 * 7)
-    private val buffer = ByteBuffer.allocateDirect(data.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
-    private val rnd = java.util.Random(19)
-    private var seeded = false
+internal class AirField(internal val count: Int) {
+    internal val along = FloatArray(count)      // position along the rail, relative to the ship
+    internal val lu = FloatArray(count); internal val lv = FloatArray(count)   // lateral offsets (side, up)
+    internal val data = FloatArray(count * 2 * 7)
+    internal val buffer = ByteBuffer.allocateDirect(data.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
+    internal val rnd = java.util.Random(19)
+    internal var seeded = false
 
-    private fun respawn(i: Int, spread: Float, upstream: Boolean) {
+    internal fun respawn(i: Int, spread: Float, upstream: Boolean) {
         val a = rnd.nextFloat() * 2f * PI.toFloat(); val r = spread * sqrt(rnd.nextFloat())
         lu[i] = cos(a) * r; lv[i] = sin(a) * r
         // Upstream band (-5.5, -4]: inside the kill bounds and behind every camera (chase sits at -2.7..-3.3).
@@ -3036,13 +2122,13 @@ private class AirField(private val count: Int) {
 }
 
 /** Coarse drift: red cells, platelets, dust, pollen, proteins, vesicles — drawn as shaded shapes. */
-private class BodyField(val count: Int) {
+internal class BodyField(val count: Int) {
     val px = FloatArray(count); val py = FloatArray(count); val pz = FloatArray(count)
-    private val vx = FloatArray(count); private val vy = FloatArray(count); private val vz = FloatArray(count)
+    internal val vx = FloatArray(count); internal val vy = FloatArray(count); internal val vz = FloatArray(count)
     val kind = IntArray(count); val size = FloatArray(count); val spin = FloatArray(count)
-    private val rnd = java.util.Random(11)
-    private var seeded = false
-    private var lastAmb: Amb? = null
+    internal val rnd = java.util.Random(11)
+    internal var seeded = false
+    internal var lastAmb: Amb? = null
 
     companion object {
         const val RED_CELL = 0; const val PLATELET = 1; const val DUST = 2; const val POLLEN = 3
@@ -3052,7 +2138,7 @@ private class BodyField(val count: Int) {
 
     fun reset() { seeded = false; lastAmb = null }
 
-    private fun kindFor(amb: Amb): Int {
+    internal fun kindFor(amb: Amb): Int {
         val r = rnd.nextFloat()
         return when (amb) {
             Amb.AIR -> if (r < 0.7f) DUST else if (r < 0.9f) POLLEN else NONE
@@ -3067,7 +2153,7 @@ private class BodyField(val count: Int) {
         }
     }
 
-    private fun respawn(i: Int, cx: Float, cy: Float, cz: Float, spread: Float, amb: Amb) {
+    internal fun respawn(i: Int, cx: Float, cy: Float, cz: Float, spread: Float, amb: Amb) {
         kind[i] = kindFor(amb)
         size[i] = when (kind[i]) {
             RED_CELL -> 0.30f + rnd.nextFloat() * 0.12f
@@ -3122,7 +2208,7 @@ private class BodyField(val count: Int) {
  * The vertex stage (always highp) also pre-computes the lamp/eye vectors so the fragment stage
  * only ever sees small numbers.
  */
-private const val FRAG_PRECISION = """
+internal const val FRAG_PRECISION = """
         #ifdef GL_FRAGMENT_PRECISION_HIGH
         precision highp float;
         #else
@@ -3131,8 +2217,8 @@ private const val FRAG_PRECISION = """
 """
 
 /** Point-lit sphere shader: the Mote's lamp lights everything; rim glow in the accent colour; optional mottling. */
-private class LitShader {
-    private val program = compileProgram(
+internal class LitShader {
+    internal val program = compileProgram(
         """
         attribute vec3 aPosition;
         attribute vec3 aNormal;
@@ -3181,16 +2267,16 @@ private class LitShader {
     )
     val positionHandle = GLES20.glGetAttribLocation(program, "aPosition")
     val normalHandle = GLES20.glGetAttribLocation(program, "aNormal")
-    private val mvpHandle = GLES20.glGetUniformLocation(program, "uMvp")
-    private val modelHandle = GLES20.glGetUniformLocation(program, "uModel")
-    private val normalMatrixHandle = GLES20.glGetUniformLocation(program, "uNormal")
-    private val baseHandle = GLES20.glGetUniformLocation(program, "uBase")
-    private val accentHandle = GLES20.glGetUniformLocation(program, "uAccent")
-    private val alphaHandle = GLES20.glGetUniformLocation(program, "uAlpha")
-    private val patternHandle = GLES20.glGetUniformLocation(program, "uPattern")
-    private val glowHandle = GLES20.glGetUniformLocation(program, "uGlow")
-    private val lampHandle = GLES20.glGetUniformLocation(program, "uLamp")
-    private val eyeHandle = GLES20.glGetUniformLocation(program, "uEye")
+    internal val mvpHandle = GLES20.glGetUniformLocation(program, "uMvp")
+    internal val modelHandle = GLES20.glGetUniformLocation(program, "uModel")
+    internal val normalMatrixHandle = GLES20.glGetUniformLocation(program, "uNormal")
+    internal val baseHandle = GLES20.glGetUniformLocation(program, "uBase")
+    internal val accentHandle = GLES20.glGetUniformLocation(program, "uAccent")
+    internal val alphaHandle = GLES20.glGetUniformLocation(program, "uAlpha")
+    internal val patternHandle = GLES20.glGetUniformLocation(program, "uPattern")
+    internal val glowHandle = GLES20.glGetUniformLocation(program, "uGlow")
+    internal val lampHandle = GLES20.glGetUniformLocation(program, "uLamp")
+    internal val eyeHandle = GLES20.glGetUniformLocation(program, "uEye")
 
     fun use(
         mvp: FloatArray, model: FloatArray, normal: FloatArray, base: FloatArray, accent: FloatArray,
@@ -3211,8 +2297,8 @@ private class LitShader {
 }
 
 /** Passage walls: vertex colour, lit by the lamp with distance fog, a slow organic ripple and a heartbeat pulse. */
-private class WallShader {
-    private val program = compileProgram(
+internal class WallShader {
+    internal val program = compileProgram(
         """
         attribute vec3 aPosition;
         attribute vec3 aNormal;
@@ -3265,14 +2351,14 @@ private class WallShader {
     val positionHandle = GLES20.glGetAttribLocation(program, "aPosition")
     val normalHandle = GLES20.glGetAttribLocation(program, "aNormal")
     val colorHandle = GLES20.glGetAttribLocation(program, "aColor")
-    private val mvpHandle = GLES20.glGetUniformLocation(program, "uMvp")
-    private val modelHandle = GLES20.glGetUniformLocation(program, "uModel")
-    private val lampHandle = GLES20.glGetUniformLocation(program, "uLamp")
-    private val timeHandle = GLES20.glGetUniformLocation(program, "uTime")
-    private val pulseHandle = GLES20.glGetUniformLocation(program, "uPulse")
-    private val fogHandle = GLES20.glGetUniformLocation(program, "uFog")
-    private val alphaHandle = GLES20.glGetUniformLocation(program, "uAlpha")
-    private val detailHandle = GLES20.glGetUniformLocation(program, "uDetail")
+    internal val mvpHandle = GLES20.glGetUniformLocation(program, "uMvp")
+    internal val modelHandle = GLES20.glGetUniformLocation(program, "uModel")
+    internal val lampHandle = GLES20.glGetUniformLocation(program, "uLamp")
+    internal val timeHandle = GLES20.glGetUniformLocation(program, "uTime")
+    internal val pulseHandle = GLES20.glGetUniformLocation(program, "uPulse")
+    internal val fogHandle = GLES20.glGetUniformLocation(program, "uFog")
+    internal val alphaHandle = GLES20.glGetUniformLocation(program, "uAlpha")
+    internal val detailHandle = GLES20.glGetUniformLocation(program, "uDetail")
 
     fun use(mvp: FloatArray, model: FloatArray, lx: Float, ly: Float, lz: Float, time: Float, pulse: Float, fog: Float, alpha: Float, detail: Float) {
         GLES20.glUseProgram(program)
@@ -3288,8 +2374,8 @@ private class WallShader {
 }
 
 /** The one textured surface in the app: a picture plate for chapter III. */
-private class PlateShader {
-    private val program = compileProgram(
+internal class PlateShader {
+    internal val program = compileProgram(
         """
         attribute vec3 aPosition;
         attribute vec2 aUv;
@@ -3317,10 +2403,10 @@ private class PlateShader {
     )
     val positionHandle = GLES20.glGetAttribLocation(program, "aPosition")
     val uvHandle = GLES20.glGetAttribLocation(program, "aUv")
-    private val mvpHandle = GLES20.glGetUniformLocation(program, "uMvp")
-    private val texHandle = GLES20.glGetUniformLocation(program, "uTex")
-    private val alphaHandle = GLES20.glGetUniformLocation(program, "uAlpha")
-    private val liftHandle = GLES20.glGetUniformLocation(program, "uLift")
+    internal val mvpHandle = GLES20.glGetUniformLocation(program, "uMvp")
+    internal val texHandle = GLES20.glGetUniformLocation(program, "uTex")
+    internal val alphaHandle = GLES20.glGetUniformLocation(program, "uAlpha")
+    internal val liftHandle = GLES20.glGetUniformLocation(program, "uLift")
 
     fun use(mvp: FloatArray, texture: Int, alpha: Float, lift: Float) {
         GLES20.glUseProgram(program)
@@ -3333,8 +2419,8 @@ private class PlateShader {
     }
 }
 
-private class ColorShader {
-    private val program = compileProgram(
+internal class ColorShader {
+    internal val program = compileProgram(
         """
         attribute vec3 aPosition;
         attribute vec4 aColor;
@@ -3367,10 +2453,10 @@ private class ColorShader {
     )
     val positionHandle = GLES20.glGetAttribLocation(program, "aPosition")
     val colorHandle = GLES20.glGetAttribLocation(program, "aColor")
-    private val mvpHandle = GLES20.glGetUniformLocation(program, "uMvp")
-    private val pointSizeHandle = GLES20.glGetUniformLocation(program, "uPointSize")
-    private val pointHandle = GLES20.glGetUniformLocation(program, "uPoint")
-    private val fadeHandle = GLES20.glGetUniformLocation(program, "uFade")
+    internal val mvpHandle = GLES20.glGetUniformLocation(program, "uMvp")
+    internal val pointSizeHandle = GLES20.glGetUniformLocation(program, "uPointSize")
+    internal val pointHandle = GLES20.glGetUniformLocation(program, "uPoint")
+    internal val fadeHandle = GLES20.glGetUniformLocation(program, "uFade")
 
     /** Alpha multiplier applied to everything drawn until changed (landmark distance fade). */
     var globalFade = 1f
@@ -3385,16 +2471,16 @@ private class ColorShader {
     }
 }
 
-private fun FloatArray.toFloatBuffer(): FloatBuffer {
+internal fun FloatArray.toFloatBuffer(): FloatBuffer {
     val buffer = ByteBuffer.allocateDirect(size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
     buffer.put(this)
     buffer.position(0)
     return buffer
 }
 
-private fun List<Float>.toFloatBuffer(): FloatBuffer = toFloatArray().toFloatBuffer()
+internal fun List<Float>.toFloatBuffer(): FloatBuffer = toFloatArray().toFloatBuffer()
 
-private fun compileProgram(vertexSource: String, fragmentSource: String): Int {
+internal fun compileProgram(vertexSource: String, fragmentSource: String): Int {
     val vertex = compileShader(GLES20.GL_VERTEX_SHADER, vertexSource)
     val fragment = compileShader(GLES20.GL_FRAGMENT_SHADER, fragmentSource)
     val program = GLES20.glCreateProgram()
@@ -3409,7 +2495,7 @@ private fun compileProgram(vertexSource: String, fragmentSource: String): Int {
     return program
 }
 
-private fun compileShader(type: Int, source: String): Int {
+internal fun compileShader(type: Int, source: String): Int {
     val shader = GLES20.glCreateShader(type)
     GLES20.glShaderSource(shader, source.trimIndent())
     GLES20.glCompileShader(shader)
