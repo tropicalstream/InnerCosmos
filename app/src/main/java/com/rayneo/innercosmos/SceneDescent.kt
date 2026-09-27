@@ -3177,9 +3177,9 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
     t1Color(st.headsB, fm, 0f, so - 0.016f * cos(seconds * 7.1f), uo + 0.016f * sin(seconds * 9.2f), 3f, true)
     t1Color(st.headsC, fm, 0f, so + 0.016f * sin(seconds * 5.7f + 2f), uo + 0.016f * cos(seconds * 7.9f + 1f), 3f, true)
     t1Color(st.rim, fm, 0f, so, uo, 3.5f, true)
-    if (quality < 2) t1Color(st.tails, fm, 0f, so, uo, 1f, false, 0.9f)
+    if (quality == 0) t1Color(st.tails, fm, 0f, so, uo, 1f, false, 0.9f)
     // ---- the pit (or, once pinched, the flat membrane with the vesicle below)
-    if (abs(h - m.lastH) > 0.002f || m.headVerts == 0) {
+    if (abs(h - m.lastH) > 0.006f || m.headVerts == 0) {
         m.lastH = h
         t1PitProfile(h, m, pinched)
         val dd = m.heads.data
@@ -3188,10 +3188,10 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
         val hc = floatArrayOf(1f, 0.78f, 0.45f)
         for (k in 0 until m.np) {
             if (k > 0) acc += sqrt((m.pr[k] - m.pr[k - 1]).pow(2) + (m.pz[k] - m.pz[k - 1]).pow(2))
-            if (k > 0 && acc < 0.055f) continue
+            if (k > 0 && acc < 0.07f) continue
             acc = 0f
             val r = m.pr[k]
-            val cnt = max(1, (TAU * r / 0.055f).toInt())
+            val cnt = max(1, (TAU * r / 0.07f).toInt())
             for (j in 0 until cnt) {
                 if (v + 2 >= 12000) break
                 val a = TAU * (j + t1Hash(k * 977 + j)) / cnt
