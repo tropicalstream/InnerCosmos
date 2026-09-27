@@ -36,7 +36,7 @@ internal val BETHUNE_DRIFT: Map<Int, DriftSpec> = mapOf(
     // The cut: tissue, not a vessel; the few red cells in the cleft are part of the scene.
     7 to DriftSpec.NONE,
     // Septicaemia: sluggish venous blood (the neutrophils are drawn by the scene).
-    8 to DriftSpec.of(BodyField.RED_CELL to 0.93f, BodyField.PLATELET to 0.07f, density = 0.55f, flow = 0.55f, oxy = false),
+    8 to DriftSpec.of(BodyField.RED_CELL to 0.93f, BodyField.PLATELET to 0.07f, density = 0.4f, flow = 0.55f, oxy = false),
 )
 
 // ------------------------------------------------------------------ palette
@@ -77,7 +77,7 @@ internal val T3_COLD = floatArrayOf(0.24f, 0.33f, 0.52f, 1f)
 internal val T3_STORED_RBC = floatArrayOf(0.50f, 0.06f, 0.12f, 1f)
 internal val T3_PACKED = floatArrayOf(0.40f, 0.05f, 0.09f, 1f)
 internal val T3_PLASMA = floatArrayOf(0.96f, 0.86f, 0.50f, 1f)
-internal val T3_PLASMA_BG = floatArrayOf(0.80f, 0.78f, 0.60f, 1f)
+internal val T3_PLASMA_BG = floatArrayOf(0.66f, 0.70f, 0.78f, 1f)
 internal val T3_COLD_RIM = floatArrayOf(0.60f, 0.75f, 1f, 1f)
 internal val T3_GLASS_COLDER = floatArrayOf(0.55f, 0.72f, 0.98f, 1f)
 internal val T3_FROST = floatArrayOf(0.85f, 0.92f, 1f, 1f)
@@ -1350,7 +1350,7 @@ internal fun StereoBodyRenderer.drawStored(n: TourNode, i: Int, seconds: Float) 
     drawMesh(cached("st_glass") { storedMesh(b, um, 6) }, T3_GLASS_COLDER, T3_COLD_RIM, 0.5f, 0f, 0.4f)
     drawMesh(cached("st_frost") { storedMesh(b, um, 11) }, T3_FROST, T3_FROST, 0.7f, 0f, 0.5f)
     // ...and the cold light over everything: a faint blue cast on the whole store.
-    fillLumen("st_cold", b, -8f, 34f, 0.72f, T3_COLD_RIM, 0.14f, 0.3f)
+    fillLumen("st_cold", b, -8f, 34f, 0.72f, T3_COLD_RIM, 0.2f, 0.3f)
     drawMesh(cached("st_glint") { storedMesh(b, um, 7) }, T3_STEEL_EDGE, T3_STEEL_EDGE, 0.45f + 0.1f * sin(seconds * 0.4f), 0f, 0.8f)
     GLES20.glDepthMask(true)
 }
@@ -1425,7 +1425,7 @@ private fun StereoBodyRenderer.storedMesh(b: Float, um: Float, part: Int): T3Mes
             val cr = java.util.Random(23)
             val patches = listOf(floatArrayOf(0.5f, -2.3f), floatArrayOf(4.5f, 1.3f), floatArrayOf(8.2f, -1.6f), floatArrayOf(11f, 0.8f))
             for ((pi, pc) in patches.withIndex()) {
-                val nCells = 5 + (pi * 3) % 4
+                val nCells = 4 + (pi * 3) % 3
                 for (k in 0 until nCells) {
                     val ang = k * 2.399f; val rr = 0.5f + 0.65f * sqrt(k.toFloat())
                     val f = rfv(b, pc[0] + cos(ang) * rr)
@@ -2682,8 +2682,9 @@ internal fun StereoBodyRenderer.drawSepsis(n: TourNode, i: Int, seconds: Float) 
         val (c, nrm, f) = pm
         val reach = 0.5f + 0.4f * sin(seconds * 0.6f + w * 1.7f)
         val r = 13f / 2f / um
-        val p = c + nrm * (r * (0.75f + reach * 0.35f)) + f.d * (r * 0.3f)
-        drawScaled(sphere, p, nrm, f.d, r * 0.42f, r * 0.34f, r * (0.35f + reach * 0.3f), T3_LEUKOCYTE, T3_LEUKOCYTE, 1f, 0.1f)
+        // (a flattened lamellipodium spreading along the wall from the cell's leading edge)
+        val p = c + f.d * (r * (0.75f + reach * 0.3f)) + nrm * (r * 0.15f)
+        drawScaled(sphere, p, f.d, nrm, r * 0.5f, r * 0.22f, r * (0.3f + reach * 0.25f), T3_LEUKOCYTE, T3_LEUKOCYTE, 1f, 0.1f)
     }
     // The bacteria: a handful of short chains (2-8 cocci), dividing; every 8 s one is engulfed by a
     // neutrophil (drawn into its pseudopod over 2 s) and another arrives from upstream.
@@ -2705,9 +2706,9 @@ internal fun StereoBodyRenderer.drawSepsis(n: TourNode, i: Int, seconds: Float) 
         var alpha = 1f
         if (eatenNow) {
             // drawn into the pseudopod of the nearest neutrophil
-            val (c, nrm, _) = pmns[ev % pmns.size]
+            val (c, nrm, pf) = pmns[ev % pmns.size]
             val q = smooth01((evT - 5f) / 2f)
-            p = lerpV(p, c + nrm * (13f / 2f / um * 0.4f), q)
+            p = lerpV(p, c + pf.d * (13f / 2f / um * 0.9f) + nrm * (13f / 2f / um * 0.2f), q)
             alpha = 1f - smooth01((evT - 7f) / 1f)
         }
         val tumble = seconds * 0.2f + k * 1.3f
