@@ -2980,8 +2980,11 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
     fun wz(x: Float, z: Float) = bz + az * (x + sway) * H + tz * z * H
     fun wy(y: Float) = by + y * H
     val yaw = atan2(tx, tz) * 180f / PI.toFloat()
+    // Small parts use the low-poly sphere; only big shells whose silhouettes show get the smooth one
+    // (the look-back is otherwise the heaviest frame of the tour on a fanless device).
     fun part(x: Float, y: Float, z: Float, rx: Float, ry: Float, rz: Float, col: FloatArray, acc: FloatArray, a: Float, pat: Float = 0f, glow: Float = 0f) =
-        drawSphereAt(wx(x, z), wy(y), wz(x, z), rx * H, ry * H, rz * H, col, acc, a * alpha, yaw, 0f, 1f, 0f, sphere, pat, glow)
+        drawSphereAt(wx(x, z), wy(y), wz(x, z), rx * H, ry * H, rz * H, col, acc, a * alpha, yaw, 0f, 1f, 0f,
+            if (max(rx, max(ry, rz)) * H > 0.9f) sphere else blob, pat, glow)
     /** A smooth capsule between two figure-space points (limbs, torso, vessels). */
     fun seg(x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float, r: Float, col: FloatArray, acc: FloatArray, a: Float, glow: Float = 0f) {
         val px0 = wx(x0, z0); val py0 = wy(y0); val pz0 = wz(x0, z0)
@@ -3066,16 +3069,15 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
     val sk = COL_SKIN_SHELL; val rim = COL_SKIN_RIM
     part(0f, 0.928f, 0f, 0.056f, 0.068f, 0.064f, sk, rim, 0.3f, glow = 0.35f)
     // A face: eyes (sclera + iris), the nose and the lips, so she reads as a person, not a mannequin.
-    for (sgn in SIGNS) {
+    if (quality == 0) for (sgn in SIGNS) {
         part(sgn * 0.021f, 0.938f, 0.052f, 0.009f, 0.006f, 0.006f, COL_SCLERA, COL_LAMP, 0.9f, 0f, 0.3f)
         part(sgn * 0.021f, 0.938f, 0.057f, 0.0045f, 0.0045f, 0.003f, COL_IRIS, COL_LAMP, 1f, 0f, 0.2f)
     }
     part(0f, 0.922f, 0.062f, 0.008f, 0.013f, 0.009f, sk, rim, 0.6f, glow = 0.35f)                          // nose
     part(0f, 0.902f, 0.056f, 0.015f, 0.0045f, 0.006f, COL_LIPS, COL_LAMP, 0.9f, 0f, 0.3f)                  // lips                                            // head
     seg(0f, 0.845f, 0f, 0f, 0.878f, 0f, 0.028f, sk, rim, 0.3f, glow = 0.35f)                                              // neck
-    seg(0f, 0.53f, 0f, 0f, 0.78f, 0f, 0.075f, sk, rim, 0.26f, glow = 0.35f)                                               // trunk core
     part(0f, 0.735f, 0f, 0.115f, 0.095f, 0.072f, sk, rim, 0.24f, glow = 0.35f)                                            // chest and shoulders
-    part(0f, 0.49f, 0f, 0.118f, 0.06f, 0.068f, sk, rim, 0.26f, glow = 0.35f)                                              // pelvis
+    part(0f, 0.545f, 0f, 0.112f, 0.105f, 0.066f, sk, rim, 0.26f, glow = 0.35f)                             // abdomen and pelvis, one shell
     for (sgn in SIGNS) {
         seg(sgn * 0.13f, 0.805f, 0f, sgn * 0.155f, 0.635f, 0f, 0.034f, sk, rim, 0.3f, glow = 0.35f)                       // upper arm
         seg(sgn * 0.155f, 0.635f, 0f, sgn * 0.17f, 0.47f, 0.01f, 0.027f, sk, rim, 0.3f, glow = 0.35f)                     // forearm
