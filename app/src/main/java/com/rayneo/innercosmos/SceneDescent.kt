@@ -4585,7 +4585,7 @@ private val BODY_MARKS: Map<Int, Array<BodyMark>> = mapOf(
         BodyMark(-0.020f, 0.975f, 0.030f, 0.004f),     //   a carbon atom
         BodyMark(0f, 0.6f, 0.04f)),                    // (the look-back itself: not marked)
     2 to arrayOf(
-        BodyMark(0f, 0.893f, 0.058f),                  // mouth
+        BodyMark(0f, 0.893f, 0.058f, 0.02f),           // mouth: a ring round the lips, clear of the wiping hand
         BodyMark(0.058f, 0.662f, 0.05f),               // stomach
         BodyMark(-0.012f, 0.56f, 0.052f),              // small intestine
         BodyMark(0.076f, 0.58f, 0.03f),                // phage, in the descending colon
@@ -4616,7 +4616,7 @@ private val BODY_MARKS: Map<Int, Array<BodyMark>> = mapOf(
 private val BODY_ROUTES: Map<Int, Map<Int, List<FloatArray>>> = mapOf(
     1 to mapOf(
         0 to listOf(floatArrayOf(0f, 0.915f, 0.06f), floatArrayOf(0f, 0.912f, -0.004f), floatArrayOf(0f, 0.85f, -0.012f), floatArrayOf(0f, 0.845f, 0.018f)),
-        1 to listOf(floatArrayOf(0f, 0.785f, 0f), floatArrayOf(-0.016f, 0.768f, -0.004f), floatArrayOf(-0.030f, 0.752f, 0.012f))),
+        1 to listOf(floatArrayOf(0f, 0.785f, 0f), floatArrayOf(-0.007f, 0.771f, -0.003f), floatArrayOf(-0.030f, 0.752f, 0.012f))),
     2 to mapOf(
         0 to listOf(floatArrayOf(0f, 0.893f, 0.03f), floatArrayOf(0f, 0.885f, -0.008f), floatArrayOf(0f, 0.835f, -0.018f), floatArrayOf(0.004f, 0.75f, -0.022f),
             floatArrayOf(0.006f, 0.71f, -0.02f), floatArrayOf(0.04f, 0.693f, -0.002f))),
@@ -4838,7 +4838,8 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     for (e in listOf(v3(-0.030f, 0.782f, -0.004f), v3(-0.030f, 0.752f, 0.012f), v3(-0.028f, 0.735f, -0.012f))) tube(listOf(rMain, e), 0.004f, COL_CARTILAGE_LB)  // upper, middle, lower lobe
     for (e in listOf(v3(0.040f + mx, 0.775f, 0f), v3(0.040f + mx, 0.745f, -0.012f))) tube(listOf(lMain, e), 0.004f, COL_CARTILAGE_LB)                             // upper, lower lobe
     // Oesophagus: behind the trachea, down through the diaphragm and over to the cardia on her left.
-    tube(spline(listOf(v3(0f, 0.87f, -0.012f), v3(0f, 0.835f, -0.018f), v3(0.004f, 0.75f, -0.022f), v3(0.006f, 0.71f, -0.02f), v3(0.04f, 0.693f, -0.002f)), 6), 0.0065f, COL_OESOPHAGUS)
+    tube(spline(listOf(v3(0f, 0.87f, -0.012f), v3(0f, 0.835f, -0.018f), v3(0.004f, 0.75f, -0.022f), v3(0.006f, 0.71f, -0.02f)), 6), 0.0065f, COL_OESOPHAGUS)
+    // (its short abdominal stretch, below the hiatus, moves with the stomach; see below)
 
     // ---- lungs inside the ribs: the right larger (three lobes), the left narrower with the cardiac
     // notch; apices above the clavicles, bases on the domes. Fissures as dark lines on the surface.
@@ -4907,14 +4908,17 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     part(0.018f, 0.682f, 0.030f, 0.042f, 0.018f, 0.028f, COL_ORG_LIVER, COL_LAMP, 1f)                      //   left lobe
     part(-0.035f, 0.632f, 0.040f, 0.008f, 0.014f, 0.008f, COL_GALLBLADDER, COL_LAMP, 1f)                   // gallbladder
     tube(listOf(v3(-0.033f, 0.625f, 0.036f), v3(-0.028f, 0.61f, 0.02f)), 0.002f, COL_GALLBLADDER)          //   bile duct
+    if (him) s = s0                               // (under his fixed left dome his stomach stays put)
+    tube(spline(listOf(v3(0.006f, 0.712f, -0.02f), v3(0.02f, 0.70f, -0.012f), v3(0.04f, 0.693f, -0.002f)), 4), 0.0065f, COL_OESOPHAGUS)  // abdominal oesophagus to the cardia
     part(0.058f, if (him) 0.690f else 0.682f, 0f, 0.022f, 0.022f, 0.022f, COL_STOMACH_LB, COL_LAMP, 1f)     // stomach: fundus under the dome,
     s.ellAxis(v3(0.055f, 0.655f, 0.022f), v3(-0.25f, -1f, 0.1f), v3(1f, 0f, 0f), 0.026f, 0.038f, 0.024f, COL_STOMACH_LB, COL_LAMP, 1f, 0f, 0.12f)   // body,
     s.tube(spline(listOf(v3(0.046f, 0.625f, 0.028f), v3(0.03f, 0.618f, 0.034f), v3(0.012f, 0.628f, 0.035f)), 5), { k -> 0.014f - k * 0.0006f }, COL_STOMACH_LB, COL_LAMP, 1f, 0f, 0.12f)  // antrum to pylorus
+    s = if (him) s0 else ab                       // (his duodenum and pancreas stay with his still stomach)
     val pylorus = v3(0.012f, 0.628f, 0.035f); val djFlexure = v3(0.022f, 0.592f, 0.010f)
     tube(spline(listOf(pylorus, v3(-0.022f, 0.622f, 0.025f), v3(-0.030f, 0.600f, 0.012f), v3(-0.012f, 0.585f, 0.008f), djFlexure), 5), 0.0075f, COL_GUT_LB)  // duodenum
     part(-0.010f, 0.607f, -0.005f, 0.014f, 0.012f, 0.010f, COL_PANCREAS, COL_LAMP, 1f, 0.6f)               // pancreas: head,
     s.tube(spline(listOf(v3(-0.004f, 0.612f, -0.008f), v3(0.03f, 0.63f, -0.012f), v3(0.075f, 0.655f, -0.03f)), 5), { k -> 0.009f - k * 0.0003f }, COL_PANCREAS, COL_LAMP, 1f, 0.6f, 0.12f)  // body and tail
-    part(0.088f, 0.660f, -0.035f, 0.018f, 0.032f, 0.012f, COL_SPLEEN, COL_LAMP, 1f)                       // spleen
+    (if (him) s0 else s).ell(0.088f, 0.660f, -0.035f, 0.018f, 0.032f, 0.012f, COL_SPLEEN, COL_LAMP, 1f, 0f, 0.12f)   // spleen
     s = s0
     for (sgn in SIGNS) {
         val ky = if (sgn < 0f) 0.625f else 0.635f                                                            // the right kidney lower, under the liver
@@ -4927,7 +4931,8 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     for (k in 0 until 150) { val t = k / 149f
         coil.add(v3(0.046f * sin(TAU * 2.5f * t), 0.597f - 0.075f * t + 0.005f * sin(TAU * 9f * t), 0.026f + 0.012f * cos(TAU * 7f * t))) }
     coil.add(v3(-0.055f, 0.540f, 0.015f))
-    s.tube(coil, { 0.0085f }, COL_GUT_LB, COL_LAMP, 1f, 0.6f, 0.12f)
+    (if (him) s0 else ab).tube(coil.subList(0, 9), { 0.0085f }, COL_GUT_LB, COL_LAMP, 1f, 0.6f, 0.12f)   // (the jejunum's start moves with the duodenum)
+    s.tube(coil.subList(7, coil.size), { 0.0085f }, COL_GUT_LB, COL_LAMP, 1f, 0.6f, 0.12f)
     // Large intestine: caecum and appendix low on her right, ascending colon, hepatic flexure under
     // the liver, the transverse colon sagging, the splenic flexure higher on her left, descending
     // colon, sigmoid, rectum and anal canal. Haustra bulge along it.
