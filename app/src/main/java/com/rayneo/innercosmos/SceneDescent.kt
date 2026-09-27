@@ -70,6 +70,8 @@ internal val T1_DNA = floatArrayOf(1f, 0.86f, 0.52f, 1f)
 internal val T1_TRNA2 = floatArrayOf(1f, 0.45f, 0.55f, 1f)
 internal val T1_LIP = floatArrayOf(0.86f, 0.44f, 0.46f, 1f)
 internal val T1_PUMP_DIM = floatArrayOf(0.85f, 0.55f, 0.38f, 1f)
+internal val T1_RING_UNDER = floatArrayOf(0.95f, 0.86f, 0.84f, 1f)
+internal val T1_DUSTG = floatArrayOf(0.30f, 0.20f, 0.10f, 1f)
 internal val T1_DERMIS = floatArrayOf(0.93f, 0.60f, 0.60f, 1f)
 internal val T1_FAT = floatArrayOf(0.98f, 0.88f, 0.52f, 1f)
 internal val T1_MUCOSA = floatArrayOf(0.95f, 0.60f, 0.62f, 1f)
@@ -234,7 +236,7 @@ private fun StereoBodyRenderer.t1Color(
 }
 
 /** Per-frame points/lines in world space. */
-private val t1Dyn = DynMesh(640)
+private val t1Dyn = DynMesh(1200)
 private fun StereoBodyRenderer.t1DynDraw(verts: Int, mode: Int, size: Float, alpha: Float = 1f, depthWrite: Boolean = true) {
     if (verts <= 0 || alpha <= 0.004f) return
     Matrix.setIdentityM(model, 0)
@@ -665,7 +667,7 @@ private fun StereoBodyRenderer.t1FlowCells(b: T1CellBatch, pMin: Float, pMax: Fl
 // converge toward the nose tip, a columella widening into its footplates, alar rims and alar-facial
 // grooves, the tip lobule, and the upper lip with its philtrum; pores and fine vellus hairs on the
 // skin; vibrissae sloping out of the vestibule and swaying with the breath. A 6 mm punch biopsy is
-// lifted out of the lip, and beside it a x50 inset (joined by leader lines, with a 0.1 mm scale bar)
+// lifted out of the lip, and beside it a x100 inset (joined by leader lines, with a 0.1 mm scale bar)
 // shows its cut face: stratum corneum, the living epidermis - about as thick as a sheet of paper -
 // with melanocytes along its base handing melanin up to the keratinocytes above, and the dermis
 // with its papillae and capillary loops. The craft's nostril is centred on its lane.
@@ -674,7 +676,7 @@ private fun StereoBodyRenderer.t1FlowCells(b: T1CellBatch, pMin: Float, pMax: Fl
 private const val T1_FACE_P = 0.62f
 private const val T1_TILT = -26f * DEG
 private val T1_TILT_K = tan(26f * DEG)
-private const val T1_NOS_ROT = 17f * DEG
+private const val T1_NOS_ROT = 30f * DEG
 private const val T1_MID = 0.95f
 
 /** The craft's nostril outline: a teardrop, its apex turned 17 degrees toward the midline. */
@@ -694,6 +696,8 @@ private fun t1NosDist(X: Float, Y: Float, cy: Float, rot: Float, ax: Float, ay: 
 }
 
 private fun t1OtherNostril(X: Float, Y: Float): Float = t1NosDist(X, Y, 1.9f, -T1_NOS_ROT, 0.85f, 0.52f)
+private const val T1_PIT_X = -2.0f
+private const val T1_PIT_Y = -0.55f
 
 /** Skin depth along the rail (negative = toward the viewer) at face coordinates (X, Y). */
 private fun t1FaceDepth(X: Float, Y: Float): Float {
@@ -702,7 +706,11 @@ private fun t1FaceDepth(X: Float, Y: Float): Float {
     val xp = X - 0.4f
     val wx = (2.1f - 0.35f * xp).coerceAtLeast(0.5f)
     h -= 1.7f * exp(-(t1Q4(xp / 2.3f) + t1Q4(ym / wx)))                // the nasal base projects ~1.5 cm
-    h -= 0.5f * exp(-((X - 2.0f) * (X - 2.0f) / 0.5f + ym * ym / 0.6f)) // lobule (tip)
+    h -= 0.8f * exp(-((X - 2.0f) * (X - 2.0f) / 0.5f + ym * ym / 0.5f)) // lobule (tip)
+    // the nasal dorsum rising from the tip toward the root of the nose, and the nose's side walls
+    val dor = t1Smooth(1.6f, 2.6f, X) * (1f - t1Smooth(5.6f, 6.6f, X))
+    h -= dor * (0.9f * exp(-ym * ym / 0.32f) + 0.9f * exp(-ym * ym / 2.2f) * (1f - t1Smooth(2.5f, 5.5f, X) * 0.5f))
+    h += 1.5f * (ym / 5.45f).pow(2)                                    // the cheeks curve back
     for (k in 0..1) {
         val cy = if (k == 0) 0f else 1.9f; val rot = if (k == 0) T1_NOS_ROT else -T1_NOS_ROT
         val e = t1NosDist(X, Y, cy, rot, 0.85f, 0.55f)
@@ -710,7 +718,7 @@ private fun t1FaceDepth(X: Float, Y: Float): Float {
         h -= 0.14f * exp(-q * q)                                         // alar rim
         val lateral = if (k == 0) t1Smooth(0.2f, -0.4f, Y) else t1Smooth(1.7f, 2.3f, Y)
         val g = (t1NosDist(X, Y, cy, rot, 1.1f, 0.8f) - 1.55f) / 0.16f
-        h += 0.25f * exp(-g * g) * lateral                               // alar-facial groove
+        h += 0.35f * exp(-g * g) * lateral                               // alar-facial groove
     }
     // columella footplates: the columella widens as it meets the lip
     h -= 0.12f * exp(-((X + 0.95f) * (X + 0.95f) / 0.08f + ym * ym / 0.12f))
@@ -719,6 +727,9 @@ private fun t1FaceDepth(X: Float, Y: Float): Float {
     h += 0.12f * exp(-((X + 2.0f) * (X + 2.0f) / 0.8f + ym * ym / 0.05f))
     for (sg in SIGNS) h -= 0.07f * exp(-((X + 2.0f) * (X + 2.0f) / 0.8f + (ym - sg * 0.35f) * (ym - sg * 0.35f) / 0.02f))
     h -= 0.06f * exp(-((X + 3.15f) * (X + 3.15f) / 0.015f)) * exp(-ym * ym / 2.5f)
+    // the punch-biopsy pit: a 6 mm cylindrical defect, 2 mm deep, cut into the lip
+    val pr = sqrt((X - T1_PIT_X).pow(2) + (Y - T1_PIT_Y).pow(2))
+    h += 0.25f * t1Smooth(0.42f, 0.34f, pr)
     return h
 }
 
@@ -726,7 +737,7 @@ private fun t1FaceDepth(X: Float, Y: Float): Float {
 private fun t1PatchEdge(dx: Float, dy: Float): Float {
     // distance along the ray (dx, dy) from the craft's nostril centre to the ellipse
     // ((X - x0)/ax)^2 + ((Y - y0)/ay)^2 = 1 with x0 = -0.6, y0 = mid, ax = 3.0, ay = 3.2
-    val x0 = -0.6f; val y0 = T1_MID; val ax = 3.0f; val ay = 3.2f
+    val x0 = 1.25f; val y0 = T1_MID; val ax = 5.25f; val ay = 5.45f
     val a = (dx / ax).pow(2) + (dy / ay).pow(2)
     val b = 2f * ((-x0) * dx / (ax * ax) + (-y0) * dy / (ay * ay))
     val c = (x0 / ax).pow(2) + (y0 / ay).pow(2) - 1f
@@ -741,7 +752,8 @@ private fun t1FacePoint(u: Float, v: Float, tmp: FloatArray, out: FloatArray) {
     val r = r0 + (R - r0) * u.pow(1.5f)
     val X = dx * r; val Y = dy * r
     var h = t1FaceDepth(X, Y)
-    h += 1.5f * t1Smooth(1.0f, 0.72f, t1OtherNostril(X, Y))           // the other nostril: a pit (dark plug below)
+    val od = t1OtherNostril(X, Y)
+    h += 0.4f * t1Smooth(1.08f, 0.96f, od) + 3.2f * t1Smooth(0.96f, 0.85f, od)   // the other nostril: its rim rolls into its vestibule
     if (u < 0.07f) { val k = 1f - u / 0.07f; h += 0.4f * k * k }       // our rim rolls into the vestibule
     out[0] = X; out[1] = Y; out[2] = -h
 }
@@ -784,15 +796,16 @@ private fun StereoBodyRenderer.t1FaceMeshes(): Array<ColorVboMesh> {
     val pores = ArrayList<Float>(); val vellus = ArrayList<Float>()
     val pc = floatArrayOf(0.46f, 0.29f, 0.24f, 0.95f); val vc = floatArrayOf(0.70f, 0.52f, 0.40f, 0.9f)
     var placed = 0; var tries = 0
-    while (placed < 700 && tries < 30000) {
+    while (placed < 1100 && tries < 40000) {
         tries++
-        val X = -3.5f + rnd.nextFloat() * 6f; val Y = T1_MID + (rnd.nextFloat() * 2f - 1f) * 3.1f
+        val X = -4f + rnd.nextFloat() * 10.5f; val Y = T1_MID + (rnd.nextFloat() * 2f - 1f) * 5.45f
         val rr = sqrt(X * X + Y * Y)
         if (rr < 1e-3f) continue
         if (rr > t1PatchEdge(X / rr, Y / rr) * 0.97f) continue
         t1NostrilRim(atan2(Y, X), tmp)
         if (rr < sqrt(tmp[0] * tmp[0] + tmp[1] * tmp[1]) * 1.3f) continue
         if (t1OtherNostril(X, Y) < 1.3f) continue
+        if ((X - T1_PIT_X).pow(2) + (Y - T1_PIT_Y).pow(2) < 0.25f) continue
         val xp = X - 0.4f; val yp = Y - T1_MID
         val m = exp(-(t1Q4(xp / 2.3f) + t1Q4(yp / (2.1f - 0.35f * xp).coerceAtLeast(0.5f))))
         if (rnd.nextFloat() > 0.3f + 0.7f * m) continue
@@ -815,7 +828,7 @@ private fun StereoBodyRenderer.t1FaceMeshes(): Array<ColorVboMesh> {
 
 /** The biopsy core in face coordinates: e1(0..2), e2(3..5), top centre(6..8), axis k(9..11), surface point(12..14). */
 private fun t1CoreFrame(): FloatArray {
-    val Xc = -2.0f; val Yc = -0.55f
+    val Xc = T1_PIT_X; val Yc = T1_PIT_Y
     val sz = -t1FaceDepth(Xc, Yc)
     var kx = -0.3f; var ky = -0.25f; var kz = 1f
     val kl = sqrt(kx * kx + ky * ky + kz * kz); kx /= kl; ky /= kl; kz /= kl
@@ -826,12 +839,13 @@ private fun t1CoreFrame(): FloatArray {
     return floatArrayOf(e1x, e1y, e1z, e2x, e2y, e2z, Xc + kx * lift, Yc + ky * lift, sz + kz * lift, kx, ky, kz, Xc, Yc, sz)
 }
 
-// The x50 inset, in its own coordinates: x across (Y of the face), y = depth into the skin (down the
+// The x100 inset, in its own coordinates: x across (Y of the face), y = depth into the skin (down the
 // screen = -X of the face), z toward the viewer. 1 unit of inset = 20 um of skin (0.1 mm = 5 units x
 // 0.125). The slab is 1.5 wide (0.24 mm), 1.2 deep (0.19 mm), 0.35 thick.
-private const val T1_INSET_X = -0.9f       // face X of the slab's skin surface
-private const val T1_INSET_Y = -2.9f       // face Y of the slab's centre
-private const val T1_INSET_Z = 3.2f        // toward the viewer
+private const val T1_INSET_X = 1.2f        // face X of the slab's skin surface
+private const val T1_INSET_Y = -4.3f       // face Y of the slab's centre
+private const val T1_INSET_Z = 3.6f        // toward the viewer
+private const val T1_INS_K = 2f           // the slab drawn twice as large (x100 overall)
 private const val T1_INSET_W = 1.5f
 private const val T1_EPI = 0.62f           // epidermis 0.1 mm at x50 (with the stratum corneum)
 private const val T1_SC = 0.08f
@@ -843,7 +857,7 @@ private class T1Inset(val corneum: T1Batch, val epi: T1Batch, val dermis: T1Batc
 private fun t1BuildInset(): T1Inset {
     val W = T1_INSET_W; val hw = W / 2f; val D = 1.2f; val T = 0.35f
     // face coords: X = T1_INSET_X - y, Y = T1_INSET_Y + x, zloc = T1_INSET_Z + z
-    fun fc(x: Float, y: Float, z: Float, out: FloatArray) { out[0] = T1_INSET_X - y; out[1] = T1_INSET_Y + x; out[2] = T1_INSET_Z + z }
+    fun fc(x: Float, y: Float, z: Float, out: FloatArray) { out[0] = T1_INSET_X - y * T1_INS_K; out[1] = T1_INSET_Y + x * T1_INS_K; out[2] = T1_INSET_Z + z * T1_INS_K }
     val cor = T1Builder(); val epi = T1Builder(); val der = T1Builder(); val top = T1Builder(); val mel = T1Builder()
     val q = FloatArray(3)
     // cut face (z = +T/2) and a sliver of the side face
@@ -893,7 +907,7 @@ private fun t1BuildInset(): T1Inset {
     while (mx < hw - 0.08f) {
         val my = t1Junction(mx) - 0.035f
         fc(mx, my, T / 2f + 0.01f, q)
-        mel.ellipsoid(q[0], q[1], q[2], floatArrayOf(0f, 0.035f, 0f), floatArrayOf(-0.025f, 0f, 0f), floatArrayOf(0f, 0f, 0.02f), 5, 8)
+        mel.ellipsoid(q[0], q[1], q[2], floatArrayOf(0f, 0.06f * T1_INS_K, 0f), floatArrayOf(-0.035f * T1_INS_K, 0f, 0f), floatArrayOf(0f, 0f, 0.03f * T1_INS_K), 5, 8)
         for (d in -1..1) {
             val ex = mx + d * 0.07f; val ey = my - 0.13f - 0.03f * (1 - abs(d))
             add(lines, mx, my, melDen); add(lines, ex, ey, melDen)
@@ -941,7 +955,7 @@ private fun t1BuildLeaders(): LineMesh {
         val sy = c[7] + c[1] * (a + 0.0f) + c[4] * (b - 0.2f) + c[10] * 0.004f
         val sz = c[8] + c[2] * (a + 0.0f) + c[5] * (b - 0.2f) + c[11] * 0.004f
         val t = corners[k]
-        add(sx, sy, sz); add(T1_INSET_X - t[1], T1_INSET_Y + t[0], T1_INSET_Z + t[2])
+        add(sx, sy, sz); add(T1_INSET_X - t[1] * T1_INS_K, T1_INSET_Y + t[0] * T1_INS_K, T1_INSET_Z + t[2] * T1_INS_K)
     }
     // the little square itself
     val sqp = Array(4) { k -> val a = src[k][0]; val b = src[k][1]
@@ -972,7 +986,7 @@ internal fun StereoBodyRenderer.drawThreshold(n: TourNode, i: Int, seconds: Floa
         val bands = floatArrayOf(0f, 0.82f, 0.91f, 1f)
         val bandA = floatArrayOf(1f, 0.55f, 0.2f)
         for (b in 0..2) {
-            val skin = t1Mesh("face$b") { ParamMesh(if (b == 0) 50 else 5, 96) { u, v, out -> t1FacePoint(bands[b] + (bands[b + 1] - bands[b]) * u, v, tmp, out) } }
+            val skin = t1Mesh("face$b") { ParamMesh(if (b == 0) 72 else 5, 144) { u, v, out -> t1FacePoint(bands[b] + (bands[b + 1] - bands[b]) * u, v, tmp, out) } }
             if (b > 0 || face < 0.999f) GLES20.glDepthMask(false)
             t1Lit(skin, fT, 0f, 0f, 0f, T1_SKIN, T1_SKIN_RIM, face * bandA[b], 0.12f)
             GLES20.glDepthMask(true)
@@ -991,9 +1005,16 @@ internal fun StereoBodyRenderer.drawThreshold(n: TourNode, i: Int, seconds: Floa
         val lines = t1Mesh("face.lines") { t1FaceMeshes() }
         if (face < 0.999f) GLES20.glDepthMask(false)
         t1Lit(vest, fT, 0f, 0f, 0f, T1_VESTIBULE, T1_MUCOSA_RIM, face, 0.12f)
-        // the other nostril's dark lumen
-        t1Shape(t1Disc(), fT, t1FaceDepth(0f, 1.9f) + 0.45f, 0f, 1.9f, 1f, 0f, 0f, 0f, cos(-T1_NOS_ROT), sin(-T1_NOS_ROT),
-            0.48f, 0.8f, 1f, T1_HOLE, T1_HOLE, face)
+        // the other nostril: the same vestibule, mirrored across the columella, its lumen dark red deep inside
+        val vest2 = t1Mesh("vestibule2") { ParamMesh(10, 48) { u, v, out ->
+            t1NostrilRim(v * TAU, tmp)
+            val sh = 1f - 0.15f * u
+            val X = tmp[0]; val Y = 2f * T1_MID - tmp[1]
+            out[0] = X * sh - T1_TILT_K * 1.7f * u; out[1] = 2f * T1_MID - tmp[1] * sh; out[2] = -(t1FaceDepth(X, Y) + 0.4f + 1.7f * u)
+        } }
+        t1Lit(vest2, fT, 0f, 0f, 0f, T1_VESTIBULE, T1_MUCOSA_RIM, face, 0.12f)
+        t1Shape(t1Disc(), fT, t1FaceDepth(0f, 1.9f) + 2.08f, -T1_TILT_K * 1.7f, 1.9f, 1f, 0f, 0f, 0f, cos(-T1_NOS_ROT), sin(-T1_NOS_ROT),
+            0.44f, 0.74f, 1f, T1_MEATUS, T1_MEATUS, face)
         // biopsy core: fat, dermis, epidermis top, and the dark hole it came out of
         val c = t1CoreFrame()
         val kA = -c[11]; val kS = c[9]; val kU = c[10]
@@ -1006,9 +1027,14 @@ internal fun StereoBodyRenderer.drawThreshold(n: TourNode, i: Int, seconds: Floa
         at(0.1285f, q); t1Shape(cyl, fT, q[0], q[1], q[2], kA, kS, kU, e1A, e1S, e1U, 0.36f, 0.36f, 0.1215f, T1_DERMIS, T1_DERMIS, face, 0.15f)
         at(0.0035f, q); t1Shape(cyl, fT, q[0], q[1], q[2], kA, kS, kU, e1A, e1S, e1U, 0.365f, 0.365f, 0.0065f, T1_EPIDERMIS, T1_SKIN_RIM, face, 0.2f)
         at(0f, q); t1Shape(disc, fT, q[0], q[1], q[2], kA, kS, kU, e1A, e1S, e1U, 0.36f, 0.36f, 1f, T1_SKIN, T1_SKIN_RIM, face, 0.12f)
-        t1Shape(disc, fT, -(c[14] + 0.012f), c[12], c[13], -1f, 0f, 0f, 0f, 1f, 0f, 0.36f, 0.36f, 1f, T1_HOLE, T1_HOLE, face)
+        // the pit it came out of: its wall shows the same layers, a thin epidermis over dermis over fat
+        val sf = -c[14] - 0.25f                     // the skin surface round the pit (c[14] is its floor)
+        t1Shape(cyl, fT, sf + 0.012f, c[12], c[13], 1f, 0f, 0f, 0f, 1f, 0f, 0.345f, 0.345f, 0.012f, T1_EPIDERMIS, T1_SKIN_RIM, face, 0.2f)
+        t1Shape(cyl, fT, sf + 0.084f, c[12], c[13], 1f, 0f, 0f, 0f, 1f, 0f, 0.345f, 0.345f, 0.06f, T1_DERMIS, T1_DERMIS, face, 0.15f)
+        t1Shape(cyl, fT, sf + 0.194f, c[12], c[13], 1f, 0f, 0f, 0f, 1f, 0f, 0.345f, 0.345f, 0.05f, T1_FAT, T1_FAT, face, 0.15f)
+        t1Shape(disc, fT, sf + 0.243f, c[12], c[13], 1f, 0f, 0f, 0f, 1f, 0f, 0.345f, 0.345f, 1f, T1_FAT, T1_FAT, face, 0.1f)
         if (face < 0.999f) GLES20.glDepthMask(true)
-        // the x50 inset of the biopsy's cut face
+        // the x100 inset of the biopsy's cut face
         val ins = t1Mesh("face.inset") { t1BuildInset() }
         val inA = face * t1Smooth(0.05f, 0.25f, 1f - rp.coerceAtMost(0.5f) * 2f)
         if (inA > 0.01f) {
@@ -1018,7 +1044,7 @@ internal fun StereoBodyRenderer.drawThreshold(n: TourNode, i: Int, seconds: Floa
             t1Lit(ins.top, fT, 0f, 0f, 0f, T1_SKIN, T1_SKIN_RIM, inA, 0.25f)
             t1Lit(ins.melano, fT, 0f, 0f, 0f, T1_MELANOCYTE, T1_WHITE, inA, 0.2f)
             t1Color(ins.lines, fT, 0f, 0f, 0f, 1.5f, false, inA)
-            t1Color(ins.red, fT, 0f, 0f, 0f, 2.5f, false, inA)
+            t1Color(ins.red, fT, 0f, 0f, 0f, 3.5f, false, inA)
             t1Color(ins.dots, fT, 0f, 0f, 0f, 2.5f, true, inA)
             t1Color(t1Mesh("face.leaders") { t1BuildLeaders() }, fT, 0f, 0f, 0f, 1f, false, inA * 0.8f)
         }
@@ -1030,15 +1056,37 @@ internal fun StereoBodyRenderer.drawThreshold(n: TourNode, i: Int, seconds: Floa
         var v = 0
         val hc = floatArrayOf(0.32f, 0.22f, 0.16f, 1f)
         fun wv(x: Float, y: Float, zl: Float) { v = t1Put(d, v, fx(fT, -zl, x, y), fy(fT, -zl, x, y), fz(fT, -zl, x, y), hc, 1f) }
-        for (k in 0 until hs.root.size / 3) {
-            val sw = amp * sin(seconds * 1.1f + k * 0.9f)
-            val o = 3 * k
-            val mx = hs.mid[o] + hs.side[o] * sw * 0.4f; val my = hs.mid[o + 1] + hs.side[o + 1] * sw * 0.4f
-            val ex = hs.tip[o] + hs.side[o] * sw; val ey = hs.tip[o + 1] + hs.side[o + 1] * sw
-            wv(hs.root[o], hs.root[o + 1], hs.root[o + 2]); wv(mx, my, hs.mid[o + 2])
-            wv(mx, my, hs.mid[o + 2]); wv(ex, ey, hs.tip[o + 2])
+        for (side in 0..1) {
+            v = 0
+            fun my(y: Float) = if (side == 0) y else 2f * T1_MID - y
+            for (k in 0 until hs.root.size / 3) {
+                val sw = amp * sin(seconds * 1.1f + k * 0.9f + side)
+                val o = 3 * k
+                val mx = hs.mid[o] + hs.side[o] * sw * 0.4f; val myy = hs.mid[o + 1] + hs.side[o + 1] * sw * 0.4f
+                val ex = hs.tip[o] + hs.side[o] * sw; val ey = hs.tip[o + 1] + hs.side[o + 1] * sw
+                wv(hs.root[o], my(hs.root[o + 1]), hs.root[o + 2]); wv(mx, my(myy), hs.mid[o + 2])
+                wv(mx, my(myy), hs.mid[o + 2]); wv(ex, my(ey), hs.tip[o + 2])
+            }
+            t1DynDraw(v, GLES20.GL_LINES, 2.5f, face)
         }
-        t1DynDraw(v, GLES20.GL_LINES, 2.5f, face)
+        // the inspired air: streaks converging on the craft's nostril on the inhale
+        val insp = max(0f, sin(br * TAU))
+        if (insp > 0.05f) {
+            v = 0
+            val ac = floatArrayOf(0.9f, 0.9f, 1f, 1f)
+            for (k in 0 until 24) {
+                val ang = TAU * k / 24f + 0.3f * t1Hash(k)
+                val ph = (seconds * 0.8f + t1Hash(k + 40)) % 1f
+                val r = 3.0f - 2.4f * ph
+                val x = cos(ang) * r * 0.8f; val y = sin(ang) * r * 0.6f
+                val x2 = cos(ang) * (r - 0.3f) * 0.8f; val y2 = sin(ang) * (r - 0.3f) * 0.6f
+                val z = -(t1FaceDepth(x, y) - 0.3f - 0.4f * (1f - ph)); val z2 = -(t1FaceDepth(x2, y2) - 0.3f - 0.4f * (1f - ph) + 0.1f)
+                val a = 0.4f * insp * sin(PI_F * ph)
+                v = t1Put(d, v, fx(fT, -z, x, y), fy(fT, -z, x, y), fz(fT, -z, x, y), ac, 0f)
+                v = t1Put(d, v, fx(fT, -z2, x2, y2), fy(fT, -z2, x2, y2), fz(fT, -z2, x2, y2), ac, a)
+            }
+            t1DynDraw(v, GLES20.GL_LINES, 2f, face, depthWrite = false)
+        }
         if (quality < 2) {
             t1Color(lines[0], fT, 0f, 0f, 0f, 2f, true, face * 0.9f, depthWrite = false)   // pores
             t1Color(lines[1], fT, 0f, 0f, 0f, 1f, false, face * 0.7f, depthWrite = false) // vellus hairs
@@ -1104,22 +1152,39 @@ private fun t1MouthExit(a: Float, circles: FloatArray): Float {
     return best
 }
 
+/** Tracheal radius at rail progress p and wall angle th: D-shaped (flat posterior membranous wall), flaring a little at the carina. */
+private fun t1TrR(p: Float, th: Float, inset: Float = 0f): Float {
+    val R = T1_TR_R + 0.2f * t1Smooth(T1_CARINA - 0.12f, T1_CARINA, p) - inset
+    var a = (th / DEG) % 360f; if (a < 0f) a += 360f
+    return if (a > 225f && a < 315f) R * cos(45f * DEG) / cos((a - 270f) * DEG) else R
+}
+
 private fun StereoBodyRenderer.t1BuildTracheaMesh(): T1Trachea {
     val tube = T1Builder(); val membr = T1Builder(); val rings = T1Builder(); val shell = T1Builder(); val mucus = T1Builder()
-    // the wall: anterior and lateral mucosa over the rings, and the posterior membranous strip
-    tube.surface(70, 24) { u, v, out -> val p = T1_TR0 + (T1_CARINA - 0.02f - T1_TR0) * u; t1RailPoint(p, (-45f + 270f * v) * DEG, T1_TR_R + 0.02f, out) }
-    membr.surface(70, 6) { u, v, out -> val p = T1_TR0 + (T1_CARINA - 0.02f - T1_TR0) * u; t1RailPoint(p, (225f + 90f * v) * DEG, T1_TR_R + 0.02f, out) }
+    val pEnd = T1_CARINA - 0.02f
+    // the wall: anterior and lateral mucosa over the rings, and the flat posterior membranous strip
+    tube.surface(70, 24) { u, v, out -> val p = T1_TR0 + (pEnd - T1_TR0) * u; val th = (-45f + 270f * v) * DEG; t1RailPoint(p, th, t1TrR(p, th) + 0.02f, out) }
+    membr.surface(70, 8) { u, v, out -> val p = T1_TR0 + (pEnd - T1_TR0) * u; val th = (225f + 90f * v) * DEG; t1RailPoint(p, th, t1TrR(p, th) + 0.02f, out) }
+    // C-rings, each a little different in height; one in eight forks into two over part of its arc
+    val rnd0 = java.util.Random(21)
     for (k in 0 until T1_RINGS) {
         val pk = T1_RING0 + k * T1_RING_STEP
+        val hgt = (0.40f + 0.15f * rnd0.nextFloat()) / 16f
         rings.surface(40, 6) { u, v, out ->
             val th = (-45f + 270f * u) * DEG
-            val pp = pk + (v - 0.5f) * 0.5f / 16f
+            val pp = pk + (v - 0.5f) * hgt
             val taper = sin(PI_F * u).pow(0.15f)                        // the free ends of the C thin out
-            t1RailPoint(pp, th, T1_TR_R + 0.01f - 0.04f * sin(PI_F * v) * taper, out)
+            t1RailPoint(pp, th, t1TrR(pp, th) + 0.01f - 0.035f * sin(PI_F * v) * taper, out)
+        }
+        if (k % 8 == 3) rings.surface(16, 6) { u, v, out ->              // the fork: a second limb diverging and rejoining
+            val th = (40f + 110f * u) * DEG
+            val split = sin(PI_F * u).coerceAtLeast(0f)
+            val pp = pk + 0.3f / 16f * split + (v - 0.5f) * hgt * 0.6f
+            t1RailPoint(pp, th, t1TrR(pp, th) + 0.01f - 0.03f * sin(PI_F * v), out)
         }
     }
-    shell.surface(70, 32) { u, v, out -> val p = T1_TR0 + (T1_CARINA - 0.02f - T1_TR0) * u; t1RailPoint(p, v * TAU, T1_TR_R - 0.045f, out) }
-    mucus.surface(70, 32) { u, v, out -> val p = T1_TR0 + (T1_CARINA - 0.02f - T1_TR0) * u; t1RailPoint(p, v * TAU, T1_TR_R - 0.065f, out) }
+    shell.surface(70, 32) { u, v, out -> val p = T1_TR0 + (pEnd - T1_TR0) * u; val th = v * TAU; t1RailPoint(p, th, t1TrR(p, th, 0.045f), out) }
+    mucus.surface(70, 32) { u, v, out -> val p = T1_TR0 + (pEnd - T1_TR0) * u; val th = v * TAU; t1RailPoint(p, th, t1TrR(p, th, 0.065f), out) }
     // longitudinal elastic folds of the membranous wall
     val folds = ArrayList<Float>()
     val fc = floatArrayOf(0.95f, 0.62f, 0.62f, 0.9f)
@@ -1128,37 +1193,37 @@ private fun StereoBodyRenderer.t1BuildTracheaMesh(): T1Trachea {
         val th = (238f + 21f * k) * DEG
         for (m in 0 until 60) for (h in 0..1) {
             val p = T1_TR0 + (T1_CARINA - 0.03f - T1_TR0) * (m + h) / 60f
-            t1RailPoint(p, th, T1_TR_R - 0.05f, q); folds.add(q[0]); folds.add(q[1]); folds.add(q[2]); folds.add(fc[0]); folds.add(fc[1]); folds.add(fc[2]); folds.add(fc[3])
+            t1RailPoint(p, th, t1TrR(p, th, 0.05f), q); folds.add(q[0]); folds.add(q[1]); folds.add(q[2]); folds.add(fc[0]); folds.add(fc[1]); folds.add(fc[2]); folds.add(fc[3])
         }
     }
-    // the carina: a funnel from the tracheal wall down into the two mouths, the keel between them
+    // the carina: a funnel from the tracheal wall down into the two mouths - the right main bronchus
+    // wider (14 mm) and nearer the axis, the left narrower (11 mm) - with the keel between them
     val fcar = frameAt(T1_CARINA)
-    val circles = floatArrayOf(0f, 0f, 0.8f, -0.85f, 0f, 0.5f)          // right (on the lane), left
+    val circles = floatArrayOf(0.58f, 0f, 0.9f, -0.99f, 0f, 0.66f)
     fun capPoint(u: Float, v: Float, out: FloatArray) {
         val a = v * TAU
         val d0 = t1MouthExit(a, circles)
         val wx = cos(a); val wy = sin(a)
-        // exit from the tracheal circle (radius T1_TR_R about the origin) seen from (-0.5, 0)
-        val b = -0.5f * wx
-        val d1 = -b + sqrt(b * b - 0.25f + T1_TR_R * T1_TR_R)
+        // exit from the D-shaped tracheal outline, seen from (-0.5, 0)
+        var lo = 0f; var hi = 3f
+        repeat(24) { val m = (lo + hi) * 0.5f; val s = -0.5f + wx * m; val up = wy * m
+            if (sqrt(s * s + up * up) < t1TrR(T1_CARINA, atan2(up, s))) lo = m else hi = m }
+        val d1 = lo
         val d = d0.coerceAtMost(d1) + (d1 - d0.coerceAtMost(d1)) * u
         val s = -0.5f + wx * d; val up = wy * d
         val along = -0.35f * u * u
         out[0] = fx(fcar, along, s, up); out[1] = fy(fcar, along, s, up); out[2] = fz(fcar, along, s, up)
     }
     val cap = T1Builder(); cap.surface(6, 64) { u, v, out -> capPoint(u, v, out) }
-    // the bronchi: tubes from each mouth, the right 25 degrees toward +side (her right), the left 45
     val br = T1Builder(); val holes = T1Builder()
     fun bronchus(cs: Float, r: Float, ang: Float, len: Float) {
         val da = cos(ang); val ds = sin(ang)
         br.surface(10, 20) { u, v, out ->
             val t = len * u; val a = v * TAU
             val ca = cs + ds * t; val al = da * t
-            // cross-section perpendicular to the tube: (side, along) rotated, up unchanged
             val ls = cos(a) * r * da; val la = -cos(a) * r * ds; val lu = sin(a) * r
             out[0] = fx(fcar, al + la, ca + ls, lu); out[1] = fy(fcar, al + la, ca + ls, lu); out[2] = fz(fcar, al + la, ca + ls, lu)
         }
-        // the next division at its far end: two lumens under a small keel
         val ea = da * len; val es = cs + ds * len
         for (m in 0..1) {
             val o = (if (m == 0) 0.3f else -0.3f) * r / 0.8f
@@ -1169,26 +1234,33 @@ private fun StereoBodyRenderer.t1BuildTracheaMesh(): T1Trachea {
             val ez = floatArrayOf((fcar.dx * da + fcar.sx * ds) * 0.02f, (fcar.dy * da + fcar.sy * ds) * 0.02f, (fcar.dz * da + fcar.sz * ds) * 0.02f)
             holes.ellipsoid(px, py, pz, ex, ey, ez, 4, 16)
         }
-        // an end wall around them
         br.surface(3, 24) { u, v, out ->
             val a = v * TAU; val rr = r * (0.2f + 0.8f * u)
             val ls = cos(a) * rr * da; val la = -cos(a) * rr * ds; val lu = sin(a) * rr
             out[0] = fx(fcar, ea + la + 0.03f * da, es + ls + 0.03f * ds, lu); out[1] = fy(fcar, ea + la + 0.03f * da, es + ls + 0.03f * ds, lu); out[2] = fz(fcar, ea + la + 0.03f * da, es + ls + 0.03f * ds, lu)
         }
+        // a dark-red shadow inside each mouth so the two openings read as two
+        val depth = if (ang > 0f) 1.3f else 1.1f
+        val sa = da * depth; val ss = cs + ds * depth
+        holes.ellipsoid(fx(fcar, sa, ss, 0f), fy(fcar, sa, ss, 0f), fz(fcar, sa, ss, 0f),
+            floatArrayOf((fcar.sx * da - fcar.dx * ds) * r * 0.9f, (fcar.sy * da - fcar.dy * ds) * r * 0.9f, (fcar.sz * da - fcar.dz * ds) * r * 0.9f),
+            floatArrayOf(fcar.ux * r * 0.9f, fcar.uy * r * 0.9f, fcar.uz * r * 0.9f),
+            floatArrayOf((fcar.dx * da + fcar.sx * ds) * 0.02f, (fcar.dy * da + fcar.sy * ds) * 0.02f, (fcar.dz * da + fcar.sz * ds) * 0.02f), 4, 20)
     }
-    bronchus(0f, 0.8f, 25f * DEG, 3.2f)
-    bronchus(-0.85f, 0.5f, -45f * DEG, 4.5f)
+    bronchus(0.58f, 0.9f, 25f * DEG, 3.2f)
+    bronchus(-0.99f, 0.66f, -45f * DEG, 4.5f)
     val keel = T1Builder()
-    val kx = fx(fcar, 0.02f, -0.62f, 0f); val ky = fy(fcar, 0.02f, -0.62f, 0f); val kz = fz(fcar, 0.02f, -0.62f, 0f)
-    keel.ellipsoid(kx, ky, kz, floatArrayOf(fcar.sx * 0.09f, fcar.sy * 0.09f, fcar.sz * 0.09f), floatArrayOf(fcar.ux * 0.46f, fcar.uy * 0.46f, fcar.uz * 0.46f),
+    val kx = fx(fcar, 0.02f, -0.325f, 0f); val ky = fy(fcar, 0.02f, -0.325f, 0f); val kz = fz(fcar, 0.02f, -0.325f, 0f)
+    keel.ellipsoid(kx, ky, kz, floatArrayOf(fcar.sx * 0.06f, fcar.sy * 0.06f, fcar.sz * 0.06f), floatArrayOf(fcar.ux * 0.6f, fcar.uy * 0.6f, fcar.uz * 0.6f),
         floatArrayOf(fcar.dx * 0.3f, fcar.dy * 0.3f, fcar.dz * 0.3f), 8, 12)
-    // ciliary glints on the wall (positions; brightness is animated per frame)
+    // ciliary glints on the cartilaginous wall (positions; brightness is animated per frame)
     val rnd = java.util.Random(40)
-    val sp = FloatArray(420 * 4)
-    for (j in 0 until 420) {
-        val p = T1_TR0 + rnd.nextFloat() * (T1_CARINA - 0.05f - T1_TR0); val th = rnd.nextFloat() * TAU
-        t1RailPoint(p, th, T1_TR_R - 0.075f, q)
-        sp[4 * j] = q[0]; sp[4 * j + 1] = q[1]; sp[4 * j + 2] = q[2]; sp[4 * j + 3] = (p - T1_TR0) * 16f
+    val n = 900
+    val sp = FloatArray(n * 4)
+    for (j in 0 until n) {
+        val p = T1_TR0 + rnd.nextFloat() * (T1_CARINA - 0.05f - T1_TR0); val th = (-50f + 280f * rnd.nextFloat()) * DEG
+        t1RailPoint(p, th, t1TrR(p, th, 0.075f), q)
+        sp[4 * j] = q[0]; sp[4 * j + 1] = q[1]; sp[4 * j + 2] = q[2]; sp[4 * j + 3] = p
     }
     return T1Trachea(tube.build(), membr.build(), rings.build(), shell.build(), mucus.build(), LineMesh(folds.toFloatArray()),
         cap.build(), br.build(), keel.build(), holes.build(), sp)
@@ -1212,12 +1284,15 @@ internal fun StereoBodyRenderer.drawAirway(n: TourNode, i: Int, seconds: Float) 
     // The glottis: vestibular (false) folds above the pearly vocal folds; a V with its apex anterior.
     val fv = frameAt(0.845f)
     val off = t1ShipOff(fv); val so = off[0]; val uo = off[1]
+    // vestibular (false) folds: thin mucosal shelves 0.3 (2.4 mm) above the pearly true vocal folds,
+    // both converging on the front (up) in a V; the rima glottidis is the opening between the true folds
     for (fold in 0..1) {
         val aF = if (fold == 0) -0.3f else 0f
         val apexU = if (fold == 0) 1.55f else 1.45f
-        val procS = if (fold == 0) 1.05f else 0.72f
+        val procS = if (fold == 0) 1.0f else 0.72f
         val procU = if (fold == 0) -1.1f else -1.15f
-        val half = if (fold == 0) 0.5f else 0.55f
+        val half = if (fold == 0) 0.28f else 0.2f
+        val thick = if (fold == 0) 0.06f else 0.1f
         for (sgn in SIGNS) {
             val dS = sgn * procS; val dU = procU - apexU
             val dl = sqrt(dS * dS + dU * dU)
@@ -1225,8 +1300,8 @@ internal fun StereoBodyRenderer.drawAirway(n: TourNode, i: Int, seconds: Float) 
             if (lS * sgn < 0f) { lS = -lS; lU = -lU }
             val cS = dS * 0.5f + lS * half; val cU = apexU + dU * 0.5f + lU * half
             t1Shape(sphere, fv, aF, so + cS, uo + cU, 0f, dS / dl, dU / dl, 1f, 0f, 0f,
-                half, if (fold == 0) 0.14f else 0.2f, dl * 0.5f,
-                if (fold == 0) T1_MUCOSA else T1_VOCAL, if (fold == 0) T1_MUCOSA_RIM else T1_WHITE, 1f, if (fold == 0) 0.4f else 0.5f)
+                half, thick, dl * 0.5f,
+                if (fold == 0) T1_MUCOSA else T1_VOCAL, if (fold == 0) T1_MUCOSA_RIM else T1_WHITE, 1f, if (fold == 0) 0.3f else 0.5f)
         }
     }
     // the arytenoid mounds, behind and below the folds' posterior ends
@@ -1235,11 +1310,13 @@ internal fun StereoBodyRenderer.drawAirway(n: TourNode, i: Int, seconds: Float) 
     val tr = t1Mesh("trachea2") { t1BuildTracheaMesh() }
     t1LitWorld(tr.tube, T1_TR_GAP, T1_MUCOSA_RIM, 1f, 0.08f)
     t1LitWorld(tr.membr, T1_TRACHEALIS, T1_MUCOSA_RIM, 1f, 0.1f)
-    t1LitWorld(tr.rings, T1_CARTILAGE, T1_WHITE, 1f, 0.12f)
+    GLES20.glDepthMask(false)
+    t1LitWorld(tr.rings, T1_RING_UNDER, T1_WHITE, 0.55f, 0.12f)
+    GLES20.glDepthMask(true)
     t1LitWorld(tr.cap, T1_MUCOSA, T1_MUCOSA_RIM, 1f, 0.2f)
     t1LitWorld(tr.bronchi, T1_TR_GAP, T1_MUCOSA_RIM, 1f, 0.12f)
     t1LitWorld(tr.holes, T1_MEATUS, T1_MEATUS, 1f, 0f)
-    t1LitWorld(tr.keel, T1_CARTILAGE, T1_WHITE, 1f, 0.35f)
+    t1LitWorld(tr.keel, T1_CARTILAGE, T1_WHITE, 1f, 0.6f)
     t1Color(tr.folds, null, 0f, 0f, 0f, 1.5f, false, 0.8f)
     // Ciliary shimmer: metachronal waves running up the wall toward the larynx
     val d = t1Dyn.data
@@ -1248,9 +1325,9 @@ internal fun StereoBodyRenderer.drawAirway(n: TourNode, i: Int, seconds: Float) 
         val sc = floatArrayOf(1f, 1f, 0.94f)
         val sp = tr.sparkle
         for (j in 0 until sp.size / 4) {
-            val a = sp[4 * j + 3]
-            val w = 0.5f + 0.5f * sin(TAU * 1.5f * seconds + a * 7f)
-            v = t1Put(d, v, sp[4 * j], sp[4 * j + 1], sp[4 * j + 2], sc, 0.12f + 0.88f * w * w)
+            // one travelling wave: bright bands run up the wall toward the larynx at ~1 unit/s
+            val w = 0.5f + 0.5f * sin(TAU * (1.5f * seconds + sp[4 * j + 3] * 12f))
+            v = t1Put(d, v, sp[4 * j], sp[4 * j + 1], sp[4 * j + 2], sc, 0.06f + 0.94f * w * w * w * w)
         }
         t1DynDraw(v, GLES20.GL_POINTS, 2.6f, 1f, depthWrite = false)
     }
@@ -1262,7 +1339,7 @@ internal fun StereoBodyRenderer.drawAirway(n: TourNode, i: Int, seconds: Float) 
     for (j in 0 until 60) {
         val pp = T1_TR0 + ((t1Hash(j) * span - seconds * 0.0013f) % span + span) % span
         val th = j * 2.39996f
-        t1RailPoint(pp, th, T1_TR_R - 0.07f, q)
+        t1RailPoint(pp, th, t1TrR(pp, th, 0.07f), q)
         v = t1Put(d, v, q[0], q[1], q[2], dc, 0.95f)
     }
     t1DynDraw(v, GLES20.GL_POINTS, 3.2f)
@@ -1339,13 +1416,19 @@ private fun t1Honeycomb(d: Float, xMin: Float, xMax: Float, yMin: Float, yMax: F
     return xy to out.toIntArray()
 }
 
-private class T1DomeNet(val mesh: TriMesh, val posts: TriMesh, val paths: List<FloatArray>, val type1: LineMesh, val nuclei: T1Batch)
+private class T1DomeNet(val mesh: TriMesh, val lumen: TriMesh, val posts: TriMesh, val paths: List<FloatArray>, val type1: LineMesh, val nuclei: T1Batch)
 
 private fun t1DomeZ(x: Float, y: Float) = T1_DOME_H * t1HexDist(x, y)
 
-/** Ribbons (half-width w) along honeycomb edges, and pale oval tissue posts in the gaps. */
-private fun t1RibbonNet(xy: FloatArray, e: IntArray, w: Float, col: FloatArray, post: FloatArray, postR: Float,
-                        map: (Float, Float, Float, ArrayList<Float>, FloatArray) -> Unit, centres: FloatArray): Pair<TriMesh, TriMesh> {
+/** The hexagonal prism of the sac's side walls: distance from the axis at wall angle th (vertices at 30 + 60k degrees). */
+private fun t1HexR(th: Float): Float {
+    var a = (th / DEG - 30f) % 60f; if (a < 0f) a += 60f
+    return T1_DOME_R * cos(30f * DEG) / cos((a - 30f) * DEG)
+}
+
+/** Ribbons (half-width w) along honeycomb edges; optionally pale oval tissue posts in the gaps. */
+private fun t1RibbonNet(xy: FloatArray, e: IntArray, w: Float, col: FloatArray, post: FloatArray?, postR: Float,
+                        map: (Float, Float, Float, ArrayList<Float>, FloatArray) -> Unit, centres: FloatArray, lift: Float = 0f): Pair<TriMesh, TriMesh> {
     val tri = ArrayList<Float>(); val posts = ArrayList<Float>()
     var k = 0
     while (k < e.size) {
@@ -1353,39 +1436,44 @@ private fun t1RibbonNet(xy: FloatArray, e: IntArray, w: Float, col: FloatArray, 
         val x0 = xy[2 * a]; val y0 = xy[2 * a + 1]; val x1 = xy[2 * b]; val y1 = xy[2 * b + 1]
         val l = sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)).coerceAtLeast(1e-5f)
         val nx = -(y1 - y0) / l * w; val ny = (x1 - x0) / l * w
-        // extend each ribbon a little past its ends so the junctions close up; split it in four so it
-        // follows the curved wall instead of cutting across a fold
         val ex = (x1 - x0) / l * w * 0.8f; val ey = (y1 - y0) / l * w * 0.8f
         val sx0 = x0 - ex; val sy0 = y0 - ey; val sx1 = x1 + ex; val sy1 = y1 + ey
-        for (m in 0 until 4) {
-            val ta = m / 4f; val tb = (m + 1) / 4f
+        for (m in 0 until 3) {
+            val ta = m / 3f; val tb = (m + 1) / 3f
             val ax = sx0 + (sx1 - sx0) * ta; val ay = sy0 + (sy1 - sy0) * ta; val bx = sx0 + (sx1 - sx0) * tb; val by = sy0 + (sy1 - sy0) * tb
-            map(ax + nx, ay + ny, 0f, tri, col); map(bx + nx, by + ny, 0f, tri, col); map(bx - nx, by - ny, 0f, tri, col)
-            map(ax + nx, ay + ny, 0f, tri, col); map(bx - nx, by - ny, 0f, tri, col); map(ax - nx, ay - ny, 0f, tri, col)
+            map(ax + nx, ay + ny, lift, tri, col); map(bx + nx, by + ny, lift, tri, col); map(bx - nx, by - ny, lift, tri, col)
+            map(ax + nx, ay + ny, lift, tri, col); map(bx - nx, by - ny, lift, tri, col); map(ax - nx, ay - ny, lift, tri, col)
         }
     }
-    var c = 0
-    while (c < centres.size) {
-        val cx = centres[c]; val cy = centres[c + 1]; c += 2
-        val rx = postR * (0.8f + 0.4f * t1Hash(c * 3)); val ry = postR * (0.8f + 0.4f * t1Hash(c * 5 + 1)); val rot = t1Hash(c * 7) * PI_F
-        for (m in 0 until 8) {
-            val a0 = TAU * m / 8f + rot; val a1 = TAU * (m + 1) / 8f + rot
-            map(cx, cy, 0.001f, posts, post)
-            map(cx + cos(a0) * rx, cy + sin(a0) * ry, 0.001f, posts, post); map(cx + cos(a1) * rx, cy + sin(a1) * ry, 0.001f, posts, post)
+    if (post != null) {
+        var c = 0
+        while (c < centres.size) {
+            val cx = centres[c]; val cy = centres[c + 1]; c += 2
+            val rx = postR * (0.8f + 0.4f * t1Hash(c * 3)); val ry = postR * (0.8f + 0.4f * t1Hash(c * 5 + 1)); val rot = t1Hash(c * 7) * PI_F
+            for (m in 0 until 8) {
+                val a0 = TAU * m / 8f + rot; val a1 = TAU * (m + 1) / 8f + rot
+                map(cx, cy, 0.001f, posts, post)
+                map(cx + cos(a0) * rx, cy + sin(a0) * ry, 0.001f, posts, post); map(cx + cos(a1) * rx, cy + sin(a1) * ry, 0.001f, posts, post)
+            }
         }
     }
     return TriMesh(tri.toFloatArray()) to TriMesh(posts.toFloatArray())
 }
 
-/** The far wall's capillary sheet (dome-local, just behind the septum's surface) and red-cell paths through it. */
+private val T1_CAP_COL = floatArrayOf(0.78f, 0.16f, 0.20f, 1f)
+private val T1_CAP_LUMEN = floatArrayOf(0.95f, 0.42f, 0.42f, 1f)
+private val T1_POST_COL = floatArrayOf(0.97f, 0.86f, 0.86f, 0.25f)
+
+/** The far wall's capillary net (dome-local, just behind the septum's surface) and red-cell paths through it. */
 private fun t1BuildDomeNet(): T1DomeNet {
     val lim = T1_DOME_R * 0.95f
     val d = 0.15f
     val (xy, e) = t1Honeycomb(d, -lim, lim, -lim, lim, 0.35f * d * 0.5f, 7) { x, y -> t1HexDist(x, y) < 0.96f }
     val centres = t1HoneyCentres
-    val (mesh, posts) = t1RibbonNet(xy, e, 0.05f, floatArrayOf(0.86f, 0.36f, 0.40f, 0.8f), floatArrayOf(0.97f, 0.86f, 0.86f, 0.9f), 0.032f,
-        { x, y, lift, l, c -> l.add(x); l.add(y); l.add(t1DomeZ(x, y) - 0.012f + lift); l.add(c[0]); l.add(c[1]); l.add(c[2]); l.add(c[3]) }, centres)
-    // Red-cell paths: random walks through the mesh (no immediate backtracking).
+    val mapD: (Float, Float, Float, ArrayList<Float>, FloatArray) -> Unit =
+        { x, y, lift, l, c -> l.add(x); l.add(y); l.add(t1DomeZ(x, y) - 0.012f + lift); l.add(c[0]); l.add(c[1]); l.add(c[2]); l.add(c[3]) }
+    val (mesh, posts) = t1RibbonNet(xy, e, 0.035f, T1_CAP_COL, T1_POST_COL, 0.03f, mapD, centres)
+    val (lumen, _) = t1RibbonNet(xy, e, 0.012f, T1_CAP_LUMEN, null, 0f, mapD, centres, 0.002f)
     val adj = HashMap<Int, MutableList<Int>>()
     var k = 0
     while (k < e.size) { val a = e[k]; val b = e[k + 1]; k += 2; adj.getOrPut(a) { ArrayList() }.add(b); adj.getOrPut(b) { ArrayList() }.add(a) }
@@ -1393,21 +1481,21 @@ private fun t1BuildDomeNet(): T1DomeNet {
     val keys = adj.keys.toList()
     val paths = ArrayList<FloatArray>()
     var tries = 0
-    while (paths.size < 14 && tries < 400) {
+    while (paths.size < 40 && tries < 1200) {
         tries++
         var cur = keys[rnd.nextInt(keys.size)]
         val hd = t1HexDist(xy[2 * cur], xy[2 * cur + 1])
-        if (hd < 0.3f || hd > 0.85f) continue
+        if (hd < 0.1f || hd > 0.85f) continue
         var prev = -1
         val pts = ArrayList<Float>()
-        for (step in 0 until 28) {
+        for (step in 0 until 22) {
             val x = xy[2 * cur]; val y = xy[2 * cur + 1]
-            pts.add(x); pts.add(y); pts.add(t1DomeZ(x, y) - 0.012f)
+            pts.add(x); pts.add(y); pts.add(t1DomeZ(x, y) - 0.008f)
             val nb = adj[cur]?.filter { it != prev && t1HexDist(xy[2 * it], xy[2 * it + 1]) < 0.9f } ?: break
             if (nb.isEmpty()) break
             prev = cur; cur = nb[rnd.nextInt(nb.size)]
         }
-        if (pts.size >= 30) paths.add(pts.toFloatArray())
+        if (pts.size >= 45) paths.add(pts.toFloatArray())
     }
     // type I pneumocytes: large thin polygons (60 um) on the air side, each with a flat nucleus
     val (xy1, e1) = t1Honeycomb(0.75f, -lim, lim, -lim, lim, 0.12f, 23) { x, y -> t1HexDist(x, y) < 0.97f }
@@ -1427,55 +1515,101 @@ private fun t1BuildDomeNet(): T1DomeNet {
     var c = 0
     while (c < c1.size) {
         val x = c1[c] + 0.08f; val y = c1[c + 1] - 0.05f; c += 2
-        val z = t1DomeZ(x, y)
-        nb.ellipsoid(x, y, z + 0.01f, floatArrayOf(0.07f, 0f, 0f), floatArrayOf(0f, 0.06f, 0f), floatArrayOf(0f, 0f, 0.018f), 4, 8)
+        nb.ellipsoid(x, y, t1DomeZ(x, y) + 0.01f, floatArrayOf(0.07f, 0f, 0f), floatArrayOf(0f, 0.06f, 0f), floatArrayOf(0f, 0f, 0.018f), 4, 8)
     }
-    return T1DomeNet(mesh, posts, paths, LineMesh(t1l.toFloatArray()), nb.build())
+    return T1DomeNet(mesh, lumen, posts, paths, LineMesh(t1l.toFloatArray()), nb.build())
 }
 
-/** Capillary sheet in the sac's side walls (world space), just behind the septal surface. */
-private fun StereoBodyRenderer.t1BuildSideNet(): Pair<TriMesh, TriMesh> {
+/** Capillary net in the sac's six flat side walls (world space), just behind the septal surface. */
+private fun StereoBodyRenderer.t1BuildSideNet(): Array<TriMesh> {
     val circ = 10.6f; val len = (T1_SIDE_P1 - T1_SIDE_P0) * 16f
     val d = 0.2f
     val (xy, e) = t1Honeycomb(d, 0f, circ, 0f, len, 0.35f * d * 0.5f, 11) { x, y -> x in 0f..circ && y in 0f..len }
     val q = FloatArray(3)
-    return t1RibbonNet(xy, e, 0.06f, floatArrayOf(0.86f, 0.36f, 0.40f, 0.8f), floatArrayOf(0.97f, 0.86f, 0.86f, 0.9f), 0.045f,
-        { x, y, lift, l, c ->
-            val th = x / circ * TAU; val p = T1_SIDE_P0 + y / 16f
-            t1RailPoint(p, th, t1WallR(p, th) * (0.99f - lift * 4f), q)
-            l.add(q[0]); l.add(q[1]); l.add(q[2]); l.add(c[0]); l.add(c[1]); l.add(c[2]); l.add(c[3])
-        }, t1HoneyCentres)
+    val mapS: (Float, Float, Float, ArrayList<Float>, FloatArray) -> Unit = { x, y, lift, l, c ->
+        val th = x / circ * TAU; val p = T1_SIDE_P0 + y / 16f
+        t1RailPoint(p, th, t1HexR(th) * (1.012f - lift * 4f), q)
+        l.add(q[0]); l.add(q[1]); l.add(q[2]); l.add(c[0]); l.add(c[1]); l.add(c[2]); l.add(c[3])
+    }
+    val (a, b) = t1RibbonNet(xy, e, 0.04f, T1_CAP_COL, T1_POST_COL, 0.045f, mapS, t1HoneyCentres)
+    val (l2, _) = t1RibbonNet(xy, e, 0.014f, T1_CAP_LUMEN, null, 0f, mapS, t1HoneyCentres, 0.001f)
+    return arrayOf(a, l2, b)
 }
 
-/** Septal junction lines on the side walls, plus the neighbouring alveolus seen through the far wall. */
+/** Septal junction lines where the flat side walls meet, plus the neighbouring alveolus seen through the far wall. */
 private fun StereoBodyRenderer.t1BuildSepta(): Array<LineMesh> {
     val side = ArrayList<Float>()
-    val col = floatArrayOf(1f, 0.88f, 0.88f, 0.95f)
+    val col = floatArrayOf(1f, 0.9f, 0.9f, 1f)
     val q = FloatArray(3)
     fun add(list: ArrayList<Float>, x: Float, y: Float, z: Float, c: FloatArray) { list.add(x); list.add(y); list.add(z); list.add(c[0]); list.add(c[1]); list.add(c[2]); list.add(c[3]) }
     for (k in 0 until 6) {
         val th = (30f + 60f * k) * DEG
         val steps = 8
-        for (m in 0 until steps) {
-            for (h in 0..1) {
-                val p = T1_SIDE_P0 + (T1_SIDE_P1 - T1_SIDE_P0) * (m + h) / steps
-                t1RailPoint(p, th, t1WallR(p, th) * 0.965f, q); add(side, q[0], q[1], q[2], col)
-            }
+        for (m in 0 until steps) for (h in 0..1) {
+            val p = T1_SIDE_P0 + (T1_SIDE_P1 - T1_SIDE_P0) * (m + h) / steps
+            t1RailPoint(p, th, T1_DOME_R * 0.99f, q); add(side, q[0], q[1], q[2], col)
         }
     }
-    // Neighbour (dome-local): a smaller hexagonal cell behind the far wall.
     val nb = ArrayList<Float>()
     val nc = floatArrayOf(0.97f, 0.74f, 0.78f, 0.55f)
     val rN = 1.35f
     for (k in 0 until 6) {
         val a0 = (30f + 60f * k) * DEG; val a1 = (90f + 60f * k) * DEG
         val x0 = rN * cos(a0); val y0 = rN * sin(a0); val x1 = rN * cos(a1); val y1 = rN * sin(a1)
-        add(nb, x0, y0, -0.25f, nc); add(nb, x0, y0, -3.0f, nc)          // side edges (z = -along)
-        add(nb, x0, y0, -3.0f, nc); add(nb, 0f, 0f, -4.2f, nc)           // its far cup
-        add(nb, x0, y0, -0.25f, nc); add(nb, x1, y1, -0.25f, nc)         // near rim
+        add(nb, x0, y0, -0.25f, nc); add(nb, x0, y0, -3.0f, nc)
+        add(nb, x0, y0, -3.0f, nc); add(nb, 0f, 0f, -4.2f, nc)
+        add(nb, x0, y0, -0.25f, nc); add(nb, x1, y1, -0.25f, nc)
         add(nb, x0, y0, -3.0f, nc); add(nb, x1, y1, -3.0f, nc)
     }
     return arrayOf(LineMesh(side.toFloatArray()), LineMesh(nb.toFloatArray()))
+}
+
+private class T1AlvStatic(val holes: T1Batch, val rims: T1Batch, val type2: T1Batch, val lamellar: T1Batch, val macroGran: T1Batch)
+
+/** The sac's small static parts, batched: mouths and pores (dark), their rims, type II cells and their lamellar bodies. */
+private fun StereoBodyRenderer.t1BuildAlvStatic(): T1AlvStatic {
+    val holes = T1Builder(); val rims = T1Builder(); val t2 = T1Builder(); val lam = T1Builder(); val gran = T1Builder()
+    val q = FloatArray(3)
+    fun opening(p: Float, th: Float, rw: Float, a: Float, b: Float) {
+        val f = frameAt(p); val c = cos(th); val s = sin(th)
+        val rx = f.sx * c + f.ux * s; val ry = f.sy * c + f.uy * s; val rz = f.sz * c + f.uz * s
+        val tx = -f.sx * s + f.ux * c; val ty = -f.sy * s + f.uy * c; val tz = -f.sz * s + f.uz * c
+        val cx = f.cx + rx * rw; val cy = f.cy + ry * rw; val cz = f.cz + rz * rw
+        holes.ellipsoid(cx, cy, cz, floatArrayOf(tx * a, ty * a, tz * a), floatArrayOf(f.dx * b, f.dy * b, f.dz * b), floatArrayOf(rx * 0.01f, ry * 0.01f, rz * 0.01f), 3, 16)
+        rims.surface(16, 6) { u, v, out ->
+            val g = u * TAU; val h = v * TAU; val w = 0.18f * min(a, b)
+            val px = cos(g) * (a + w * cos(h)); val pb = sin(g) * (b + w * cos(h)); val pr = -w * sin(h) * 0.5f - 0.02f
+            out[0] = cx + tx * px + f.dx * pb + rx * pr; out[1] = cy + ty * px + f.dy * pb + ry * pr; out[2] = cz + tz * px + f.dz * pb + rz * pr
+        }
+    }
+    // neighbouring alveolar mouths on the duct wall, and two pores of Kohn in the side walls
+    val hp = floatArrayOf(1.77f, 40f, 1.81f, 135f, 1.79f, 215f, 1.83f, 320f)
+    for (k in 0 until 4) { val p = hp[2 * k]; val th = hp[2 * k + 1] * DEG; opening(p, th, t1WallR(p, th) * 0.96f, 0.42f, 0.55f) }
+    for (k in 0..1) { val p = 1.93f + 0.05f * k; val th = (if (k == 0) 75f else 290f) * DEG; opening(p, th, t1HexR(th) * 0.995f, 0.07f, 0.1f) }
+    // type II pneumocytes: cuboidal domes set into the corners where septa meet, bulging a little into
+    // the air space, lamellar bodies (stored surfactant) on their free surface
+    for (k in 0 until 6) {
+        val th = (30f + 60f * k) * DEG
+        val p = T1_SIDE_P0 + (0.25f + 0.1f * (k % 3)) * (T1_SIDE_P1 - T1_SIDE_P0)
+        t1RailPoint(p, th, T1_DOME_R * 0.995f, q)
+        val f = frameAt(p); val c = cos(th); val s = sin(th)
+        val rx = f.sx * c + f.ux * s; val ry = f.sy * c + f.uy * s; val rz = f.sz * c + f.uz * s
+        val tx = -f.sx * s + f.ux * c; val ty = -f.sy * s + f.uy * c; val tz = -f.sz * s + f.uz * c
+        t2.ellipsoid(q[0], q[1], q[2], floatArrayOf(tx * 0.13f, ty * 0.13f, tz * 0.13f), floatArrayOf(rx * 0.08f, ry * 0.08f, rz * 0.08f), floatArrayOf(f.dx * 0.12f, f.dy * 0.12f, f.dz * 0.12f), 6, 10)
+        for (m in 0 until 5) {
+            val b = m * 1.26f
+            val lx = q[0] - rx * 0.07f + tx * 0.06f * cos(b) + f.dx * 0.06f * sin(b)
+            val ly = q[1] - ry * 0.07f + ty * 0.06f * cos(b) + f.dy * 0.06f * sin(b)
+            val lz = q[2] - rz * 0.07f + tz * 0.06f * cos(b) + f.dz * 0.06f * sin(b)
+            lam.ellipsoid(lx, ly, lz, floatArrayOf(0.02f, 0f, 0f), floatArrayOf(0f, 0.02f, 0f), floatArrayOf(0f, 0f, 0.02f), 3, 5)
+        }
+    }
+    // dust in the macrophage (in its own local frame, x/y across it, z up from the floor)
+    for (m in 0 until 5) {
+        val a = m * 1.3f
+        gran.ellipsoid(0.13f * cos(a), 0.09f * sin(a), 0.02f, floatArrayOf(0.025f, 0f, 0f), floatArrayOf(0f, 0.025f, 0f), floatArrayOf(0f, 0f, 0.025f), 3, 5)
+    }
+    return T1AlvStatic(holes.build(), rims.build(), t2.build(), lam.build(), gran.build())
 }
 
 internal fun StereoBodyRenderer.drawAlveolus(n: TourNode, i: Int, seconds: Float) {
@@ -1485,63 +1619,41 @@ internal fun StereoBodyRenderer.drawAlveolus(n: TourNode, i: Int, seconds: Float
     landmarkFade *= vis; colorShader.globalFade *= vis
     val breath = t1Breath(seconds)
     val inflate = 1f + 0.05f * sin(breath * TAU)       // the sac deepens on the inhale, in phase with every other sac
-    // Neighbouring alveolar mouths on the duct wall (dark openings with pale rims).
-    val holes = floatArrayOf(1.77f, 40f, 1.81f, 135f, 1.79f, 215f, 1.83f, 320f)
-    for (k in 0 until 4) {
-        val p = holes[2 * k]; val th = holes[2 * k + 1] * DEG
-        val fh = frameAt(p)
-        val r = t1WallR(p, th) * 0.965f; val c = cos(th); val s = sin(th)
-        t1Shape(t1Disc(), fh, 0f, c * r, s * r, 0f, -c, -s, 1f, 0f, 0f, 0.42f, 0.55f, 1f, T1_HOLE, T1_HOLE, 1f)
-        t1Shape(t1Ring(0.16f), fh, 0f, c * (r - 0.02f), s * (r - 0.02f), 0f, -c, -s, 1f, 0f, 0f, 0.44f, 0.58f, 0.4f, T1_SEPTUM, T1_WHITE, 1f, 0.2f)
-    }
+    val st = t1Mesh("alv.static") { t1BuildAlvStatic() }
+    t1LitWorld(st.holes, T1_MEATUS, T1_MEATUS, 1f, 0f)
+    t1LitWorld(st.rims, T1_SEPTUM, T1_WHITE, 1f, 0.2f)
     // The mouth: the entrance ring (elastic and smooth-muscle fibres) and the septum joining it to the wall.
     val fm = frameAt(T1_MOUTH_P)
     t1Lit(t1Ring(0.07f), fm, 0f, 0f, 0f, T1_SEPTUM, T1_WHITE, 1f, 0.15f, 1.3f, 1.3f, 1.3f)
     t1Lit(t1Ring(0.035f), fm, -0.06f, 0f, 0f, T1_ALV_SM, T1_WHITE, 1f, 0.15f, 1.3f, 1.3f, 1.3f)   // smooth muscle in the entrance ring
-    val annulus = t1Mesh("alv.annulus") { ParamMesh(3, 36) { u, v, out -> val r = 1.33f + 0.9f * u; val a = v * TAU; out[0] = cos(a) * r; out[1] = sin(a) * r; out[2] = 0f } }
+    val annulus = t1Mesh("alv.annulus2") { ParamMesh(3, 36) { u, v, out -> val a = v * TAU; val r = 1.33f + (t1HexR(a) - 1.33f) * u; out[0] = cos(a) * r; out[1] = sin(a) * r; out[2] = 0f } }
     GLES20.glDepthMask(false)
-    t1Lit(annulus, fm, 0f, 0f, 0f, T1_SEPTUM, T1_WHITE, 0.55f, 0.12f)
+    t1Lit(annulus, fm, 0f, 0f, 0f, T1_SEPTUM, T1_WHITE, 0.5f, 0.2f)
     GLES20.glDepthMask(true)
-    // Side walls: capillary sheet and the septal junctions that make the sac polyhedral.
-    val side = t1Mesh("alv.side2") { t1BuildSideNet() }
-    t1Color(side.first, null, 0f, 0f, 0f, 1f, false, 1f)
-    t1Color(side.second, null, 0f, 0f, 0f, 1f, false, 1f)
-    // the septal surface over them (type I cells), translucent: the vessels are seen through the wall
-    val shell = t1Mesh("alv.shell") { ParamMesh(8, 36) { u, v, out -> val p = T1_SIDE_P0 + (T1_SIDE_P1 - T1_SIDE_P0) * u; val th = v * TAU
-        t1RailPoint(p, th, t1WallR(p, th) * 0.972f, out) } }
-    GLES20.glDepthMask(false)
-    t1LitWorld(shell, T1_SEPTUM, T1_WHITE, 0.35f, 0.15f)
-    GLES20.glDepthMask(true)
-    // two pores of Kohn, windows between this alveolus and its neighbours
-    for (k in 0..1) {
-        val pk = 1.93f + 0.05f * k; val th = (if (k == 0) 75f else 290f) * DEG
-        val fk = frameAt(pk); val r = t1WallR(pk, th) * 0.968f; val c = cos(th); val s = sin(th)
-        t1Shape(t1Disc(), fk, 0f, c * r, s * r, 0f, -c, -s, 1f, 0f, 0f, 0.07f, 0.1f, 1f, T1_HOLE, T1_HOLE, 1f)
-        t1Shape(t1Ring(0.2f), fk, 0f, c * (r - 0.005f), s * (r - 0.005f), 0f, -c, -s, 1f, 0f, 0f, 0.075f, 0.105f, 0.075f, T1_SEPTUM, T1_WHITE, 1f, 0.3f)
-    }
-    val septa = t1Mesh("alv.septa") { t1BuildSepta() }
-    t1Color(septa[0], null, 0f, 0f, 0f, 3f, false, 0.9f)
-    // Type II pneumocytes in the corners where septa meet; a macrophage on the floor.
+    // Side walls: six flat septa (a hexagonal prism) with the capillary net in them
+    val side = t1Mesh("alv.side3") { t1BuildSideNet() }
+    t1Color(side[0], null, 0f, 0f, 0f, 1f, false, 1f)
+    t1Color(side[1], null, 0f, 0f, 0f, 1f, false, 1f)
+    t1Color(side[2], null, 0f, 0f, 0f, 1f, false, 1f)
+    t1LitWorld(st.type2, T1_TYPE2, T1_WHITE, 1f, 0.25f)
+    t1LitWorld(st.lamellar, T1_WHITE, T1_WHITE, 1f, 0.6f)
+    // An alveolar macrophage crawling on the far wall: a flattened cell, kidney nucleus and swallowed
+    // dust seen through its cytoplasm, pseudopods feeling about
     val fd = frameAt(T1_DOME_P)
+    val mx = 0.55f; val my = -0.5f; val mz = t1DomeZ(mx, my) * inflate
+    val ma = -mz - 0.08f
+    t1Shape(t1Mesh("mono.nuc") { ParamMesh.torusArc(0.45f, 0.62f) }, fd, ma, mx, my, 1f, 0f, 0f, 0f, 0f, 1f, 0.08f, 0.08f, 0.06f, T1_MONO_NUC, T1_WHITE, 1f, 0.25f)
+    t1Model(fd, ma, mx + 0.03f, my); drawLitModel(st.macroGran, T1_DUSTG, T1_DUSTG, landmarkFade, 0f, 0.1f)
     for (k in 0 until 3) {
-        val a = (30f + 120f * k) * DEG
-        t1Lit(sphere, fd, -1.0f * inflate, 1.5f * cos(a), 1.5f * sin(a), T1_TYPE2, T1_WHITE, 1f, 0.2f, 0.12f, 0.12f, 0.1f)
-        for (m in 0 until 5) {             // lamellar bodies (stored surfactant) at the air-facing surface
-            val b = m * 1.26f
-            t1Lit(blob, fd, -1.0f * inflate - 0.07f, 1.5f * cos(a) + 0.065f * cos(b), 1.5f * sin(a) + 0.065f * sin(b), T1_WHITE, T1_WHITE, 1f, 0.6f, 0.022f, 0.022f, 0.022f)
-        }
+        val g = 0.9f + k * 1.9f + 0.3f * sin(seconds * 0.7f + k)
+        val l = 0.3f + 0.05f * sin(seconds * 0.7f + k * 2f)
+        t1Rod(fd, ma, mx + cos(g) * 0.18f, my + sin(g) * 0.14f, ma + 0.02f, mx + cos(g) * l, my + sin(g) * l, 0.03f, T1_MACRO, T1_WHITE, 1f, 0.2f)
     }
-    val fmc = frameAt(1.97f); val tm = 250f * DEG
-    val rmc = t1WallR(1.97f, tm) * 0.9f
-    val cm = cos(tm); val sm = sin(tm)
-    t1Shape(sphere, fmc, 0f, cm * rmc, sm * rmc, 1f, 0f, 0f, 0f, cm, sm, 0.22f, 0.13f, 0.2f, T1_MACRO, T1_WHITE, 1f, 0.18f)
-    for (k in 0 until 3) {
-        val wob = 0.04f * sin(seconds * 0.7f + k * 2f)
-        val ta = (k - 1) * 0.55f
-        t1Lit(blob, fmc, (0.2f + wob) * cos(ta), cm * (rmc + 0.02f) - sm * (0.2f + wob) * sin(ta), sm * (rmc + 0.02f) + cm * (0.2f + wob) * sin(ta),
-            T1_MACRO, T1_WHITE, 1f, 0.18f, 0.07f, 0.07f, 0.07f)
-    }
-    // The far wall: the neighbour behind it, the translucent septum, its capillary sheet and red cells, surfactant.
+    GLES20.glDepthMask(false)
+    t1Shape(sphere, fd, ma + 0.02f, mx, my, 1f, 0f, 0f, 0f, 1f, 0f, 0.25f, 0.2f, 0.1f, T1_MACRO, T1_WHITE, 0.6f, 0.2f)
+    GLES20.glDepthMask(true)
+    // The far wall: the neighbour behind it, its capillary net, the red cells in it, the septum over them
+    val septa = t1Mesh("alv.septa2") { t1BuildSepta() }
     t1Color(septa[1], fd, 0f, 0f, 0f, 1.5f, false, 0.45f)
     val cup = t1Mesh("alv.cup") { ParamMesh(6, 36) { u, v, out ->
         val sector = (v * 6f).toInt().coerceAtMost(5); val t = v * 6f - sector
@@ -1549,59 +1661,68 @@ internal fun StereoBodyRenderer.drawAlveolus(n: TourNode, i: Int, seconds: Float
         val rs = T1_DOME_R * u
         out[0] = rs * ((1f - t) * cos(a0) + t * cos(a1)); out[1] = rs * ((1f - t) * sin(a0) + t * sin(a1)); out[2] = T1_DOME_H * u
     } }
-    val net = t1Mesh("alv.net2") { t1BuildDomeNet() }
+    val net = t1Mesh("alv.net3") { t1BuildDomeNet() }
     t1Model(fd, 0f, 0f, 0f); Matrix.scaleM(model, 0, 1f, 1f, inflate)
     Matrix.multiplyMM(mv, 0, view, 0, model, 0); Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
     colorShader.use(mvp, 1f)
     GLES20.glDisable(GLES20.GL_CULL_FACE)
     net.mesh.draw(colorShader.positionHandle, colorShader.colorHandle)
+    net.lumen.draw(colorShader.positionHandle, colorShader.colorHandle)
     net.posts.draw(colorShader.positionHandle, colorShader.colorHandle)
     GLES20.glEnable(GLES20.GL_CULL_FACE)
-    // Red cells single file through the sheet, the disc lying in the sheet: they load oxygen within
-    // the first third of their ~0.75 s transit (dark venous red -> bright arterial red).
-    val bins = arrayOf(COL_RBC_DEOXY, floatArrayOf(0.70f, 0.10f, 0.13f, 1f), COL_RBC_OXY)
-    for (bin in 0..2) {
-        t1Cells("alv.rbc$bin", 20, 0f, bins[bin], 0.3f) { b ->
-            for ((j, path) in net.paths.withIndex()) {
-                val segs = path.size / 3 - 1
-                var total = 0f
-                for (m in 0 until segs) total += sqrt((path[3 * m + 3] - path[3 * m]).pow(2) + (path[3 * m + 4] - path[3 * m + 1]).pow(2) + (path[3 * m + 5] - path[3 * m + 2]).pow(2))
-                for (c in 0 until 2) {
-                    var s = ((seconds / 0.75f * total + j * 1.7f + c * total / 2f) % total)
-                    val frac = s / total
-                    val cb = if (frac < 0.12f) 0 else if (frac < 0.3f) 1 else 2
-                    if (cb != bin) continue
-                    var m = 0
-                    while (m < segs) {
-                        val dx = path[3 * m + 3] - path[3 * m]; val dy = path[3 * m + 4] - path[3 * m + 1]; val dz = path[3 * m + 5] - path[3 * m + 2]
-                        val l = sqrt(dx * dx + dy * dy + dz * dz)
-                        if (s <= l || m == segs - 1) {
-                            val t = (s / l).coerceIn(0f, 1f)
-                            val x = path[3 * m] + dx * t; val y = path[3 * m + 1] + dy * t
-                            val z = (path[3 * m + 2] + dz * t) * inflate
-                            // sheet normal ~ the dome's local normal (from the height gradient)
+    // Red cells packed single file in the capillaries, loading oxygen in the first third of a ~0.75 s
+    // transit (dark venous red -> bright arterial red). Those on the nearest paths are drawn as discs.
+    val d = t1Dyn.data
+    var v = 0
+    val cDark = floatArrayOf(0.50f, 0.06f, 0.10f); val cBright = floatArrayOf(0.90f, 0.12f, 0.14f); val col = FloatArray(3)
+    val nDisc = if (quality == 0) 12 else 6
+    t1Cells("alv.rbc2", 80, 0f, COL_RBC_OXY, 0.3f) { b ->
+        for ((j, path) in net.paths.withIndex()) {
+            val segs = path.size / 3 - 1
+            var total = 0f
+            for (m in 0 until segs) total += sqrt((path[3 * m + 3] - path[3 * m]).pow(2) + (path[3 * m + 4] - path[3 * m + 1]).pow(2) + (path[3 * m + 5] - path[3 * m + 2]).pow(2))
+            val head = (seconds / 0.75f * total * 0.5f + j * 1.7f) % total
+            for (c in 0 until 6) {
+                var s = ((head - c * 0.12f) % total + total) % total
+                val frac = s / total
+                val k = t1Smooth(0.12f, 0.3f, frac)
+                for (q in 0..2) col[q] = cDark[q] + (cBright[q] - cDark[q]) * k
+                var m = 0
+                while (m < segs) {
+                    val dx = path[3 * m + 3] - path[3 * m]; val dy = path[3 * m + 4] - path[3 * m + 1]; val dz = path[3 * m + 5] - path[3 * m + 2]
+                    val l = sqrt(dx * dx + dy * dy + dz * dz)
+                    if (s <= l || m == segs - 1) {
+                        val t = (s / l).coerceIn(0f, 1f)
+                        val x = path[3 * m] + dx * t; val y = path[3 * m + 1] + dy * t
+                        val z = (path[3 * m + 2] + dz * t) * inflate
+                        val wx = fd.cx + fd.sx * x + fd.ux * y - fd.dx * z; val wy = fd.cy + fd.sy * x + fd.uy * y - fd.dy * z; val wz = fd.cz + fd.sz * x + fd.uz * y - fd.dz * z
+                        if (j < nDisc && k > 0.99f) {
                             val e = 0.01f
                             val gx = (t1DomeZ(x + e, y) - t1DomeZ(x - e, y)) / (2f * e); val gy = (t1DomeZ(x, y + e) - t1DomeZ(x, y - e)) / (2f * e)
-                            val nx = -gx; val ny = -gy; val nz = 1f
-                            b.add(fd.cx + fd.sx * x + fd.ux * y - fd.dx * z, fd.cy + fd.sy * x + fd.uy * y - fd.dy * z, fd.cz + fd.sz * x + fd.uz * y - fd.dz * z,
-                                fd.sx * dx + fd.ux * dy - fd.dx * dz, fd.sy * dx + fd.uy * dy - fd.dy * dz, fd.sz * dx + fd.uz * dy - fd.dz * dz,
-                                fd.sx * nx + fd.ux * ny - fd.dx * nz, fd.sy * nx + fd.uy * ny - fd.dy * nz, fd.sz * nx + fd.uz * ny - fd.dz * nz, 0.047f)
-                            break
-                        }
-                        s -= l; m++
+                            b.add(wx, wy, wz, fd.sx * dx + fd.ux * dy - fd.dx * dz, fd.sy * dx + fd.uy * dy - fd.dy * dz, fd.sz * dx + fd.uz * dy - fd.dz * dz,
+                                -fd.sx * gx - fd.ux * gy - fd.dx, -fd.sy * gx - fd.uy * gy - fd.dy, -fd.sz * gx - fd.uz * gy - fd.dz, 0.047f)
+                        } else if (v < 1190) v = t1Put(d, v, wx, wy, wz, col, 1f)
+                        break
                     }
+                    s -= l; m++
                 }
             }
         }
     }
-    // the septum over them (type I cell surface) with the cells' outlines and flat nuclei
+    t1DynDraw(v, GLES20.GL_POINTS, 7f)
+    // the septum over them (type I cell surface) with the cells' outlines and flat nuclei; surfactant film
     GLES20.glDepthMask(false)
-    t1Lit(cup, fd, 0f, 0f, 0f, T1_SEPTUM, T1_WHITE, 0.35f, 0.15f, 1f, 1f, inflate)
+    t1Lit(cup, fd, 0f, 0f, 0f, T1_SEPTUM, T1_WHITE, 0.3f, 0.2f, 1f, 1f, inflate)
     GLES20.glDepthMask(true)
     t1Lit(net.nuclei, fd, 0f, 0f, 0f, T1_SEPTUM, T1_WHITE, 0.9f, 0.3f, 1f, 1f, inflate)
     t1Color(net.type1, fd, 0f, 0f, 0f, 1.5f, false, 0.9f)
+    t1Color(septa[0], null, 0f, 0f, 0f, 3f, false, 1f)
+    // the flat side walls' surface, pale and glistening (never grey)
+    val shell = t1Mesh("alv.shell2") { ParamMesh(4, 48) { u, v, out -> val p = T1_SIDE_P0 + (T1_SIDE_P1 - T1_SIDE_P0) * u; val th = v * TAU
+        t1RailPoint(p, th, t1HexR(th), out) } }
     GLES20.glDepthMask(false)
-    t1Lit(cup, fd, -0.03f, 0f, 0f, T1_FILM, T1_WHITE, 0.16f + 0.05f * sin(breath * TAU), 0.3f, 0.985f, 0.985f, inflate)
+    t1LitWorld(shell, T1_SEPTUM, T1_WHITE, 0.22f, 0.25f)
+    t1Lit(cup, fd, -0.03f, 0f, 0f, T1_FILM, T1_WHITE, 0.14f + 0.05f * sin(breath * TAU), 0.3f, 0.985f, 0.985f, inflate)
     GLES20.glDepthMask(true)
 }
 
