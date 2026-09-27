@@ -305,7 +305,9 @@ internal fun StereoBodyRenderer.drawLookBack(n: TourNode, i: Int, seconds: Float
     }
     if (h < 40f) drawPerson(n, i, h, ((40f - h) / 8f).coerceIn(0f, 1f), seconds)
     // Chapter III closes on the man himself: the scroll portrait, out among the cells.
-    if (map.id == 3) drawPlate("portrait", frameAt(i + 0.12f), tunnelRadius(i + 0.12f) * 0.34f, tunnelRadius(i + 0.12f) * 0.10f, 3.6f, seconds)
+    // (Only once the craft is really here: the plate draws over the world, so a fading-in look-back
+    // must not show it from the previous stop.)
+    if (map.id == 3 && routeProgress > i - 0.35f) drawPlate("portrait", frameAt(i + 0.12f), tunnelRadius(i + 0.12f) * 0.34f, tunnelRadius(i + 0.12f) * 0.10f, 3.6f, seconds)
 }
 
 /** One rib: an arc of a ring open at the front (the sternum), laid horizontal around the chest. */

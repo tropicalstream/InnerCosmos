@@ -438,7 +438,9 @@ class StereoBodyRenderer(
         val inAir = routeProgress < map.airEnd
         airFlow = if (inAir) sin(breath * 2f * PI.toFloat()) * 2.6f else 0f
         // DriftField's flow is along +z (toward the nose on this rail): negative on the inhale.
-        val dustFlow = if (amb == Amb.AIR) -airFlow * 0.7f else flowSpeed(amb)
+        // DriftField advects along world +z (back toward the nose): the fluid runs deeper, WITH the
+        // craft, so its flow is negative; only the breath reverses.
+        val dustFlow = if (amb == Amb.AIR) -airFlow * 0.7f else -flowSpeed(amb) * 0.8f
         drift.update(shipX, shipY, shipZ, spread, amb, dustFlow, dt)
         val stopIdx = (routeProgress + 0.5f).toInt().coerceIn(0, nodes.lastIndex)
         bodies.update(routeProgress, stopIdx, driftFor(stopIdx), airFlow * 0.7f, dt)
