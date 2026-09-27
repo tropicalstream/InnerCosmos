@@ -1439,7 +1439,7 @@ internal fun StereoBodyRenderer.drawStored(n: TourNode, i: Int, seconds: Float) 
     }
     GLES20.glDepthMask(false)
     // near the craft the coat is thin and sparse, the dark red floor showing through it
-    drawMesh(cached("st_thin") { storedMesh(b, um, 16) }, T3_BUFFY, T3_BUFFY, 0.55f, 0f, 0.1f)
+    drawMesh(cached("st_thin") { storedMesh(b, um, 16) }, T3_BUFFY, T3_BUFFY, 0.4f, 0f, 0.1f)
     // Plasma: a pale straw body filling everything above the cells (seen from within it).
     drawMesh(cached("st_plasma") { storedMesh(b, um, 5) }, T3_PLASMA_PALE, T3_PLASMA_PALE, 0.35f, 0f, 0.5f)
     // The glass: cold, blue, beaded outside with condensation from the cold room (never frost
@@ -2034,11 +2034,12 @@ internal fun StereoBodyRenderer.drawTransfusion(n: TourNode, i: Int, seconds: Fl
         if (a < -8f || a > 24f) return
         val f = rfv(b, a)
         val Y = f.radial(spin + 1.57f); val Z = f.d; val X = Y.cross(Z).unit()
-        if (a + tileL > camA - 1.5f && a < camA + 1.5f) {
-            // at the lens: the block's cells drawn one by one, any within 1.2 units of the eye left out
+        if (a + tileL > camA - 2.6f && a < camA + 2.6f) {
+            // at the lens: the block's cells drawn one by one, any within 2.6 units of the eye left
+            // out (the craft sits in a clear pocket of plasma, the column all round and ahead)
             for ((c, ax) in cachedValue("${key}_cells", build)) {
                 val p = f.c + X * c.x + Y * c.y + Z * c.z
-                if ((p - cam).len() < 1.2f) continue
+                if ((p - cam).len() < 2.6f) continue
                 val axW = (X * ax.x + Y * ax.y + Z * ax.z).unit()
                 drawScaled(rbc, p, perp(axW), axW, 7.5f / 2f / um, 7.5f / 2f / um, 7.5f / 2f / um, T3_RBC, T3_RBC_RIM3, 1f, 0.05f)
             }
@@ -2071,8 +2072,10 @@ internal fun StereoBodyRenderer.drawTransfusion(n: TourNode, i: Int, seconds: Fl
     GLES20.glDepthMask(false)
     drawMesh(tube, T3_ENDOTHELIUM, T3_JUNCTION, 0.22f, 0f, 0.15f)
     GLES20.glDepthMask(true)
-    // the endothelial nuclei, flat in the wall, barely brighter than the lining
-    drawMesh(nuc, T3_ENDO_NUC_PALE, T3_ENDOTHELIUM, 1f, 0f, 0.02f)
+    // the endothelial nuclei, flat in the wall, barely brighter than the lining they belong to
+    GLES20.glDepthMask(false)
+    drawMesh(nuc, T3_ENDO_NUC_PALE, T3_ENDOTHELIUM, 0.4f, 0f, 0f)
+    GLES20.glDepthMask(true)
 }
 
 /**
@@ -2940,7 +2943,7 @@ private fun StereoBodyRenderer.cutMesh(b: Float, um: Float, part: Int, lo: Float
             // mostly embedded, only its front showing as a low red band flush with the face (2),
             // edged by its pale endothelium (26)
             val top = cutJunction(pa) - 0.7f
-            val cr = 7f / 2f / um; val depth = 0.28f
+            val cr = 7f / 2f / um; val depth = 0.34f
             val path = ArrayList<FloatArray>()
             for (q in 0..6) path.add(floatArrayOf(pa - 0.6f, top - 3f + 3f * q / 6f))
             for (q in 1..6) { val ang = q / 6f * PI.toFloat(); path.add(floatArrayOf(pa - 0.6f * cos(ang), top + 0.35f * sin(ang))) }
