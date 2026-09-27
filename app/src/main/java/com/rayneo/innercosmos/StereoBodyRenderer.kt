@@ -1914,7 +1914,12 @@ internal class ParamMesh(stacks: Int, slices: Int, fn: (Float, Float, FloatArray
             val vx = pu[0] - pv[0]; val vy = pu[1] - pv[1]; val vz = pu[2] - pv[2]
             var nx = uy * vz - uz * vy; var ny = uz * vx - ux * vz; var nz = ux * vy - uy * vx
             val l = sqrt(nx * nx + ny * ny + nz * nz)
-            if (l > 1e-9f) { nx /= l; ny /= l; nz /= l } else { nx = 0f; ny = 1f; nz = 0f }
+            if (l > 1e-9f) { nx /= l; ny /= l; nz /= l } else {
+                // A pole (every v maps to one point): point the normal outward from the shape's
+                // centre, so the two faces of a red cell's dimple light as the surfaces they are.
+                val pl = sqrt(px * px + py * py + pz * pz)
+                if (pl > 1e-9f) { nx = px / pl; ny = py / pl; nz = pz / pl } else { nx = 0f; ny = 1f; nz = 0f }
+            }
             data.add(px); data.add(py); data.add(pz); data.add(nx); data.add(ny); data.add(nz)
         }
         for (i in 0 until stacks) {
