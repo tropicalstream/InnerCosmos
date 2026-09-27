@@ -3193,7 +3193,7 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
             val r = m.pr[k]
             val cnt = max(1, (TAU * r / 0.07f).toInt())
             for (j in 0 until cnt) {
-                if (v + 2 >= 12000) break
+                if (v + 2 >= 8000) break                  // capped: the pit stays light on the GL thread
                 val a = TAU * (j + t1Hash(k * 977 + j)) / cnt
                 val jr = (t1Hash(k * 131 + j * 7) - 0.5f) * 0.04f
                 for (sg in SIGNS) {
@@ -3270,22 +3270,35 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
         val lx2 = cos(ta) * rr0 + T1_SHEAR * zl0; val ly2 = sin(ta) * rr0
         var tx = fm.cx + fm.sx * lx2 + fm.ux * ly2 - fm.dx * zl0 - c0[0]; var ty = fm.cy + fm.sy * lx2 + fm.uy * ly2 - fm.dy * zl0 - c0[1]; var tz = fm.cz + fm.sz * lx2 + fm.uz * ly2 - fm.dz * zl0 - c0[2]
         val tl = sqrt(tx * tx + ty * ty + tz * tz).coerceAtLeast(1e-6f); tx /= tl; ty /= tl; tz /= tl
-        drawBasis(c0[0], c0[1], c0[2], nx, ny, nz, tx, ty, tz, 0.06f, 0.06f, T1_LEAF, cylinder, T1_PUMP, T1_WHITE, landmarkFade, 0f, 0.3f)
+        // T1_PUMP orange, low glow and no pale rim (accent = base), so it stays orange at display size
+        drawBasis(c0[0], c0[1], c0[2], nx, ny, nz, tx, ty, tz, 0.06f, 0.06f, T1_LEAF, cylinder, T1_PUMP, T1_PUMP, landmarkFade, 0f, 0.1f)
         for (sg in SIGNS) drawBasis(c0[0] + nx * sg * T1_LEAF, c0[1] + ny * sg * T1_LEAF, c0[2] + nz * sg * T1_LEAF, nx * sg, ny * sg, nz * sg, tx, ty, tz,
-            0.06f, 0.06f, 1f, t1Disc(), T1_PUMP, T1_WHITE, landmarkFade, 0f, 0.3f)
+            0.06f, 0.06f, 1f, t1Disc(), T1_PUMP, T1_PUMP, landmarkFade, 0f, 0.1f)
         // the head, in the cytoplasm (the side away from the receptors' stalks)
         val hd = T1_LEAF + 0.06f + 0.05f
-        drawBasis(c0[0] - nx * hd, c0[1] - ny * hd, c0[2] - nz * hd, nx, ny, nz, tx, ty, tz, 0.05f, 0.05f, 0.05f, sphere, T1_PUMP, T1_WHITE, landmarkFade, 0f, 0.3f)
+        drawBasis(c0[0] - nx * hd, c0[1] - ny * hd, c0[2] - nz * hd, nx, ny, nz, tx, ty, tz, 0.05f, 0.05f, 0.05f, sphere, T1_PUMP, T1_PUMP, landmarkFade, 0f, 0.1f)
         // the two leaflet lines, 3 px, running along the membrane's profile across the pump's body
         var lv = 0
         val lc = floatArrayOf(1f, 0.80f, 0.55f)
-        val ka = max(0, kb - 3); val kz = min(m.np - 1, kb + 3)
+        val ka = max(0, kb - 5); val kz = min(m.np - 1, kb + 5)
         for (sg in SIGNS) for (k in ka until kz) {
             wp(k, sg * T1_LEAF, q); lv = t1Put(d, lv, q[0], q[1], q[2], lc, 1f)
             wp(k + 1, sg * T1_LEAF, q); lv = t1Put(d, lv, q[0], q[1], q[2], lc, 1f)
         }
         GLES20.glDisable(GLES20.GL_DEPTH_TEST)
-        t1DynDraw(lv, GLES20.GL_LINES, 3f, 1f, depthWrite = false)
+        t1DynDraw(lv, GLES20.GL_LINES, 4f, 1f, depthWrite = false)
+        // its ions, on the same 1.5 s cycle as the other pumps: 3 Na+ (yellow) from the cytoplasm out through
+        // the body, then 2 K+ (violet) in
+        var iv2 = 0
+        val naC = floatArrayOf(1f, 0.92f, 0.3f); val kC = floatArrayOf(0.75f, 0.5f, 1f)
+        val ph = ((seconds / 1.5f + 0.33f) % 1f)
+        if (ph < 0.45f) { val t = ph / 0.45f
+            for (j in 0 until 3) { val o = -0.14f * (1f - t) + 0.2f * t; val sd = 0.025f * (j - 1)
+                iv2 = t1Put(d, iv2, c0[0] + nx * o + tx * sd, c0[1] + ny * o + ty * sd, c0[2] + nz * o + tz * sd, naC, 1f - t * 0.3f) } }
+        else if (ph > 0.5f && ph < 0.95f) { val t = (ph - 0.5f) / 0.45f
+            for (j in 0 until 2) { val o = 0.2f * (1f - t) - 0.14f * t; val sd = 0.025f * (j * 2 - 1)
+                iv2 = t1Put(d, iv2, c0[0] + nx * o + tx * sd, c0[1] + ny * o + ty * sd, c0[2] + nz * o + tz * sd, kC, 1f) } }
+        t1DynDraw(iv2, GLES20.GL_POINTS, 4.5f, 1f, depthWrite = false)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
     }
     // clathrin coat on the cytoplasmic face of the pit (on the vesicle after scission, until it falls away)
@@ -3294,7 +3307,7 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
     }
     val coat = if (pinched) 1f - t1Smooth(7.14f, 7.2f, rp) else t1Smooth(0.2f, 0.6f, psi)
     if (coat > 0.02f && psi > 0.1f) {
-        if (abs(psi - m.lastPsi) > 0.01f) {
+        if (abs(psi - m.lastPsi) > 0.03f) {         // the cage re-cut every 0.03 rad of wrap
             m.lastPsi = psi
             val e = t1Clathrin; val dd = m.cage.data
             var v = 0
