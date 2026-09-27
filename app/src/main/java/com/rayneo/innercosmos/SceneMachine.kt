@@ -3677,13 +3677,13 @@ private fun StereoBodyRenderer.t2FactoryMeshes(i: Int): Array<ColorVboMesh> = t2
     }
     // ribosomes on Sec61: the large (60S) subunit against the translocon, the small (40S) outward
     for (rz in floatArrayOf(6f, 9.6f)) {
-        g.ell(t2s(-3.0f, -0.9f, rz), t2s(1.2f, 0f, 0f), t2s(0f, 1.45f, 0f), t2s(0f, 0f, 1.35f), T2_RIBO_60S, 1f, 9, 12)
+        g.ell(t2s(-3.0f, -0.9f, rz), t2v(1.2f, 0f, 0f), t2v(0f, 1.45f, 0f), t2v(0f, 0f, 1.35f), T2_RIBO_60S, 1f, 9, 12)
         g.ball(t2s(-2.4f, 0.5f, rz - 0.2f), 0.5f, T2_RIBO_60S, 1f, 5, 7)
         g.ball(t2s(-2.8f, -1.0f, rz + 1.35f), 0.42f, T2_RIBO_60S, 1f, 5, 7)
-        g.ell(t2s(-1.0f, -0.8f, rz), t2s(0.75f, 0f, 0f), t2s(0f, 1.15f, 0f), t2s(0f, 0f, 1.2f), T2_RIBO_40S, 1f, 8, 11)
+        g.ell(t2s(-1.0f, -0.8f, rz), t2v(0.75f, 0f, 0f), t2v(0f, 1.15f, 0f), t2v(0f, 0f, 1.2f), T2_RIBO_40S, 1f, 8, 11)
         g.ball(t2s(-0.9f, 0.5f, rz + 0.2f), 0.55f, T2_RIBO_40S, 1f, 5, 7)
         g.tube(t2s(-4.2f, -0.9f, rz), t2s(-5.0f, -0.9f, rz), 0.6f, 0.6f, T2_SEC61, 1f, 10, true)
-        g.torus(t2s(-4.28f, -0.9f, rz), t2s(1f, 0f, 0f), 0.7f, 0.1f, T2_SEC61_RIM, 1f, 16, 5)
+        g.torus(t2s(-4.28f, -0.9f, rz), t2v(1f, 0f, 0f), 0.7f, 0.1f, T2_SEC61_RIM, 1f, 16, 5)
     }
     // the second ribosome's product, already folded in the lumen, with a chaperone
     g.ball(t2s(-6.1f, -0.8f, 9.9f), 0.42f, T2_CHAIN_B, 1f, 6, 8); g.ball(t2s(-6.0f, 0.05f, 10.4f), 0.45f, T2_BIP, 1f, 6, 8)
@@ -3692,8 +3692,8 @@ private fun StereoBodyRenderer.t2FactoryMeshes(i: Int): Array<ColorVboMesh> = t2
     run {
         val c = t2s(-2.2f, 6.2f, 16f); val r = 3.8f
         glass.ball(c, r, T2_COPII_VES, 0.3f, 12, 18)
-        for (k in 0 until 30) { val y = 1f - 2f * (k + 0.5f) / 30f; val rr = sqrt(1f - y * y); val a = k * 2.39996f; g.ball(c + t2s(cos(a) * rr, y, sin(a) * rr) * (r + 0.2f), 0.35f, T2_COPII, 1f, 4, 6) }
-        for (k in 0 until 3) g.ball(c + t2s(cos(k * 2.1f), 0.3f * k - 0.3f, sin(k * 2.1f)) * 1.4f, 0.6f, T2_CHAIN_B, 1f, 6, 8)
+        for (k in 0 until 30) { val y = 1f - 2f * (k + 0.5f) / 30f; val rr = sqrt(1f - y * y); val a = k * 2.39996f; g.ball(c + t2v(cos(a) * rr, y, sin(a) * rr) * (r + 0.2f), 0.35f, T2_COPII, 1f, 4, 6) }
+        for (k in 0 until 3) g.ball(c + t2v(cos(k * 2.1f), 0.3f * k - 0.3f, sin(k * 2.1f)) * 1.4f, 0.6f, T2_CHAIN_B, 1f, 6, 8)
     }
     // the cis face of a Golgi cisterna, far ahead: where the vesicle is headed
     run {
