@@ -31,6 +31,9 @@ import android.widget.TextView
  *   SWIPE fwd    cycle the audio mix         SWIPE back   toggle the telemetry HUD
  */
 class MainActivity : Activity() {
+    /** When set (adb `--ez lockview true`), script cues no longer switch the camera view. */
+    private var viewLocked = false
+
     private lateinit var sceneView: InnerCosmosView
     private val audioEngine = BodyAudioEngine()
     private val crewVoices by lazy { CrewVoices(this) }
@@ -107,7 +110,7 @@ class MainActivity : Activity() {
             context = this,
             crewVoices = crewVoices,
             onProgress = { p -> sceneView.setProgress(p); bodyMap.setProgress(p) },
-            onView = { m -> sceneView.setView(m) },
+            onView = { m -> if (!viewLocked) sceneView.setView(m) },
             onSfx = { name -> uiHandler.post { onSfx(name) } },
             onCaption = { role, text -> uiHandler.post { showCaption(role, text) } },
             onNode = { node -> audioEngine.setStage(currentMap.nodes[node.coerceIn(0, currentMap.nodes.lastIndex)].amb) }
@@ -261,6 +264,8 @@ class MainActivity : Activity() {
                 segmentMenu.onPick?.invoke(segs[i])
             }
             if (intent.hasExtra("view")) sceneView.setView(intent.getIntExtra("view", 1))
+            // Capture/demo aid: hold the camera where it was put, ignoring the script's camera cuts.
+            if (intent.hasExtra("lockview")) viewLocked = intent.getBooleanExtra("lockview", false)
             if (intent.getBooleanExtra("menu", false)) sceneView.post { openMenuFromTour() }
             if (intent.hasExtra("hud")) { hudVisible = !intent.getBooleanExtra("hud", true); toggleHud() }
             if (intent.hasExtra("debug")) { sceneView.setDebugHud(intent.getBooleanExtra("debug", false)); telemetryView.text = sceneView.telemetry() }
