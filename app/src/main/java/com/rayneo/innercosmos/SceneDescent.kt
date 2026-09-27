@@ -4000,6 +4000,26 @@ private class PersonBaker {
     fun seg(p0: FloatArray, p1: FloatArray, r: Float, base: FloatArray, accent: FloatArray, a: Float, glow: Float = 0f) =
         seg(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], r, base, accent, a, glow)
 
+    /** A tube swept along a polyline (parallel-transported frame), radius per point, capped with small balls. */
+    fun tube(pts: List<FloatArray>, rad: (Int) -> Float, base: FloatArray, accent: FloatArray, a: Float, pattern: Float = 0f, glow: Float = 0f, sides: Int = 8) {
+        val m = pts.size; if (m < 2) return
+        val T = Array(m) { k -> val o = pts[min(k + 1, m - 1)]; val i = pts[max(k - 1, 0)]; floatArrayOf(o[0] - i[0], o[1] - i[1], o[2] - i[2]).also { norm(it) } }
+        val Nn = arrayOfNulls<FloatArray>(m); val Bn = arrayOfNulls<FloatArray>(m)
+        Nn[0] = perp(T[0]); Bn[0] = cross(T[0], Nn[0]!!)
+        for (k in 1 until m) {
+            val p0 = Nn[k - 1]!!; val d = p0[0] * T[k][0] + p0[1] * T[k][1] + p0[2] * T[k][2]
+            val q = floatArrayOf(p0[0] - d * T[k][0], p0[1] - d * T[k][1], p0[2] - d * T[k][2])
+            if (norm(q) < 1e-6f) { Nn[k] = perp(T[k]) } else Nn[k] = q
+            Bn[k] = cross(T[k], Nn[k]!!)
+        }
+        prim(m - 1, sides, 0f, 0f, 0f, EX, EY, EZ, 1f, 1f, 1f, base, accent, a, pattern, glow) { u, v, p, q ->
+            val k = (u * (m - 1) + 0.5f).toInt().coerceIn(0, m - 1); val an = v * TAU
+            val c = cos(an); val sn = sin(an); val nn = Nn[k]!!; val bb = Bn[k]!!; val r = rad(k)
+            for (j in 0..2) { q[j] = nn[j] * c + bb[j] * sn; p[j] = pts[k][j] + q[j] * r }
+        }
+        for (k in intArrayOf(0, m - 1)) ell(pts[k][0], pts[k][1], pts[k][2], rad(k), rad(k), rad(k), base, accent, a, pattern, glow)
+    }
+
     /** An upright cylinder, radius r, from y0 to y1; [capped] closes it top and bottom (a solid), else an open wall. */
     fun cyl(x: Float, y0: Float, y1: Float, z: Float, r: Float, base: FloatArray, accent: FloatArray, a: Float, capped: Boolean, glow: Float = 0f) {
         // rows: bottom centre, bottom rim (down), bottom rim (out), top rim (out), top rim (up), top centre
@@ -4060,7 +4080,53 @@ private class PersonBaker {
 }
 
 /** The baked figure of one tour: organs and bones (opaque), then stop markers and skin (translucent), and the route. */
-private class PersonMeshes(val solid: TriMesh, val glass: TriMesh, val route: LineMesh?)
+private class PersonMeshes(val solid: TriMesh, val glass: TriMesh, val marks: TriMesh, val route: LineMesh?)
+
+/**
+ * Where each stop sits in the look-back figure (x across, +x her left; y up from the soles; z toward
+ * the viewer; fractions of her height), per tour and stop. The 2D inset's map coordinates are a
+ * schematic with overlapping organs and different proportions, so the figure has its own table;
+ * a stop missing from it falls back to the inset's position.
+ */
+private val BODY_MARKS: Map<Int, Array<FloatArray>> = mapOf(
+    1 to arrayOf(
+        floatArrayOf(0f, 0.925f, 0.072f),        // nose
+        floatArrayOf(0f, 0.80f, 0.024f),         // trachea
+        floatArrayOf(-0.07f, 0.72f, 0.046f),     // alveolus, mid right lung
+        floatArrayOf(0.055f, 0.73f, 0.044f),     // lung venule, left hilum
+        floatArrayOf(0.022f, 0.69f, 0.058f),     // heart
+        floatArrayOf(0.018f, 0.862f, 0.024f),    // neck venule
+        floatArrayOf(0f, 0.945f, 0.058f),        // brain: neuron and everything inside its cells
+        floatArrayOf(0f, 0.945f, 0.058f), floatArrayOf(0f, 0.945f, 0.058f), floatArrayOf(0f, 0.945f, 0.058f),
+        floatArrayOf(0f, 0.945f, 0.058f), floatArrayOf(0f, 0.945f, 0.058f),
+        floatArrayOf(0f, 0.6f, 0.04f)),          // (the look-back itself: not marked)
+    2 to arrayOf(
+        floatArrayOf(0f, 0.902f, 0.066f),        // mouth
+        floatArrayOf(0.045f, 0.608f, 0.05f),     // stomach
+        floatArrayOf(-0.012f, 0.515f, 0.06f),    // small intestine
+        floatArrayOf(0.072f, 0.52f, 0.03f),      // phage, in the colon
+        floatArrayOf(-0.05f, 0.62f, 0.064f),     // liver
+        floatArrayOf(0.044f, 0.565f, -0.012f),   // kidney
+        floatArrayOf(-0.074f, 0.33f, 0.046f),    // thigh muscle
+        floatArrayOf(-0.075f, 0.37f, 0f),        // femoral marrow
+        floatArrayOf(-0.075f, 0.37f, 0f),        // B cell, marrow
+        floatArrayOf(-0.035f, 0.622f, 0.05f),    // liver cell
+        floatArrayOf(0.018f, 0.592f, 0f),        // pancreas
+        floatArrayOf(0.03f, 0.68f, 0.052f),      // heart muscle
+        floatArrayOf(0.012f, 0.52f, 0.058f),     // gut lining
+        floatArrayOf(0f, 0.6f, 0.04f)),
+    3 to arrayOf(
+        floatArrayOf(0.064f, 0.784f, 0.034f),    // the cavity, left apex
+        floatArrayOf(0.152f, 0.632f, 0.03f),     // donor's vein, left cubital fossa
+        floatArrayOf(0.24f, 0.653f, 0.008f),     // the bottle
+        floatArrayOf(-0.075f, 0.33f, 0.05f),     // the wound, right thigh
+        floatArrayOf(-0.152f, 0.632f, 0.03f),    // transfusion, right cubital fossa
+        floatArrayOf(0.074f, 0.37f, 0.05f),      // the table, left thigh
+        floatArrayOf(0.085f, 0.545f, 0f),        // marrow, iliac crest
+        floatArrayOf(0.181f, 0.383f, 0.016f),    // the cut, left middle fingertip
+        floatArrayOf(0.022f, 0.69f, 0.058f),     // the fever, in the blood
+        floatArrayOf(0f, 0.6f, 0.04f)),
+)
 private var personCache: PersonMeshes? = null
 private var personKey: Any? = null
 private var personTour = -1
@@ -4072,8 +4138,8 @@ private val COL_SPLEEN = floatArrayOf(0.55f, 0.20f, 0.30f, 1f)
 private val COL_QUADS = floatArrayOf(0.80f, 0.40f, 0.40f, 1f)
 private val COL_HAIR_HER = floatArrayOf(0.34f, 0.22f, 0.15f, 1f)
 private val COL_HAIR_HIM = floatArrayOf(0.42f, 0.36f, 0.31f, 1f)
-private val COL_WOOD = floatArrayOf(0.72f, 0.52f, 0.32f, 1f)
-private val COL_WORKTOP = floatArrayOf(0.88f, 0.86f, 0.82f, 1f)
+private val COL_WOOD = floatArrayOf(0.55f, 0.40f, 0.26f, 1f)
+private val COL_WORKTOP = floatArrayOf(0.74f, 0.72f, 0.69f, 1f)
 private val COL_FLOOR = floatArrayOf(0.45f, 0.40f, 0.38f, 1f)
 private val COL_PERSON_GLASS = floatArrayOf(0.80f, 0.90f, 1.0f, 1f)
 private val COL_WATER = floatArrayOf(0.62f, 0.80f, 0.95f, 1f)
@@ -4147,7 +4213,7 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     val hit = personCache
     if (hit != null && personKey === sphere && personTour == map.id) return hit
     // (a recreated context already freed the old buffers; their ids may now belong to others)
-    if (hit != null && personKey === sphere) { hit.solid.release(); hit.glass.release(); hit.route?.release() }
+    if (hit != null && personKey === sphere) { hit.solid.release(); hit.glass.release(); hit.marks.release(); hit.route?.release() }
     val him = map.id == 3
     val kitchen = map.id == 2
     val s = PersonBaker()
@@ -4164,12 +4230,13 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
         else Triple(v3(sgn * 0.13f, 0.80f, 0f), v3(sgn * 0.155f, 0.635f, 0f), v3(sgn * 0.17f, 0.47f, 0.01f))
     }
 
-    // ---- the kitchen (Tour II): a counter behind her with the glass on it, wall cupboards, the floor
+    // ---- the kitchen (Tour II): a counter at her right hand with the glass on it, a wall cupboard
+    // above it, the floor. Kept to her side and muted so the figure still reads against the dark.
     if (kitchen) {
-        s.box(-0.30f, 0f, -0.42f, 0.40f, 0.51f, -0.16f, COL_WOOD, 1f)                                   // base cabinets
-        s.box(-0.31f, 0.51f, -0.43f, 0.41f, 0.535f, -0.14f, COL_WORKTOP, 1f)                            // worktop
-        s.box(-0.30f, 0.80f, -0.44f, 0.40f, 1.05f, -0.30f, COL_WOOD, 1f)                                // wall cupboards
-        s.box(-0.6f, -0.01f, -0.5f, 0.7f, 0f, 0.45f, COL_FLOOR, 0.55f)                                  // floor
+        s.box(-0.62f, 0f, -0.34f, -0.17f, 0.51f, -0.08f, COL_WOOD, 1f)                                  // base cabinet
+        s.box(-0.63f, 0.51f, -0.35f, -0.16f, 0.535f, -0.06f, COL_WORKTOP, 1f)                           // worktop
+        s.box(-0.62f, 0.82f, -0.36f, -0.17f, 1.02f, -0.24f, COL_WOOD, 1f)                               // wall cupboard
+        s.box(-0.7f, -0.01f, -0.45f, 0.35f, 0f, 0.35f, COL_FLOOR, 0.4f)                                  // floor
     }
 
     // ---- organs (opaque), in their true places
@@ -4207,13 +4274,26 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     part(0.074f, 0.612f, -0.022f, 0.02f, 0.03f, 0.012f, COL_SPLEEN, COL_LAMP, 1f)                         // spleen, behind the stomach
     part(0.018f, 0.592f, -0.014f, 0.042f, 0.009f, 0.012f, COL_PANCREAS, COL_LAMP, 1f, 0.6f)               // pancreas, across the back wall
     for (sgn in SIGNS) part(sgn * 0.044f, 0.565f, -0.032f, 0.017f, 0.030f, 0.015f, COL_ORG_KIDNEY, COL_LAMP, 1f) // kidneys, behind
-    part(0f, 0.515f, 0.022f, 0.052f, 0.04f, 0.036f, COL_ORG_GUT, COL_LAMP, 1f, 1f)                        // small intestine
-    // Large intestine framing it: ascending on her right, transverse under the liver and stomach,
-    // descending on her left, and the sigmoid curling to the midline.
-    seg(-0.068f, 0.47f, 0.012f, -0.07f, 0.572f, 0.014f, 0.013f, COL_COLON, COL_LAMP, 1f)
-    seg(-0.07f, 0.572f, 0.026f, 0.07f, 0.572f, 0.026f, 0.012f, COL_COLON, COL_LAMP, 1f)
-    seg(0.07f, 0.572f, 0.014f, 0.07f, 0.47f, 0.012f, 0.012f, COL_COLON, COL_LAMP, 1f)
-    seg(0.07f, 0.47f, 0.012f, 0.02f, 0.455f, 0.02f, 0.010f, COL_COLON, COL_LAMP, 1f)
+    // Small intestine: one tube in coils, descending in sweeps across the lower abdomen.
+    s.tube(List(150) { k -> val t = k / 149f
+        v3(0.046f * sin(TAU * 2.5f * t), 0.552f - 0.075f * t + 0.005f * sin(TAU * 9f * t), 0.026f + 0.012f * cos(TAU * 7f * t)) },
+        { 0.0085f }, COL_ORG_GUT, COL_LAMP, 1f, 0.6f, 0.12f)
+    // Large intestine framing it: caecum (with the appendix) low on her right, ascending colon, the
+    // hepatic flexure under the liver, the transverse colon sagging a little, the splenic flexure
+    // higher on her left, descending colon, and the sigmoid curling to the midline. Haustra bulge
+    // along it.
+    val colonCtl = listOf(v3(-0.066f, 0.462f, 0.012f), v3(-0.07f, 0.52f, 0.014f), v3(-0.066f, 0.566f, 0.018f),
+        v3(-0.045f, 0.574f, 0.03f), v3(0f, 0.562f, 0.036f), v3(0.045f, 0.58f, 0.03f), v3(0.07f, 0.596f, 0.012f),
+        v3(0.076f, 0.56f, 0.008f), v3(0.072f, 0.49f, 0.01f), v3(0.058f, 0.458f, 0.016f), v3(0.03f, 0.46f, 0.024f), v3(0.012f, 0.448f, 0.02f))
+    val colon = ArrayList<FloatArray>()
+    for (k in 0 until colonCtl.size - 1) for (j in 0 until 12) {
+        val t = j / 12f; val p0 = colonCtl[max(k - 1, 0)]; val p1 = colonCtl[k]; val p2 = colonCtl[k + 1]; val p3 = colonCtl[min(k + 2, colonCtl.size - 1)]
+        colon.add(FloatArray(3) { q -> 0.5f * (2f * p1[q] + (-p0[q] + p2[q]) * t + (2f * p0[q] - 5f * p1[q] + 4f * p2[q] - p3[q]) * t * t + (-p0[q] + 3f * p1[q] - 3f * p2[q] + p3[q]) * t * t * t) })
+    }
+    colon.add(colonCtl.last())
+    s.tube(colon, { k -> 0.0115f + 0.0022f * abs(sin(k * PI_F / 3f)) }, COL_COLON, COL_LAMP, 1f, 0f, 0.12f)
+    part(-0.066f, 0.462f, 0.012f, 0.016f, 0.015f, 0.016f, COL_COLON, COL_LAMP, 1f)                        // caecum
+    seg(-0.058f, 0.453f, 0.012f, -0.05f, 0.436f, 0.016f, 0.003f, COL_COLON, COL_LAMP, 1f)                 // appendix
     part(0f, 0.466f, 0.026f, 0.021f, 0.018f, 0.018f, COL_ORG_BLADDER, COL_LAMP, 1f)                       // bladder
     // Diaphragm: two domes under the lungs, the right higher over the liver, joined by the central
     // tendon under the heart (translucent, so the organs above and below read through it).
@@ -4232,16 +4312,16 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     for (k in 0 until 5) part(0f, 0.590f - k * 0.024f, -0.046f + 0.006f * sin(k / 4f * PI_F), 0.014f, 0.010f, 0.013f, COL_BONE, COL_LAMP, 1f, 0.6f)
     s.ellAxis(v3(0f, 0.463f, -0.05f), v3(0f, 1f, 0.35f), v3(1f, 0f, 0f), 0.028f, 0.024f, 0.008f, COL_BONE, COL_LAMP, 1f)   // sacrum
     // Twelve pairs of ribs, each a ring in the horizontal plane with its gap at the front, tilted
-    // forward ~22 degrees (ribs slope down toward the front); widest at the 7th-8th, the last two
+    // forward ~30 degrees (ribs slope down toward the front); widest at the 7th-8th, the last two
     // short (floating).
     for (k in 0 until 12) {
         val y = 0.80f - k * 0.018f
         val w = 0.078f + 0.030f * sin((k + 1.5f) / 13f * PI_F)
         val sweep = if (k >= 10) 0.42f else 0.80f
-        s.arc(0f, y, -0.004f, v3(0f, 0.927f, 0.375f), v3(0f, 0f, 1f), w, 0.068f, 0.012f, COL_BONE, COL_LAMP, 0.75f, sweep)
+        s.arc(0f, y, -0.004f, v3(0f, 0.866f, 0.5f), v3(0f, 0f, 1f), w, 0.068f, 0.012f, COL_BONE, COL_LAMP, 0.75f, sweep)
         // Costal cartilage from the rib's front end: ribs 1-7 to the sternum, 8-10 up to the cartilage above.
         if (k < 10) for (sgn in SIGNS) {
-            val ex = sgn * w * 0.588f; val ey = y - 0.021f; val ez = 0.047f
+            val ex = sgn * w * 0.588f; val ey = y - 0.0275f; val ez = 0.044f
             if (k < 7) seg(ex, ey, ez, sgn * 0.011f, max(0.672f, y - 0.004f), 0.052f, 0.0035f, COL_CARTILAGE, COL_LAMP, 0.9f)
             else seg(ex, ey, ez, sgn * 0.036f, 0.668f + (k - 7) * 0.004f, 0.05f, 0.0032f, COL_CARTILAGE, COL_LAMP, 0.9f)
         }
@@ -4249,7 +4329,13 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     part(0f, 0.738f, 0.052f, 0.012f, 0.066f, 0.005f, COL_BONE, COL_LAMP, 1f)                              // sternum
     s.arc(0f, 0.50f, 0f, v3(0f, 1f, 0f), v3(0f, 0f, 1f), 0.11f, 0.07f, 0.014f, COL_BONE, COL_LAMP, 0.85f) // pelvic brim
     for ((k, sgn) in SIGNS.withIndex()) {
-        part(sgn * 0.075f, 0.515f, -0.01f, 0.05f, 0.04f, 0.012f, COL_BONE, COL_LAMP, 0.85f)                 // iliac wings
+        // Iliac wing: a curved fan, the side wall of the pelvic bowl, from the sacroiliac joint behind
+        // to the anterior superior iliac spine in front.
+        s.ell(sgn * 0.035f, 0.505f, -0.01f, 0.058f, 0.045f, 0.042f, COL_BONE, COL_LAMP, 0.85f, 0f, 0.12f,
+            0.08f * PI_F, 0.5f * PI_F, if (sgn > 0f) -0.45f * PI_F else 0.55f * PI_F, if (sgn > 0f) 0.45f * PI_F else 1.45f * PI_F, twoSided = true)
+        part(sgn * 0.058f, 0.478f, 0f, 0.012f, 0.012f, 0.012f, COL_BONE, COL_LAMP, 1f)                      // femoral head, in the acetabulum
+        seg(sgn * 0.058f, 0.478f, 0f, sgn * 0.074f, 0.462f, 0f, 0.0075f, COL_BONE, COL_LAMP, 1f)            // femoral neck
+        part(sgn * 0.081f, 0.468f, 0f, 0.009f, 0.011f, 0.009f, COL_BONE, COL_LAMP, 1f)                      // greater trochanter
         seg(sgn * 0.012f, 0.822f, 0.03f, sgn * 0.07f, 0.828f, 0.035f, 0.007f, COL_BONE, COL_LAMP, 1f)        // clavicle, S-curved,
         seg(sgn * 0.07f, 0.828f, 0.035f, sgn * 0.125f, 0.838f, 0.0f, 0.007f, COL_BONE, COL_LAMP, 1f)         //   rising to the shoulder
         part(sgn * 0.075f, 0.765f, -0.062f, 0.034f, 0.048f, 0.005f, COL_BONE, COL_LAMP, 0.8f)                // scapula, behind the upper ribs
@@ -4272,23 +4358,23 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
         g.cyl(0.24f, 0.626f, 0.678f, 0.008f, 0.018f, COL_PERSON_GLASS, COL_LAMP, 0.35f, capped = false, glow = 0.3f)
     }
     if (kitchen) {                                                                                         // the glass on the worktop
-        g.cyl(-0.19f, 0.536f, 0.566f, -0.22f, 0.019f, COL_WATER, COL_LAMP, 0.6f, capped = true, glow = 0.2f)
-        g.cyl(-0.19f, 0.535f, 0.61f, -0.22f, 0.022f, COL_PERSON_GLASS, COL_LAMP, 0.3f, capped = false, glow = 0.3f)
+        g.cyl(-0.24f, 0.536f, 0.566f, -0.16f, 0.019f, COL_WATER, COL_LAMP, 0.6f, capped = true, glow = 0.2f)
+        g.cyl(-0.24f, 0.535f, 0.61f, -0.16f, 0.022f, COL_PERSON_GLASS, COL_LAMP, 0.3f, capped = false, glow = 0.3f)
     }
     // Stops where they happened. Map coordinates follow the 2D inset: a figure facing you,
     // image-left = her right (-x); just under the skin (limbs are thin).
-    fun mx(t: TourNode) = (t.mapX - 50f) / 150f
-    fun my(t: TourNode) = 1f - t.mapY / 150f
-    fun mz(x: Float) = if (abs(x) > 0.12f) 0.008f else 0.035f
+    val table = BODY_MARKS[map.id]?.takeIf { it.size == nodes.size }
+    fun mark(k: Int): FloatArray = table?.get(k) ?: run {
+        val x = (nodes[k].mapX - 50f) / 150f
+        floatArrayOf(x, 1f - nodes[k].mapY / 150f, if (abs(x) > 0.12f) 0.008f else 0.035f)
+    }
+    val mk = PersonBaker()
     val route = ArrayList<Float>()
     for (k in 0 until nodes.size - 1) {
-        val a0 = nodes[k]; val x = mx(a0); val y = my(a0)
-        g.ell(x, y, mz(x), 0.011f, 0.011f, 0.011f, COL_LAMP, COL_LAMP, 1f, 0f, 0.9f)
-        if (k + 1 < nodes.size - 1) {
-            val b0 = nodes[k + 1]
-            for ((qx, qy) in listOf(x to y, mx(b0) to my(b0))) {
-                route.add(qx); route.add(qy); route.add(mz(qx)); route.add(1f); route.add(0.77f); route.add(0.42f); route.add(0.5f)
-            }
+        val q = mark(k)
+        mk.ell(q[0], q[1], q[2], 0.011f, 0.011f, 0.011f, COL_LAMP, COL_LAMP, 1f, 0f, 0.9f)
+        if (k + 1 < nodes.size - 1) for (pq in listOf(q, mark(k + 1))) {
+            route.add(pq[0]); route.add(pq[1]); route.add(pq[2]); route.add(1f); route.add(0.77f); route.add(0.42f); route.add(0.5f)
         }
     }
     for (sgn in SIGNS) g.ell(sgn * 0.074f, 0.375f, 0.014f, 0.036f, 0.088f, 0.034f, COL_QUADS, COL_LAMP, 0.3f, 0f, 0.1f)  // quadriceps
@@ -4316,7 +4402,7 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
         g.seg(sgn * 0.078f, 0.27f, 0f, sgn * 0.08f, 0.05f, 0f, 0.040f, sk, rim, 0.28f, glow = 0.35f)       // lower leg
         g.ell(sgn * 0.082f, 0.018f, 0.03f, 0.029f, 0.018f, 0.058f, sk, rim, 0.3f, glow = 0.35f)            // foot
     }
-    val made = PersonMeshes(solid, TriMesh(g.data()), if (route.isEmpty()) null else LineMesh(route.toFloatArray()))
+    val made = PersonMeshes(solid, TriMesh(g.data()), TriMesh(mk.data()), if (route.isEmpty()) null else LineMesh(route.toFloatArray()))
     personCache = made; personKey = sphere; personTour = map.id
     return made
 }
@@ -4367,12 +4453,17 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
     colorShader.use(mvp, 1f)
     meshes.solid.draw(colorShader.positionHandle, colorShader.colorHandle)
     GLES20.glDepthMask(false)
+    meshes.glass.draw(colorShader.positionHandle, colorShader.colorHandle)
+    // The stops and the route between them sit at their true depth in the body but are drawn over
+    // it, so no organ hides a marker (the kidney's is behind the gut).
+    GLES20.glDisable(GLES20.GL_DEPTH_TEST)
     meshes.route?.let {
         lineWidth(2f)
         it.draw(colorShader.positionHandle, colorShader.colorHandle)
         lineWidth(1f)
     }
-    meshes.glass.draw(colorShader.positionHandle, colorShader.colorHandle)
+    meshes.marks.draw(colorShader.positionHandle, colorShader.colorHandle)
+    GLES20.glEnable(GLES20.GL_DEPTH_TEST)
     GLES20.glDepthMask(true)
     GLES20.glFrontFace(GLES20.GL_CCW)
     colorShader.globalFade = keep
