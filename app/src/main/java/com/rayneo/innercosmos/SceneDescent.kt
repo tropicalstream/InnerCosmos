@@ -3319,7 +3319,7 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
             val cc = floatArrayOf(0.88f, 0.92f, 1f)
             var k = 0
             val cosLim = cos(psi)
-            while (k < e.size && v + 2 < 4200) {
+            while (k < e.size && v + 2 < 3000) {       // capped at 3000 vertices
                 if (e[k + 2] >= cosLim && e[k + 5] >= cosLim) {
                     v = t1Put(dd, v, e[k] * cr, e[k + 1] * cr, -(e[k + 2] * cr), cc, 0.9f)
                     v = t1Put(dd, v, e[k + 3] * cr, e[k + 4] * cr, -(e[k + 5] * cr), cc, 0.9f)
@@ -3332,7 +3332,7 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
         else { t1Model(fm, 0f, so, uo); t1ApplyShear(); Matrix.translateM(model, 0, 0f, 0f, -h) }
         Matrix.multiplyMM(mv, 0, view, 0, model, 0); Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
         val keep = colorShader.globalFade; colorShader.globalFade = keep * coat
-        colorShader.use(mvp, 1f); lineWidth(2f)
+        colorShader.use(mvp, 1f); lineWidth(1f)
         m.cage.draw(colorShader.positionHandle, colorShader.colorHandle, GLES20.GL_LINES, m.cageVerts)
         lineWidth(1f); colorShader.globalFade = keep
     }
