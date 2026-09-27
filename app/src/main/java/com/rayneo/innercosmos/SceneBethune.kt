@@ -767,10 +767,14 @@ internal fun StereoBodyRenderer.drawDonor(n: TourNode, i: Int, seconds: Float) {
     val b = i.toFloat()
     val um = umu(i)
     val nd = needleFrame(b, um)
-    drawMesh(cached("dn_outer") { needleMesh(nd, 0) }, T3_STEEL, T3_STEEL_EDGE, 1f, 0f, 0.12f)
-    drawMesh(cached("dn_bore") { needleMesh(nd, 1) }, T3_BORE, T3_STEEL, 1f, 0f, 0.05f)
+    // The bore first, then the steel drawn a little translucent (a schematic cutaway) so the hollow
+    // of the needle reads from behind, where the bevel itself is seen almost edge-on.
+    drawMesh(cached("dn_bore") { needleMesh(nd, 1) }, T3_BORE, T3_BORE, 1f, 0f, 0f)
     drawMesh(cached("dn_bevel") { needleMesh(nd, 2) }, T3_STEEL_EDGE, T3_STEEL_EDGE, 1f, 0f, 0.35f)
     drawMesh(cached("dn_collar") { needleMesh(nd, 3) }, T3_INTIMA, T3_VALVE, 1f, 0f, 0.1f)
+    GLES20.glDepthMask(false)
+    drawMesh(cached("dn_outer") { needleMesh(nd, 0) }, T3_STEEL, T3_STEEL_EDGE, 0.62f, 0f, 0.12f)
+    GLES20.glDepthMask(true)
     // The valve: cusps flutter a little with each surge of flow, never closing while blood runs forward.
     val flutter = 1f + 0.035f * sin(seconds * 2f * PI.toFloat() / 1.6f)
     drawMeshRadial(cached("dn_cusps") { valveMesh(b, 0) }, b + 8.5f / NODE_UNITS, flutter, T3_VALVE, T3_SEPTUM, 0.92f, 0f, 0.12f)
@@ -1145,7 +1149,7 @@ private fun StereoBodyRenderer.woundMesh(b: Float, um: Float, part: Int): T3Mesh
         }
         8 -> {
             // grit: angular mineral fragments 9-20 µm, faceted
-            val spots = listOf(floatArrayOf(2f, 1.9f, 14f), floatArrayOf(4.8f, -2.1f, 20f), floatArrayOf(8.5f, 1.3f, 11f), floatArrayOf(-0.8f, -1.9f, 9f))
+            val spots = listOf(floatArrayOf(2f, 1.9f, 14f), floatArrayOf(4.8f, -2.1f, 15f), floatArrayOf(8.5f, 1.3f, 11f), floatArrayOf(7.2f, -1.9f, 9f))
             for (sp in spots) {
                 val f = rfv(b, sp[0]); val r = sp[2] / 2f / um
                 val c = f.at(sp[1], floorUp + 0.3f + r * 0.7f)
