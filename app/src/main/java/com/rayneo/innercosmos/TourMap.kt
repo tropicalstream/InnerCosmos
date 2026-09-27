@@ -85,7 +85,7 @@ object Tours {
             TourNode("THE MOUTH", 0.0f, 0.0f, 0f, 4.2f, rgb(0.92f, 0.50f, 0.52f), 12.0, Scene.MOUTH, Amb.AIR, 50f, 20f, "MOUTH", "12 m → 12 mm"),
             TourNode("THE GUT", 2.4f, 0.3f, -16f, 3.6f, rgb(0.95f, 0.55f, 0.55f), 1.2e-3, Scene.GUT, Amb.GUT, 50f, 68f, "SMALL INTESTINE", "1.2 mm → 12 µm"),
             TourNode("THE PHAGE", -2.2f, -0.2f, -32f, 4.5f, rgb(0.14f, 0.2f, 0.2f), 1.2e-7, Scene.PHAGE, Amb.GUT, 52f, 72f, "GUT · PHAGE", "12 µm → 120 nm"),
-            TourNode("THE LIVER", 2.0f, 0.4f, -48f, 3.0f, rgb(0.55f, 0.18f, 0.16f), 1.2e-5, Scene.LIVER, Amb.BLOOD, 43f, 52f, "LIVER", "12 µm"),
+            TourNode("THE LIVER", 2.0f, 0.4f, -48f, 1.6f, rgb(0.55f, 0.18f, 0.16f), 1.2e-5, Scene.LIVER, Amb.BLOOD, 43f, 52f, "LIVER", "12 µm"),
             TourNode("THE KIDNEY", -2.6f, 0.0f, -64f, 3.0f, rgb(0.6f, 0.42f, 0.44f), 1.2e-5, Scene.KIDNEY, Amb.BLOOD, 60f, 62f, "KIDNEY", "12 µm"),
             TourNode("THE MUSCLE", 2.4f, -0.3f, -80f, 2.6f, rgb(0.3f, 0.1f, 0.12f), 1.2e-6, Scene.MUSCLE, Amb.MUSCLE, 37f, 102f, "MUSCLE · THIGH", "12 µm → 1.2 µm"),
             TourNode("THE MARROW", -2.0f, 0.3f, -96f, 3.2f, rgb(0.55f, 0.2f, 0.28f), 1.2e-5, Scene.MARROW, Amb.CYTO, 40f, 118f, "BONE MARROW", "1.2 µm → 12 µm"),
