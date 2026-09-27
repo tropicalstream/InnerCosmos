@@ -14,18 +14,19 @@
 | # | Stop | Menu start |
 | --- | --- | --- |
 | 1 | 1. THE MOUTH | 00:00 |
-| 2 | 2. THE GUT | 03:36 |
-| 3 | 3. THE PHAGE | 06:29 |
-| 4 | 4. THE LIVER | 10:43 |
-| 5 | 5. THE KIDNEY | 12:35 |
-| 6 | 6. THE MUSCLE | 15:02 |
-| 7 | 7. THE BONE MARROW | 17:13 |
-| 8 | 8. THE SHUFFLE | 19:34 |
-| 9 | 9. THE HIGHWAY | 22:15 |
-| 10 | 10. THE FACTORY | 24:55 |
-| 11 | 11. THE MOTOR | 27:15 |
-| 12 | 12. THE DIVISION | 30:10 |
-| 13 | 13. THE LOOK BACK | 32:13 |
+| 2 | 2. THE STOMACH | 02:11 |
+| 3 | 3. THE GUT | 03:36 |
+| 4 | 4. THE PHAGE | 06:29 |
+| 5 | 5. THE LIVER | 10:43 |
+| 6 | 6. THE KIDNEY | 12:35 |
+| 7 | 7. THE MUSCLE | 15:02 |
+| 8 | 8. THE BONE MARROW | 17:13 |
+| 9 | 9. THE SHUFFLE | 19:34 |
+| 10 | 10. THE HIGHWAY | 22:15 |
+| 11 | 11. THE FACTORY | 24:55 |
+| 12 | 12. THE MOTOR | 27:15 |
+| 13 | 13. THE DIVISION | 30:10 |
+| 14 | 14. THE LOOK BACK | 32:13 |
 
 ---
 
@@ -54,6 +55,9 @@
 **01:59** · look: *BRIDGE (helm)* · SFX: `squelch`
 > **HELM:** [urgent] Ship-sized boulders to port are teeth, and the red hill heaving under us is the tongue, shoving us back. Larynx climbing under the tongue, cords slamming shut, epiglottis folding over the airway ahead and below. [warm] We ride over its top. Three safeguards, not one, keep lunch out of the lungs. Clear. Oesophagus, and that squeeze is peristalsis, a wave of muscle walking us down.
 
+
+### 2. The Stomach
+
 **02:38** · look: *BRIDGE (helm)*
 > **DOC:** [grave] Eight to ten seconds down the pipe, and here's the stomach. The fluid sits around pH one and a half to three and a half, acid enough to strip unprotected tissue, and pepsin works in it, chopping proteins to pieces. [wonder] The wall survives under a blanket of mucus and bicarbonate that holds its own surface near neutral, and it repaints itself every few days behind that shield.
 
@@ -66,7 +70,7 @@
 **03:42** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 
 
-### 2. The Gut
+### 3. The Gut
 
 **03:56** · look: *BRIDGE (helm)*
 > **HELM:** [awe] Villi. Thousands of them, swaying like kelp, each a finger half a millimetre to a millimetre and a half tall, packed so tight we can only skim the tips. We're a grain of sand riding over them. [warm] Watch the walls. They're drinking.
@@ -94,7 +98,7 @@
 **06:35** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 
 
-### 3. The Phage
+### 4. The Phage
 
 **06:47** · look: *EXTERNAL (chase, the Mote)*
 > **DOC:** [hushed] E. coli, two micrometres long. Those lunar landers settling on its hull are T4 bacteriophages: a twenty-sided head packed with DNA, a spring-loaded tail, six fibres tasting the surface. [excited] They hunt bacteria and only bacteria; no key they carry fits a human cell. [awe] Phages of every kind, ten to the thirty-one on Earth, mostly in ocean and soil. More than every star we can see.
@@ -132,7 +136,7 @@
 **10:49** · look: *EXTERNAL (chase, the Mote)* · SFX: `grow`
 
 
-### 4. The Liver
+### 5. The Liver
 
 **11:04** · look: *BRIDGE (helm)*
 > **DOC:** [awe] Plates of cells one cell thick, blood seeping between them through sinusoids, leaky on purpose. [wonder] A kilo and a half of this, your biggest internal organ, and each hepatocyte works hundreds of jobs: between them they bank about a hundred grams of glycogen, make albumin, clotting factors, bile to break up fats. [dry] It takes alcohol apart: acetaldehyde, the toxic step, then harmless acetate.
@@ -147,7 +151,7 @@
 > **HELM:** [warm] Out by the hepatic vein, through the heart, down the renal artery. No drive work this leg, Chief. [awe] And we're diving into a glomerulus: a knot of capillaries balled up inside a cup, plasma pressed through the wall around us like water through a coffee filter. Doc, tell them how much.
 
 
-### 5. The Kidney
+### 6. The Kidney
 
 **13:06** · look: *BRIDGE (helm)*
 > **DOC:** [wonder] One hundred and eighty litres of plasma a day through these sieves. Your whole plasma supply, about fifty times over. [emphasis] And the tubules take back ninety-nine percent of it, water, salt, glucose, all of it, leaving a litre and a half of urine. The kidney doesn't clean blood by throwing away. It cleans by choosing what to keep.
@@ -156,10 +160,10 @@
 > **ENGINEERING:** [reflective] I'm just a passenger here, so I'm admiring. A million of these filters in each kidney, packed into something the size of a fist. [chuckle] I couldn't fit a million of anything into a fist, and I've tried with bolts.
 
 **13:59** · look: *BRIDGE (helm)*
-> **DOC:** [warm] Down the loop now, this long hairpin, and the fluid's getting saltier around us. That's the loop of Henle, concentrating. [excited] And the kidney talks. It sends out renin, which helps set your blood pressure, and erythropoietin, EPO, a hormone that tells the bone marrow: make more red cells. Remember that order slip. We'll watch it delivered.
+> **DOC:** [warm] Past that tubule lies the loop of Henle, a long hairpin where the filtrate grows saltier and is concentrated. [excited] And the kidney talks. It sends out renin, which helps set your blood pressure, and erythropoietin, EPO, a hormone that tells the bone marrow: make more red cells. Remember that order slip. We'll watch it delivered.
 
 **14:42** · look: *BRIDGE (helm)*
-> **HELM:** [warm] Collecting duct ahead, and that's a road we won't ride to the end. [excited] Back into the blood and out to a thigh muscle, where Doc has timed a contraction to roll through while we're inside one cell longer than your forearm. Helm calling one power of ten down, Chief. Twelve micrometres to one point two.
+> **HELM:** [warm] Beyond it wait the collecting ducts, and that's a road we won't ride to the end. [excited] Back into the blood and out to a thigh muscle, where Doc has timed a contraction to roll through while we're inside one cell longer than your forearm. Helm calling one power of ten down, Chief. Twelve micrometres to one point two.
 
 **15:06** · look: *SCALE DRIVE CORE*
 > **ENGINEERING:** [tense] Three, two, one, dropping. [awe] One point two micrometres. Look at the stripes: ranks of them, a barcode running to the horizon. [dry] Each stripe's a sarcomere, Doc tells me. I'd have called it a piston row.
@@ -167,7 +171,7 @@
 **15:08** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 
 
-### 6. The Muscle
+### 7. The Muscle
 
 **15:27** · look: *BRIDGE (helm)*
 > **DOC:** [wonder] Each sarcomere is about two micrometres: thin filaments of actin laced between thick filaments of myosin. This fibre is one cell, thirty centimetres long. In 1954 two unrelated scientists, both named Huxley, published one honest answer: muscles don't shrink, filaments slide. [emphasis] Myosin heads grab actin, pull five to ten nanometres, let go, grab again. One ATP per stroke.
@@ -187,7 +191,7 @@
 **17:19** · look: *EXTERNAL (chase, the Mote)* · SFX: `grow`
 
 
-### 7. The Bone Marrow
+### 8. The Bone Marrow
 
 **17:44** · look: *BRIDGE (helm)*
 > **HELM:** [awe] Inside the bone. Struts around us like the girders of a bridge, and between them red marrow, thick and alive. [wonder] It's like flying into a snow globe somebody's shaking: cells budding, cells drifting, cells slipping into the blood every second we watch.
@@ -207,7 +211,7 @@
 **19:40** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 
 
-### 8. The Shuffle
+### 9. The Shuffle
 
 **19:57** · look: *BRIDGE (helm)*
 > **DOC:** [excited] On purpose. This cell is building its antibody gene from a library. Roughly forty to fifty V segments, twenty-five D, six J. It picks one of each, at random, and two enzymes, RAG1 and RAG2, cut them out while the cell's repair crew pastes them together. [awe] Then it adds random extra letters at the joints. Deliberately.
@@ -230,7 +234,7 @@
 **22:21** · look: *EXTERNAL (chase, the Mote)* · SFX: `grow`
 
 
-### 9. The Highway
+### 10. The Highway
 
 **22:32** · look: *EXTERNAL (chase, the Mote)*
 > **HELM:** [awe] A liver cell, seen as a city. Those hollow rails are microtubules, twenty-five nanometres across, and something is walking along one. Walking. [warm] Two feet, a long neck, and a balloon of cargo bigger than its whole body, on a string. Matching its pace now. Meet kinesin.
@@ -253,7 +257,7 @@
 **25:01** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 
 
-### 10. The Factory
+### 11. The Factory
 
 **25:19** · look: *BRIDGE (helm)*
 > **HELM:** [awe] We're at the nucleus wall, and a gene is being read. RNA polymerase crawling along the DNA, spooling out messenger RNA behind it, tens of letters a second. [warm] Follow that strand. It's headed for the pore, and so are we.
@@ -281,7 +285,7 @@
 **27:22** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 
 
-### 11. The Motor
+### 12. The Motor
 
 **27:39** · look: *BRIDGE (helm)*
 > **HELM:** [hushed] Inner membrane of a mitochondrion, in a cell of the heart. That thing turning in the wall beside us: a ring set in the membrane, a stalk, a head above it. [awe] It's spinning. It is actually spinning. ATP synthase. Holding one nanometre off it, Doc. Go.
@@ -304,7 +308,7 @@
 **30:16** · look: *EXTERNAL (chase, the Mote)* · SFX: `grow`
 
 
-### 12. The Division
+### 13. The Division
 
 **30:34** · look: *BRIDGE (helm)*
 > **DOC:** [wonder] Forty-six chromosomes, each two identical copies joined at the waist. Eight hours ago this cell copied all three point two billion base pairs, thousands of forks reading at once. Now, one hour of mitosis: condense, line up on the plate, and sisters hauled apart at about a micrometre a minute. [emphasis] Then an actin ring cinches the middle shut.
@@ -332,7 +336,7 @@
 > **DOC:** [tender] Here's what seven powers of ten taught us, twice now. The same motor in every mitochondrion. The same shuffle in every marrow. The same phage war in every gut, from the first human who ever lived to the newest born this minute. [emphasis] Science, done honestly, by people willing to be wrong, keeps finding one machinery. One family. [softly] We are all human beings.
 
 
-### 13. The Look Back
+### 14. The Look Back
 
 **34:03** · look: *BRIDGE (helm)*
 > **HELM:** [warm] Twelve metres. Full size. There's the kitchen, there's the glass, there's her, wiping her mouth. [gentle] Thank you for riding the Mote. Now go look at your own hand. Then look at a stranger's. Same crew.
