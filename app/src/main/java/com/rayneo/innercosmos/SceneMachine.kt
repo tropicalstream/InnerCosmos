@@ -85,7 +85,7 @@ internal val T2_FILTRATE = floatArrayOf(0.8f, 0.94f, 1f, 1f)
 internal val T2_ZDISC = floatArrayOf(0.96f, 0.88f, 0.52f, 1f)
 internal val T2_MYOSIN = floatArrayOf(0.72f, 0.24f, 0.3f, 1f)
 internal val T2_MYOSIN_HEAD = floatArrayOf(0.98f, 0.5f, 0.52f, 1f)
-internal val T2_ACTIN = floatArrayOf(0.95f, 0.84f, 0.78f, 1f)
+internal val T2_ACTIN = floatArrayOf(0.88f, 0.74f, 0.68f, 1f)
 internal val T2_MLINE = floatArrayOf(0.6f, 0.22f, 0.3f, 1f)
 internal val T2_TTUBULE = floatArrayOf(0.26f, 0.5f, 0.58f, 1f)
 internal val T2_SR = floatArrayOf(0.42f, 0.66f, 0.72f, 1f)
@@ -1584,7 +1584,8 @@ private const val T2_THIN_LEN = 1.25f    // 1.0 µm thin filament from each Z di
 
 private fun t2Fibrils(): List<FloatArray> {
     val out = ArrayList<FloatArray>()
-    for (k in 0 until 6) { val a = k * T2PI / 3f; out.add(floatArrayOf(cos(a) * 2.7f, sin(a) * 2.7f, 1f)) }
+    // the four beside and below the craft are opened up to show their filaments; the two above are drawn banded
+    for (k in 0 until 6) { val a = k * T2PI / 3f; out.add(floatArrayOf(cos(a) * 2.7f, sin(a) * 2.7f, if (k == 1 || k == 2) 0f else 1f)) }
     for (k in 0 until 12) { val a = (k + 0.5f) * T2PI / 6f; out.add(floatArrayOf(cos(a) * 4.75f, sin(a) * 4.75f, 0f)) }
     return out
 }
@@ -2195,7 +2196,6 @@ private fun StereoBodyRenderer.t2HighwayMeshes(i: Int): Array<ColorVboMesh> = t2
     for (k in 0 until 13) { val a = k * 2f * T2PI / 13f; g.ball(t2v(mx + cos(a) * 0.13f, my + sin(a) * 0.13f, T2_MT_Z0 - 0.1f - 0.02f * k), 0.05f, T2_GTURC, 1f, 3, 5) }
     // more microtubules of the network, further off
     g.path(listOf(t2v(-6.5f, 6.5f, -6f), t2v(-4.5f, 5.8f, 8f), t2v(-2.5f, 5.0f, 22f)), { 0.155f }, T2_TUBULIN, 1f, 8, true)
-    g.path(listOf(t2v(5.5f, -1.2f, -6f), t2v(7.5f, 0.8f, 9f), t2v(9.5f, 2.8f, 24f)), { 0.155f }, T2_TUBULIN, 1f, 8, true)
     // mitochondrion (0.64 x 1.6 µm): outer and inner membranes translucent, lamellar cristae inside
     val mc = t2v(8.6f, -3.9f, 4.5f)
     fun capsuleSurf(geo: T2Geo, r: Float, half: Float, col: FloatArray, al: Float) = geo.surf(24, 20, col, al) { u, v ->
