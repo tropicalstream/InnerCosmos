@@ -762,8 +762,6 @@ private fun t1NosDist(X: Float, Y: Float, cy: Float, rot: Float, ax: Float, ay: 
 }
 
 private fun t1OtherNostril(X: Float, Y: Float): Float = t1NosDist(X, Y, 1.9f, -T1_NOS_ROT, 0.85f, 0.52f)
-private const val T1_EYE_X = 5.3f              // the eyes: 42 mm above the nostrils, 31 mm either side of the midline
-private const val T1_EYE_Y = 3.9f
 private const val T1_PIT_X = -2.0f
 private const val T1_PIT_Y = -0.55f
 
@@ -803,12 +801,6 @@ private fun t1FaceDepth(X: Float, Y: Float): Float {
     h += 0.12f * exp(-((X + 2.0f) * (X + 2.0f) / 0.8f + ym * ym / 0.05f))
     for (sg in SIGNS) h -= 0.07f * exp(-((X + 2.0f) * (X + 2.0f) / 0.8f + (ym - sg * 0.35f) * (ym - sg * 0.35f) / 0.02f))
     h -= 0.06f * exp(-((X + 3.15f) * (X + 3.15f) / 0.015f)) * exp(-ym * ym / 2.5f)
-    // at the patch's upper edge, the orbits: two shallow sockets under the brow ridges, either side of the nasal root
-    for (sg in SIGNS) {
-        val ey = ym - sg * T1_EYE_Y
-        h += 0.55f * exp(-((X - T1_EYE_X) * (X - T1_EYE_X) / 0.7f + ey * ey / 1.8f))
-        h -= 0.3f * exp(-((X - T1_EYE_X - 1.15f) * (X - T1_EYE_X - 1.15f) / 0.2f + ey * ey / 2.4f))
-    }
     // below the upper lip, the mouth: the lips meet at the stomion, the lower lip's red below
     h += 0.12f * exp(-((X + 4.2f) * (X + 4.2f) / 0.02f)) * exp(-ym * ym / 5f)
     h -= 0.3f * exp(-((X + 4.7f) * (X + 4.7f) / 0.3f + ym * ym / 3.5f))
@@ -822,16 +814,11 @@ private fun t1FaceDepth(X: Float, Y: Float): Float {
 private fun t1PatchEdge(dx: Float, dy: Float): Float {
     // distance along the ray (dx, dy) from the craft's nostril centre to the ellipse
     // ((X - x0)/ax)^2 + ((Y - y0)/ay)^2 = 1 with x0 = -0.6, y0 = mid, ax = 3.0, ay = 3.2
-    // centred low enough that the lip is in the opaque part; reaching further up (toward the eyes) than down
-    val x0 = -0.8f; val y0 = T1_MID; val ay = 6.5f
-    fun hit(ax: Float): Float {
-        val a = (dx / ax).pow(2) + (dy / ay).pow(2)
-        val b = 2f * ((-x0) * dx / (ax * ax) + (-y0) * dy / (ay * ay))
-        val c = (x0 / ax).pow(2) + (y0 / ay).pow(2) - 1f
-        return (-b + sqrt((b * b - 4f * a * c).coerceAtLeast(0f))) / (2f * a)
-    }
-    val up = hit(7.6f)
-    return if (dx * up >= x0) up else hit(5.6f)
+    val x0 = -0.8f; val y0 = T1_MID; val ax = 5.6f; val ay = 5.0f       // centred low enough that the lip is in the opaque part
+    val a = (dx / ax).pow(2) + (dy / ay).pow(2)
+    val b = 2f * ((-x0) * dx / (ax * ax) + (-y0) * dy / (ay * ay))
+    val c = (x0 / ax).pow(2) + (y0 / ay).pow(2) - 1f
+    return (-b + sqrt((b * b - 4f * a * c).coerceAtLeast(0f))) / (2f * a)
 }
 
 private fun t1FacePoint(u: Float, v: Float, tmp: FloatArray, out: FloatArray) {
@@ -1074,17 +1061,17 @@ internal fun StereoBodyRenderer.drawThreshold(n: TourNode, i: Int, seconds: Floa
         val tmp = FloatArray(2)
         // the skin, in three bands so its edge fades out instead of ending in a rim
         // the skin fades out over the outer quarter of the patch in eight thin steps (a ramp, no rim)
-        val nb = 28
+        val nb = 22
         for (b in 0 until nb) {
             val u0 = if (b == 0) 0f else 0.65f + 0.35f * (b - 1) / (nb - 1f); val u1 = 0.65f + 0.35f * b / (nb - 1f)
-            val skin = t1Mesh("face6.$b") { ParamMesh(if (b == 0) 64 else 2, 144) { u, v, out -> t1FacePoint(u0 + (u1 - u0) * u, v, tmp, out) } }
+            val skin = t1Mesh("face7.$b") { ParamMesh(if (b == 0) 64 else 2, 144) { u, v, out -> t1FacePoint(u0 + (u1 - u0) * u, v, tmp, out) } }
             val al = if (b == 0) 1f else 1f - t1Smooth(0f, 1f, (b - 0.5f) / (nb - 1f))
             if (b > 0 || face < 0.999f) GLES20.glDepthMask(false)
             t1Lit(skin, fT, 0f, 0f, 0f, T1_SKIN, if (b == 0) T1_SKIN_RIM else T1_SKIN, face * al, 0.12f)
             GLES20.glDepthMask(true)
         }
         // the red of the upper lip, below the white roll
-        val lip = t1Mesh("face6.lip") { ParamMesh(4, 30) { u, v, out ->
+        val lip = t1Mesh("face7.lip") { ParamMesh(4, 30) { u, v, out ->
             // the upper-lip vermilion, corner to corner: its upper edge a Cupid's bow (peaks under the philtral
             // columns), fullest at the midline tubercle and thinning to the corners, rolling out toward us
             val w = 2f * v - 1f; val Y = T1_MID + w * 2.3f
@@ -1092,43 +1079,25 @@ internal fun StereoBodyRenderer.drawThreshold(n: TourNode, i: Int, seconds: Floa
             val X = top - 0.95f * u * (1f - w * w).pow(0.6f)
             out[0] = X; out[1] = Y; out[2] = -(t1FaceDepth(X, Y) - 0.015f - 0.25f * u * (1f - w * w)) } }
         t1Lit(lip, fT, 0f, 0f, 0f, T1_LIP, T1_SKIN_RIM, face, 0.12f)
-        // faint cues that this is a face, at the patch's fading edge: the mouth line and lower lip below,
-        // the two orbits (socket shadow, closed lid line, brow) above
+        // a cue that this is a face, at the patch's fading lower edge: the mouth line and the lower lip
         GLES20.glDepthMask(false)
-        val mouth = t1Mesh("face6.mouth") { ParamMesh(2, 30) { u, v, out ->
+        val mouth = t1Mesh("face7.mouth") { ParamMesh(2, 30) { u, v, out ->
             val w = 2f * v - 1f; val Y = T1_MID + w * 2.4f
             val X = -4.17f - 0.06f * u + 0.12f * w * w
             out[0] = X; out[1] = Y; out[2] = -(t1FaceDepth(X, Y) - 0.02f) } }
         t1Lit(mouth, fT, 0f, 0f, 0f, T1_MOUTH, T1_MOUTH, face * 0.6f, 0f)
-        val lip2 = t1Mesh("face6.lip2") { ParamMesh(3, 30) { u, v, out ->
+        val lip2 = t1Mesh("face7.lip2") { ParamMesh(3, 30) { u, v, out ->
             val w = 2f * v - 1f; val Y = T1_MID + w * 2.2f
             val X = -4.25f + 0.12f * w * w - 0.85f * u * (1f - w * w).pow(0.6f)
             out[0] = X; out[1] = Y; out[2] = -(t1FaceDepth(X, Y) - 0.015f) } }
         t1Lit(lip2, fT, 0f, 0f, 0f, T1_LIP, T1_SKIN_RIM, face * 0.45f, 0.12f)
-        for (k in 0..1) {
-            val sg = if (k == 0) -1f else 1f; val yc = T1_MID + sg * T1_EYE_Y
-            val sock = t1Mesh("face6.sock$k") { ParamMesh(3, 28) { u, v, out ->
-                val a = v * TAU; val X = T1_EYE_X + 0.2f + cos(a) * 1.35f * u; val Y = yc + sin(a) * 2.0f * u
-                out[0] = X; out[1] = Y; out[2] = -(t1FaceDepth(X, Y) - 0.01f) } }
-            t1Lit(sock, fT, 0f, 0f, 0f, T1_SKIN, T1_SKIN_RIM, face * 0.3f, 0.1f)
-            val lid = t1Mesh("face6.lid$k") { ParamMesh(2, 24) { u, v, out ->
-                val w = 2f * v - 1f; val Y = yc + w * 1.1f
-                val X = T1_EYE_X - 0.1f + 0.18f * (1f - w * w) - 0.05f * u
-                out[0] = X; out[1] = Y; out[2] = -(t1FaceDepth(X, Y) - 0.02f) } }
-            t1Lit(lid, fT, 0f, 0f, 0f, T1_MOUTH, T1_MOUTH, face * 0.5f, 0f)
-            val brow = t1Mesh("face6.brow$k") { ParamMesh(2, 24) { u, v, out ->
-                val w = 2f * v - 1f; val Y = yc + w * 1.5f + sg * 0.2f
-                val X = T1_EYE_X + 1.1f + 0.25f * (1f - w * w) + 0.22f * u
-                out[0] = X; out[1] = Y; out[2] = -(t1FaceDepth(X, Y) - 0.02f) } }
-            t1Lit(brow, fT, 0f, 0f, 0f, T1_SKIN_RIM, T1_SKIN_RIM, face * 0.3f, 0.3f)
-        }
         GLES20.glDepthMask(true)
         val vest = t1Mesh("vestibule") { ParamMesh(10, 48) { u, v, out ->
             t1NostrilRim(v * TAU, tmp)
             val sh = 1f - 0.15f * u
             out[0] = tmp[0] * sh - T1_TILT_K * 1.7f * u; out[1] = tmp[1] * sh; out[2] = -(t1FaceDepth(tmp[0], tmp[1]) + 0.4f + 1.7f * u)
         } }
-        val lines = t1Mesh("face6.lines") { t1FaceMeshes() }
+        val lines = t1Mesh("face7.lines") { t1FaceMeshes() }
         if (face < 0.999f) GLES20.glDepthMask(false)
         t1Lit(vest, fT, 0f, 0f, 0f, T1_VESTIBULE, T1_MUCOSA_RIM, face, 0.12f)
         // the other nostril: the same vestibule, mirrored across the columella, its lumen dark red deep inside
