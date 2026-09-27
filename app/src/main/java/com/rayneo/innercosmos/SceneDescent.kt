@@ -3773,7 +3773,28 @@ internal fun StereoBodyRenderer.drawAtom(n: TourNode, i: Int, seconds: Float) {
     // There is no wall at an atom: forget the (black, invisible) passage's depth so nothing drifting
     // beyond it is hidden. Both eyes' viewports share the depth buffer; this eye's scene so far holds
     // only the wall, and the other eye is either finished or not yet begun.
-    if (rp > 10.5f) GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT)
+    if (rp > 10.5f) {
+        GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT)
+        // and paint the passage out: a sphere round the craft in the background colour (black on the
+        // waveguide), so the neighbouring stops' tinted walls do not show as a tube round the atom
+        val void = t1Mesh("atom.void") {
+            val d = ArrayList<Float>()
+            val c = floatArrayOf(0.01f, 0f, 0.012f, 1f)
+            val st = 12; val sl = 16
+            fun pt(i: Int, j: Int) { val ph = PI_F * i / st; val th = TAU * j / sl
+                d.add(sin(ph) * cos(th)); d.add(cos(ph)); d.add(sin(ph) * sin(th)); d.addAll(c.toList()) }
+            for (i in 0 until st) for (j in 0 until sl) { pt(i, j); pt(i + 1, j); pt(i + 1, j + 1); pt(i, j); pt(i + 1, j + 1); pt(i, j + 1) }
+            TriMesh(d.toFloatArray())
+        }
+        Matrix.setIdentityM(model, 0); Matrix.translateM(model, 0, camNowX, camNowY, camNowZ); Matrix.scaleM(model, 0, 60f, 60f, 60f)
+        Matrix.multiplyMM(mv, 0, view, 0, model, 0); Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
+        GLES20.glDisable(GLES20.GL_DEPTH_TEST); GLES20.glDepthMask(false); GLES20.glDisable(GLES20.GL_CULL_FACE)
+        val keep = colorShader.globalFade; colorShader.globalFade = min(1f, k * 20f)
+        colorShader.use(mvp, 1f)
+        void.draw(colorShader.positionHandle, colorShader.colorHandle)
+        colorShader.globalFade = keep
+        GLES20.glEnable(GLES20.GL_CULL_FACE); GLES20.glEnable(GLES20.GL_DEPTH_TEST); GLES20.glDepthMask(true)
+    }
     // additive
     GLES20.glDepthMask(false); GLES20.glDisable(GLES20.GL_DEPTH_TEST)
     GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE)
