@@ -69,7 +69,7 @@ internal const val T2_OES_R = 1.9f
 internal fun t2MachineDropY(p: Float): Float {
     if (p <= 0f || p >= 1f) return 0f
     fun sm(a: Float, b: Float, x: Float): Float { val t = ((x - a) / (b - a)).coerceIn(0f, 1f); return t * t * (3f - 2f * t) }
-    return -T2_DIVE * sm(0.284f, 0.326f, p) * (1f - sm(0.42f, 0.66f, p))
+    return -T2_DIVE * sm(0.25f, 0.279f, p) * (1f - sm(0.42f, 0.66f, p))
 }
 internal const val T2_DIVE = 4.6f
 
@@ -2514,11 +2514,11 @@ private val T2_BAND_H = floatArrayOf(0.82f, 0.42f, 0.46f, 1f)
  */
 private fun StereoBodyRenderer.t2Bands(i: Int, L: Float, zRef: Float, seconds: Float) {
     if (abs(L - t2BandL) < 0.002f && t2BandVerts > 0) return
-    if (t2BandVerts > 0 && abs(seconds - t2BandT) < 0.13f) return
+    if (t2BandVerts > 0 && abs(seconds - t2BandT) < 0.18f) return
     t2BandL = L; t2BandT = seconds
     val d = t2BandTris.data; var v = 0
     val fibs = t2Fibrils().filter { it[2] < 0.5f }
-    val sides = 10; val r = 0.9f
+    val sides = 8; val r = 0.9f
     val fa = FloatArray(13); val fb = FloatArray(13)
     fun seg(z0: Float, z1: Float, c: FloatArray) {
         val a0 = max(z0, -9f); val a1 = min(z1, 17f); if (a1 <= a0) return
@@ -2587,7 +2587,7 @@ internal fun StereoBodyRenderer.drawMuscle(n: TourNode, i: Int, seconds: Float) 
                 t2Model(t2Frame(i, zm), 0f, 0f); t2Draw(m[0])
                 // cross-bridges: while the fibre shortens the heads row, each group out of step;
                 // at rest they stand perpendicular to the filament
-                if (zm < 11f) for (grp in 0 until 3) {
+                if (zm < 8f) for (grp in 0 until 3) {
                     val pose = if (rowing) ((((seconds + grp * 0.133f) / 0.4f) % 1f) * 4f).toInt().coerceIn(0, 3) else 0
                     t2Draw(m[4 + grp * 4 + pose])
                 }
