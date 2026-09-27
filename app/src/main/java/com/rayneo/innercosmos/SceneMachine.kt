@@ -18,25 +18,46 @@ import kotlin.math.*
 
 /** What drifts past at each stop of this tour, by stop index; stops not listed use DriftSpec.forAmb. */
 internal val MACHINE_DRIFT: Map<Int, DriftSpec> = mapOf(
-    // Gut at 0.8 mm a unit: bacteria and chylomicrons are sub-pixel; the scene draws the chyme.
+    // The oesophagus and stomach at 8 mm a unit: nothing loose is big enough to see; the scene
+    // draws the bolus, the chyme and its food particles.
     1 to DriftSpec.NONE,
+    // Gut at 0.8 mm a unit: bacteria and chylomicrons are sub-pixel; the scene draws the chyme.
+    2 to DriftSpec.NONE,
     // Phage stop at 80 nm a unit: a whole E. coli is 25 units, so only lumen proteins drift.
-    2 to DriftSpec.of(BodyField.PROTEIN to 1f, density = 0.2f, flow = 0.15f),
+    3 to DriftSpec.of(BodyField.PROTEIN to 1f, density = 0.2f, flow = 0.15f),
     // A liver sinusoid carries mixed portal and arterial blood.
-    3 to DriftSpec.of(BodyField.RED_CELL to 0.95f, BodyField.PLATELET to 0.05f, density = 0.6f, flow = 1.0f, oxy = false),
+    4 to DriftSpec.of(BodyField.RED_CELL to 0.95f, BodyField.PLATELET to 0.05f, density = 0.6f, flow = 1.0f, oxy = false),
     // Bowman's space holds filtrate, not cells (the scene draws the filtrate).
-    4 to DriftSpec.NONE,
-    // Inside a skeletal-muscle fibre: no blood cells.
     5 to DriftSpec.NONE,
+    // Inside a skeletal-muscle fibre: no blood cells.
+    6 to DriftSpec.NONE,
     // Red marrow: a few free cells drifting between the cords.
-    6 to DriftSpec.of(BodyField.RED_CELL to 0.6f, BodyField.PLATELET to 0.4f, density = 0.1f, flow = 0.2f),
-    // The nucleoplasm around a gene: proteins only.
+    7 to DriftSpec.of(BodyField.RED_CELL to 0.6f, BodyField.PLATELET to 0.4f, density = 0.1f, flow = 0.2f),
     // The nucleoplasm around a gene and the beta cell's ER: at 8 nm a unit a protein is as big as
     // the craft, so nothing drifts (the scenes draw the molecules that matter).
-    7 to DriftSpec.NONE,
-    8 to DriftSpec.of(BodyField.PROTEIN to 0.7f, BodyField.VESICLE to 0.3f, density = 0.25f, flow = 0.12f),
-    9 to DriftSpec.NONE,
+    8 to DriftSpec.NONE,
+    9 to DriftSpec.of(BodyField.PROTEIN to 0.7f, BodyField.VESICLE to 0.3f, density = 0.25f, flow = 0.12f),
+    10 to DriftSpec.NONE,
 )
+
+/**
+ * Tour II's passage radius from the mouth to the stomach (rail progress 0..1, 60 units of rail):
+ * the oral cavity and pharynx, the upper sphincter, ~31 units (25 cm at 8 mm a unit) of
+ * oesophagus held open to 3 cm by the bolus, the lower sphincter, then the stomach. Elsewhere
+ * the usual node-to-node radius [r].
+ */
+internal fun t2MachineRadius(p: Float, r: Float): Float {
+    if (p <= 0f || p >= 1f) return r
+    fun sm(a: Float, b: Float, x: Float): Float { val t = ((x - a) / (b - a)).coerceIn(0f, 1f); return t * t * (3f - 2f * t) }
+    return when {
+        p < 0.23f -> 4.2f
+        p < 0.27f -> 4.2f + (T2_OES_R - 4.2f) * sm(0.23f, 0.27f, p)
+        p < 0.69f -> T2_OES_R
+        p < 0.705f -> T2_OES_R - 0.3f * sm(0.69f, 0.705f, p)
+        else -> (T2_OES_R - 0.3f) + (6f - T2_OES_R + 0.3f) * sm(0.705f, 0.78f, p)
+    }
+}
+internal const val T2_OES_R = 1.9f
 
 // ------------------------------------------------------------------------------------ palette
 internal val T2_ENAMEL = floatArrayOf(0.97f, 0.95f, 0.88f, 1f)
@@ -57,6 +78,16 @@ internal val T2_TONSIL = floatArrayOf(0.93f, 0.52f, 0.54f, 1f)
 internal val T2_EPIGLOTTIS = floatArrayOf(0.98f, 0.82f, 0.8f, 1f)
 internal val T2_VOCAL_CORD = floatArrayOf(0.98f, 0.97f, 0.94f, 1f)
 internal val T2_LARYNX = floatArrayOf(0.9f, 0.5f, 0.56f, 1f)
+internal val T2_OES_LINING = floatArrayOf(0.97f, 0.8f, 0.8f, 1f)
+internal val T2_OES_MUSCLE = floatArrayOf(0.85f, 0.46f, 0.5f, 1f)
+internal val T2_GASTRIC = floatArrayOf(0.9f, 0.46f, 0.42f, 1f)
+internal val T2_RUGA_G = floatArrayOf(0.95f, 0.54f, 0.48f, 1f)
+internal val T2_PIT = floatArrayOf(0.55f, 0.2f, 0.22f, 1f)
+internal val T2_PYLORUS = floatArrayOf(0.82f, 0.36f, 0.4f, 1f)
+internal val T2_MUCUS = floatArrayOf(0.92f, 0.92f, 0.88f, 1f)
+internal val T2_CHYME_ACID = floatArrayOf(0.8f, 0.72f, 0.4f, 1f)
+internal val T2_FOOD_A = floatArrayOf(0.88f, 0.78f, 0.55f, 1f)
+internal val T2_FOOD_B = floatArrayOf(0.7f, 0.5f, 0.3f, 1f)
 internal val T2_VILLUS = floatArrayOf(0.95f, 0.6f, 0.62f, 1f)
 internal val T2_VILLUS_TIP = floatArrayOf(0.99f, 0.69f, 0.69f, 1f)
 internal val T2_VILLUS_GLASS = floatArrayOf(1f, 0.8f, 0.8f, 1f)
@@ -489,7 +520,7 @@ private fun StereoBodyRenderer.t2Rail(i: Int): T2Rail = t2Get("rail$i") {
     }
     val ki = ((i - p0) / dp).coerceIn(0f, (m - 1).toFloat()); val kk = min(ki.toInt(), max(m - 2, 0))
     val li = L[kk] + (L[min(kk + 1, m - 1)] - L[kk]) * (ki - kk)
-    val aMin = -34f; val step = 0.25f; val cnt = 273
+    val aMin = -64f; val step = 0.25f; val cnt = 513
     val out = FloatArray(cnt * 13)
     var seek = 0
     for (j in 0 until cnt) {
@@ -895,12 +926,6 @@ private fun StereoBodyRenderer.t2MouthMesh(i: Int): TriMesh = t2Get("mouth$i") {
         val x = cos(a) * min(r, T2_PH_RX + 0.2f); val y = T2_PH_CY + sin(a) * min(r, T2_PH_RY + 0.2f)
         t2v(x, y, 12.3f - 0.4f * v * v)
     }
-    // the oesophagus beyond: a collapsed muscular tube with longitudinal mucosal folds
-    g.surf(8, 48, T2_PHARYNX) { v, u ->
-        val z = 12.3f + 3.5f * v; val a = u * 2f * T2PI
-        val r = (1.3f - 0.3f * t2sm(v)) * (1f + 0.12f * cos(a * 6f))
-        t2v(cos(a) * r, T2_PH_CY + sin(a) * r * 0.8f, z)
-    }
     // ---- the tongue filling the floor of the mouth inside the lower arch: a convex dorsum with a
     //      median groove, the V of circumvallate papillae at the back of its oral part, fungiform
     //      papillae dotted over the front, the root curving down into the pharynx.
@@ -1034,6 +1059,143 @@ internal fun StereoBodyRenderer.drawMouth(n: TourNode, i: Int, seconds: Float) {
         val fe = t2Frame(i, 10.15f); t2Model(fe, 0f, -2.8f + 0.3f * tilt)
         Matrix.rotateM(model, 0, 8f + 92f * tilt, 1f, 0f, 0f)
         t2Draw(t2Epiglottis())
+    }
+}
+
+// ======================================================================== stop 1: STOMACH
+// 8 mm a unit (Mote 12 mm). The swallow carries the craft from the pharynx through the upper
+// oesophageal sphincter and ~31 units (25 cm) of oesophagus, held open to ~3 cm by the bolus
+// (pale stratified squamous lining in longitudinal folds, a peristaltic ring squeezing just behind
+// the craft), through the lower sphincter and the Z-line, where the pale oesophageal lining meets
+// the salmon-red gastric mucosa in a zig-zag, into the stomach: a chamber ~10 cm across with rugae
+// (longitudinal folds, heavier toward the greater curvature below), gastric pits, the translucent
+// mucus blanket, a pool of acid chyme with food particles, and ahead the antrum narrowing to the
+// pylorus, a thick muscular ring round a small opening.
+
+/** Arc position (units along the rail from stop [i]) where the rail progress is [p]. */
+private fun StereoBodyRenderer.t2ArcAtP(i: Int, p: Float): Float {
+    val rail = t2Rail(i); var lo = 0; var hi = rail.cnt - 1
+    while (hi - lo > 1) { val m = (lo + hi) / 2; if (rail.f[m * 13 + 12] < p) lo = m else hi = m }
+    val p0 = rail.f[lo * 13 + 12]; val p1 = rail.f[hi * 13 + 12]
+    val t = if (p1 > p0) ((p - p0) / (p1 - p0)).coerceIn(0f, 1f) else 0f
+    return rail.aMin + (lo + t) * rail.step
+}
+
+private const val T2_UES = 12.4f      // arcs from the mouth (stop 0) along the rail
+private const val T2_LES = 43.4f
+private const val T2_ZLINE = 44.2f
+private const val T2_CARDIA = 46.5f
+
+private fun t2OesR(a0: Float): Float = when {
+    a0 < T2_UES + 1f -> 1.35f
+    a0 < T2_UES + 1.8f -> 1.35f + 0.25f * t2sm((a0 - T2_UES - 1f) / 0.8f)
+    a0 < T2_LES - 0.6f -> 1.6f
+    a0 < T2_LES + 0.6f -> 1.6f - 0.25f * sin(T2PI * (a0 - T2_LES + 0.6f) / 1.2f)
+    else -> 1.6f + 3.4f * t2sm((a0 - T2_LES - 0.6f) / (T2_CARDIA + 1.5f - T2_LES - 0.6f))
+}
+
+/** The oesophagus from the upper sphincter to the cardia (baked along the rail; node-1 frame). */
+private fun StereoBodyRenderer.t2OesophagusMesh(i: Int): TriMesh = t2Get("oes$i") {
+    val g = T2Geo(); val l01 = -t2ArcAtP(i, 0f)
+    val a0s = T2_UES; val a0e = T2_CARDIA + 1.5f
+    val rows = 200; val sides = 36
+    fun pt(a0: Float, th: Float): T2V {
+        val fold = if (a0 < T2_ZLINE) 1f - 0.09f * (0.5f + 0.5f * cos(7f * th)) else 1f - 0.05f * (0.5f + 0.5f * cos(11f * th + a0))
+        val r = t2OesR(a0) * fold; return t2v(cos(th) * r, sin(th) * r, a0 - l01)
+    }
+    // squamous (pale) above the Z-line, gastric (salmon) below it; the junction is a zig-zag
+    fun zl(th: Float): Float { val u = (th / (2f * T2PI) * 10f) % 1f; return T2_ZLINE + 0.45f * (abs(u * 2f - 1f) - 0.5f) }
+    for (r in 0 until rows) {
+        val aA = a0s + (a0e - a0s) * r / rows; val aB = a0s + (a0e - a0s) * (r + 1) / rows
+        for (k in 0 until sides) {
+            val tA = 2f * T2PI * k / sides; val tB = 2f * T2PI * (k + 1) / sides
+            val am = (aA + aB) * 0.5f; val tm = (tA + tB) * 0.5f
+            val col = if (am < zl(tm)) T2_OES_LINING else T2_GASTRIC
+            g.quad(pt(aA, tA), pt(aB, tA), pt(aB, tB), pt(aA, tB), col)
+        }
+    }
+    // the sphincters: the cricopharyngeus ring at the top, the thickened lower sphincter
+    g.torus(t2v(0f, 0f, T2_UES + 0.5f - l01), t2v(0f, 0f, 1f), 1.55f, 0.28f, T2_OES_MUSCLE, 1f, 28, 7)
+    g.torus(t2v(0f, 0f, T2_LES - l01), t2v(0f, 0f, 1f), 1.5f, 0.3f, T2_OES_MUSCLE, 1f, 28, 7)
+    t2Bake(g, i, 30f, 40f)
+}
+
+/** Stomach wall radius at [z] along the rail from the stop (node 1), before the greater-curvature bulge. */
+private fun t2StomR(z: Float): Float = when {
+    z < -12f -> 1.6f + 3.0f * t2sm((z + 15f) / 3f)
+    z < 2f -> 4.6f + 0.6f * sin(T2PI * (z + 12f) / 14f)
+    z < 8.4f -> 4.6f - 2.6f * t2sm((z - 2f) / 6.4f)
+    else -> 2.0f
+}
+private fun t2StomPt(z: Float, th: Float, inset: Float = 0f): T2V {
+    val r = (t2StomR(z) - inset) * (1f + 0.12f * max(0f, -sin(th)))     // the greater curvature below
+    return t2v(cos(th) * r, sin(th) * r, z)
+}
+
+private fun StereoBodyRenderer.t2StomachMeshes(i: Int): Array<ColorVboMesh> = t2Get("stomach$i") {
+    val g = T2Geo(); val glass = T2Geo(); val bits = T2Geo(); val rnd = java.util.Random(301L)
+    val z0 = T2_CARDIA - 1f + t2ArcAtP(i, 0f); val z1 = 8.6f
+    // the wall (gastric mucosa)
+    g.surf(60, 40, T2_GASTRIC) { v, u -> t2StomPt(z0 + (z1 - z0) * v, u * 2f * T2PI) }
+    // rugae: serpentine longitudinal folds, heavier toward the greater curvature
+    for (k in 0 until 16) {
+        val th0 = 2f * T2PI * k / 16f; val low = max(0f, -sin(th0))
+        val pts = (0..30).map { q -> val z = -11f + 16.5f * q / 30f; val th = th0 + 0.07f * sin(z * 1.3f + k); t2StomPt(z, th, 0.05f) }
+        g.path(pts, { t -> (0.18f + 0.26f * low) * (0.4f + 0.6f * sin(T2PI * t).coerceAtLeast(0f)) }, T2_RUGA_G, 1f, 6, true)
+    }
+    // gastric pits: dimples all over the mucosa
+    repeat(420) {
+        val z = -11.5f + rnd.nextFloat() * 18.5f; val th = rnd.nextFloat() * 2f * T2PI
+        val pp = t2StomPt(z, th, 0.02f); val nrm = t2v(-cos(th), -sin(th), 0f)
+        g.disc(pp, nrm, 0.07f, T2_PIT, 1f, 6)
+    }
+    // the pylorus: a thick muscular ring round a small opening, the duodenal bulb beyond
+    g.torus(t2v(0f, 0f, 8.7f), t2v(0f, 0f, 1f), 1.5f, 0.7f, T2_PYLORUS, 1f, 32, 10)
+    g.surf(8, 28, T2_GASTRIC) { v, u -> val a = u * 2f * T2PI; val r = 1.4f + 0.3f * sin(T2PI * v); t2v(cos(a) * r, sin(a) * r, 9.2f + 2.4f * v) }
+    // the mucus blanket over the mucosa
+    glass.surf(40, 36, T2_MUCUS, 0.22f) { v, u -> t2StomPt(-11.5f + 18f * v, u * 2f * T2PI, 0.4f) }
+    // a pool of acid chyme along the greater curvature, food particles in and on it
+    val yPool = -3.2f
+    glass.surf(24, 12, T2_CHYME_ACID, 0.55f) { v, u ->
+        val z = -10f + 15f * v; val R = t2StomR(z) * 1.1f; val w = sqrt(max(0f, R * R - yPool * yPool)) * 0.98f
+        t2v((u * 2f - 1f) * w, yPool, z)
+    }
+    repeat(36) {
+        val z = -9f + rnd.nextFloat() * 13f; val R = t2StomR(z) * 1.1f; val w = sqrt(max(0f, R * R - yPool * yPool)) * 0.8f
+        val c = t2v((rnd.nextFloat() * 2f - 1f) * w, yPool - rnd.nextFloat() * 1.4f + 0.1f, z)
+        val s0 = 0.1f + rnd.nextFloat() * 0.25f
+        bits.ell(c, t2v(s0 * (1f + rnd.nextFloat()), 0f, 0f), t2v(0f, s0 * 0.7f, 0f), t2v(0f, 0f, s0), if (it % 3 == 0) T2_FOOD_B else T2_FOOD_A, 1f, 4, 6)
+    }
+    arrayOf(t2Bake(g, i, 30f, 40f), t2Bake(glass, i, 30f, 40f), t2Bake(bits, i, 30f, 40f))
+}
+
+/** A peristaltic constriction: a thick ring of contracted circular muscle (unit major radius). */
+private fun StereoBodyRenderer.t2PeriRing(): TriMesh = t2Get("peri") {
+    val g = T2Geo(); g.torus(t2v(0f, 0f, 0f), t2v(0f, 0f, 1f), 1f, 0.3f, T2_OES_MUSCLE, 1f, 32, 10); TriMesh(g.baked())
+}
+
+/** Tour II stop 2: the oesophagus (drawn through the swallow) and the stomach. */
+internal fun StereoBodyRenderer.drawStomach(n: TourNode, i: Int, seconds: Float) {
+    val inOes = routeProgress < i - 0.05f
+    if (!inOes && !t2Near(i)) return
+    t2Open(i, seconds) { own ->
+        t2DrawWorld(t2OesophagusMesh(i))
+        // the peristaltic wave: a ring of contraction just behind the craft, walking it down
+        val shipArc = t2ArcAtP(i, routeProgress); val l01 = -t2ArcAtP(i, 0f)
+        val ringA0 = shipArc + l01 - 2.4f
+        if (ringA0 > T2_UES + 1.5f && ringA0 < T2_LES - 1f) {
+            t2Model(t2Frame(i, shipArc - 2.4f), 0f, 0f); Matrix.scaleM(model, 0, 1.45f, 1.45f, 1.45f); t2Draw(t2PeriRing())
+        }
+        if (routeProgress > 0.45f) {
+            val m = t2StomachMeshes(i)
+            t2DrawWorld(m[0])
+            // food particles bob in the churning acid
+            val fr = t2Rigid(i, 0f, FloatArray(13))
+            Matrix.setIdentityM(model, 0)
+            Matrix.translateM(model, 0, fr[9] * 0.08f * sin(seconds * 0.9f) + fr[3] * 0.15f * sin(seconds * 0.4f), fr[10] * 0.08f * sin(seconds * 0.9f) + fr[4] * 0.15f * sin(seconds * 0.4f), fr[11] * 0.08f * sin(seconds * 0.9f) + fr[5] * 0.15f * sin(seconds * 0.4f))
+            t2Draw(m[2])
+            t2DrawWorld(m[1], true)
+        }
     }
 }
 

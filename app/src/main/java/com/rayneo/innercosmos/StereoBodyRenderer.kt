@@ -959,6 +959,7 @@ class StereoBodyRenderer(
                 Scene.ATOM -> drawAtom(n, i, seconds)
                 Scene.LOOKBACK -> drawLookBack(n, i, seconds)
                 Scene.MOUTH -> drawMouth(n, i, seconds)
+                Scene.STOMACH -> drawStomach(n, i, seconds)
                 Scene.GUT -> drawGut(n, i, seconds)
                 Scene.PHAGE -> drawPhage(n, i, seconds)
                 Scene.LIVER -> drawLiver(n, i, seconds)
@@ -1421,7 +1422,7 @@ class StereoBodyRenderer(
         return f(nodes[i]) + (f(nodes[i + 1]) - f(nodes[i])) * s
     }
 
-    internal fun tunnelRadius(p: Float): Float = nodeLerp(p) { it.radius }
+    internal fun tunnelRadius(p: Float): Float { val r = nodeLerp(p) { it.radius }; return map.radiusAt?.invoke(p, r) ?: r }
 
     // ------------------------------------------------------ mesh builders
     internal fun buildTunnel(): FloatArray {

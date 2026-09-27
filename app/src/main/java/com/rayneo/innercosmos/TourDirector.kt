@@ -209,7 +209,7 @@ class TourDirector(
 
     private fun publishProgress(p: Float) {
         onProgress(p)
-        val node = p.toInt().coerceIn(0, NODE_COUNT - 1)
+        val node = p.toInt().coerceAtLeast(0)      // the tour's own stop count (the app clamps to its map)
         if (node != lastNode) { lastNode = node; onNode(node) }
     }
 
