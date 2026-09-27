@@ -35,7 +35,7 @@ internal val BETHUNE_DRIFT: Map<Int, DriftSpec> = mapOf(
     // The cut: tissue, not a vessel; the few red cells in the cleft are part of the scene.
     7 to DriftSpec.NONE,
     // Septicaemia: sluggish venous blood (the neutrophils are drawn by the scene).
-    8 to DriftSpec.of(BodyField.RED_CELL to 0.93f, BodyField.PLATELET to 0.07f, density = 0.7f, flow = 0.55f, oxy = false),
+    8 to DriftSpec.of(BodyField.RED_CELL to 0.93f, BodyField.PLATELET to 0.07f, density = 0.55f, flow = 0.55f, oxy = false),
 )
 
 // ------------------------------------------------------------------ palette
@@ -96,8 +96,8 @@ internal val T3_ENDO_NUCLEUS = floatArrayOf(0.80f, 0.64f, 0.82f, 1f)
 internal val T3_TISSUE_DARK = floatArrayOf(0.20f, 0.11f, 0.15f, 1f)
 internal val T3_ISCHAEMIC = floatArrayOf(0.52f, 0.50f, 0.60f, 1f)
 internal val T3_ISCHAEMIC_A = floatArrayOf(0.40f, 0.38f, 0.50f, 1f)
-internal val T3_PERFUSED = floatArrayOf(0.78f, 0.24f, 0.26f, 1f)
-internal val T3_PERFUSED_A = floatArrayOf(0.56f, 0.12f, 0.16f, 1f)
+internal val T3_PERFUSED = floatArrayOf(0.70f, 0.18f, 0.20f, 1f)
+internal val T3_PERFUSED_A = floatArrayOf(0.48f, 0.08f, 0.12f, 1f)
 internal val T3_SMC = floatArrayOf(0.82f, 0.52f, 0.54f, 1f)
 internal val T3_CAP_EMPTY = floatArrayOf(0.40f, 0.30f, 0.40f, 1f)
 internal val T3_SKIN_EDGE = floatArrayOf(0.74f, 0.52f, 0.42f, 1f)
@@ -615,6 +615,8 @@ internal fun StereoBodyRenderer.drawCavity(n: TourNode, i: Int, seconds: Float) 
     drawMesh(cached("cav_deadrim") { cavityAlveoli(b, g, um, 4) }, T3_SCAR, T3_FIBROUS, 1f, 0f, 0.15f)
     drawMesh(cached("cav_scar") { cavityAlveoli(b, g, um, 5) }, T3_SCAR, T3_FIBROUS, 1f, 0f, 0.12f)
     drawMesh(cached("cav_soot") { cavityAlveoli(b, g, um, 6) }, T3_ANTHRACOTIC, T3_ANTHRACOTIC, 1f, 0f, 0f)
+    // The cavity's fibrous capsule, where it lies behind the duct wall (never bulging into the airway).
+    drawMesh(cached("cav_shell") { cavityCapsule(b, g) }, T3_SCAR, T3_FIBROUS, 1f, 0f, 0.08f)
 
     // The cavity: its caseous lining, shading from the pale lip down to the depths, and the
     // layered lip of its mouth (the fibrous capsule is seen only in that section).
@@ -769,6 +771,28 @@ private fun StereoBodyRenderer.tubercleSpots(b: Float): List<V3> = listOf(
 private fun StereoBodyRenderer.cavityTubercles(b: Float, part: Int): T3Mesh {
     val mb = Mb()
     for (p in tubercleSpots(b)) if (part == 0) mb.sphere(p, 0.5f, 7, 12) else mb.sphere(p, 1.05f, 10, 16)
+    return mb.build()
+}
+
+/** The capsule's outer surface, only where it lies outside the duct wall's radius. */
+private fun StereoBodyRenderer.cavityCapsule(b: Float, g: CavityGeom): T3Mesh {
+    val mb = Mb()
+    val c = g.centre; val ax = g.inward; val e1 = g.e1; val e2 = g.e2
+    val re = g.rc + 0.8f
+    val dMouth = sqrt(g.rc * g.rc - g.rm * g.rm)
+    val hole = acos(dMouth / re)
+    val st = 16; val sl = 36
+    fun pt(i: Int, j: Int): V3 { val ph = hole + (PI.toFloat() - hole) * i / st; val th = j * 2f * PI.toFloat() / sl; return c + ax * (re * cos(ph)) + (e1 * cos(th) + e2 * sin(th)) * (re * sin(ph)) }
+    fun behindWall(p: V3): Boolean {
+        val f = rfv(b, g.mouthAlong); val a = g.mouthAlong + (p - f.c).dot(f.d)
+        val fr = rfv(b, a); val rel = p - fr.c
+        return (rel - fr.d * rel.dot(fr.d)).len() > radiusAt(b, a) - 1.45f + 0.15f
+    }
+    for (i in 0 until st) for (j in 0 until sl) {
+        val q = arrayOf(pt(i, j), pt(i + 1, j), pt(i + 1, j + 1), pt(i, j + 1))
+        if (!q.all { behindWall(it) }) continue
+        mb.tri(q[0], q[0] - c, q[1], q[1] - c, q[2], q[2] - c); mb.tri(q[0], q[0] - c, q[2], q[2] - c, q[3], q[3] - c)
+    }
     return mb.build()
 }
 
@@ -1098,8 +1122,9 @@ private fun StereoBodyRenderer.valveMesh(b: Float, part: Int): T3Mesh {
 /**
  * Stop 3 (THE BOTTLE, 12 µm Mote: 1 unit = 8 µm): citrated blood that has stood in the cold. The
  * red cells have settled into a dark packed floor — many stacked face to face in rouleaux, others
- * lying flat — with a thin buffy coat of white cells and platelets on top, and pale straw plasma
- * standing above. To starboard the glass of the bottle; the light is cold blue.
+ * lying flat — with a thin buffy coat of white cells on top (neutrophils, lymphocytes, monocytes),
+ * pale straw plasma standing above with the platelets still suspended in it, too small to settle.
+ * To starboard the cold glass of the bottle.
  */
 internal fun StereoBodyRenderer.drawStored(n: TourNode, i: Int, seconds: Float) {
     val b = i.toFloat()
@@ -1990,12 +2015,14 @@ private fun StereoBodyRenderer.marrowMesh(b: Float, um: Float, part: Int): T3Mes
 
 /**
  * Stop 8 (THE CUT, 12 µm Mote: 1 unit = 8 µm): the nick in his finger. The craft hangs in the cleft
- * the splinter left, ~20-40 µm wide and cut clean. On both faces the skin is seen in section: the
- * dead, flattened plates of the stratum corneum at the top, a row of granular cells, the living
- * polygonal cells of the spinous layer with their nuclei, the basal row on its undulating basement
- * membrane, and the dermis below with papillae and their capillary loops, blood pooling in the bottom
- * of the cleft; a neutrophil is already leaving a loop. Chains of Streptococcus, purple, are being
- * carried down from the surface past the dead layer into living tissue.
+ * the splinter left in the thick skin of the fingertip, 32-56 µm wide, among the living cells. On
+ * both faces the skin is seen in section as one continuous, tightly joined sheet: ~50 µm of densely
+ * stacked keratin plates (stratum corneum) torn where the splinter went in, the glassy stratum
+ * lucidum, a row of granular cells with keratohyalin, the polygonal spinous cells with their nuclei
+ * packed edge to edge, the basal row on its undulating basement membrane, and the dermis below with
+ * papillae and capillary loops, blood pooling in the bottom of the cleft; a neutrophil is already
+ * leaving a loop. Chains of Streptococcus, purple, are carried down past the dead layer into
+ * living tissue.
  */
 internal fun StereoBodyRenderer.drawCut(n: TourNode, i: Int, seconds: Float) {
     val b = i.toFloat()
@@ -2210,8 +2237,8 @@ private fun StereoBodyRenderer.cutMesh(b: Float, um: Float, part: Int): T3Mesh {
 
 /**
  * Stop 9 (THE FEVER, 12 µm Mote: 1 unit = 8 µm): septicaemia in a postcapillary venule ~45 µm
- * across. Chains of Streptococcus (1 µm cocci, Gram-positive purple) multiply in the blood, every
- * chain lengthening and the count doubling on a steady clock that never resets while we watch.
+ * across. Short chains of Streptococcus (1 µm cocci, 2-8 per chain, Gram-positive purple) multiply
+ * in the blood, the count doubling on a steady time-lapse clock that never resets while we watch.
  * Neutrophils (lobed nuclei, granules, one engulfed chain each in a phagosome, a pseudopod reaching
  * out) are outnumbered. The vessel is dilating, and its endothelium has opened gaps through which
  * straw plasma and red cells leak into the oedematous tissue outside.
@@ -2306,12 +2333,9 @@ internal fun StereoBodyRenderer.drawSepsis(n: TourNode, i: Int, seconds: Float) 
     drawDyn(v, 2f)
     GLES20.glDepthMask(false)
     // ...and soaking the tissue: an interstitial haze that thickens as the leak goes on.
-    drawMeshRadial(cached("sp_haze1") { sepsisMesh(b, um, 3) }, b, 1f, T3_OEDEMA, T3_OEDEMA, 0.12f * leak, 0f, 0.3f)
-    drawMeshRadial(cached("sp_haze2") { sepsisMesh(b, um, 4) }, b, 1f, T3_OEDEMA, T3_OEDEMA, 0.12f * leak, 0f, 0.3f)
+    drawMesh(cached("sp_haze") { sepsisMesh(b, um, 3) }, T3_OEDEMA, T3_OEDEMA, 0.22f * leak, 0f, 0.3f)
     drawMeshRadial(tube, b, dil, T3_ENDOTHELIUM, T3_JUNCTION, 0.32f, 0f, 0.12f)
     GLES20.glDepthMask(true)
-    // The venule is full of dark venous blood plasma.
-    fillLumen("sp_blood", b, -8f, 34f, 0.86f, T3_VENOUS, 0.18f, 0.1f)
 }
 
 /** Gaps opened between endothelial cells: (along, angle). */
