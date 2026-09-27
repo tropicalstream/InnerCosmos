@@ -859,7 +859,12 @@ class StereoBodyRenderer(
             val dist = sqrt(cdx * cdx + cdy * cdy + cdz * cdz)
             val lim = 0.22f * (dist - 0.2f)
             if (rad >= lim) continue
-            val al = bodies.fade * ((lim - rad) / (0.15f * lim)).coerceIn(0f, 1f)
+            // And a clear zone round the camera being drawn: nothing cell-sized within 2.5 units
+            // (a translucent disc across the porthole hides the scene it drifts through), fading in
+            // over the next 0.8.
+            val near = if (rad > 0.08f) ((dist - 2.5f) / 0.8f).coerceIn(0f, 1f) else 1f
+            if (near <= 0f) continue
+            val al = bodies.fade * near * ((lim - rad) / (0.15f * lim)).coerceIn(0f, 1f)
             val tb = bodies.tumble[i]
             when (kind) {
                 BodyField.RED_CELL -> {
