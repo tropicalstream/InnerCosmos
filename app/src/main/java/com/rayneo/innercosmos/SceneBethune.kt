@@ -1349,7 +1349,7 @@ private fun StereoBodyRenderer.valveMesh(b: Float, part: Int): T3Mesh {
 internal fun StereoBodyRenderer.drawStored(n: TourNode, i: Int, seconds: Float) {
     val b = i.toFloat()
     val um = umu(i)
-    if (!openWall(i, -8f, 34f, T3_PLASMA_BG)) return
+    if (!openWall(i, -8f, 34f, T3_PLASMA_BG, 0.4f)) return
     // The cold is carried by a blue light on everything: the rim light of every surface is cold blue.
     // The dark floor of settled, deoxygenated cells, a faint cold rim light on them.
     drawMesh(cached("st_packed") { storedMesh(b, um, 0) }, T3_PACKED, T3_COLD_RIM_DIM, 1f, 0f, 0f)
@@ -1509,11 +1509,11 @@ private fun StereoBodyRenderer.storedMesh(b: Float, um: Float, part: Int): T3Mes
             // seen from inside: inward normals
             val f = rfv(b, 3f)
             // an open box of plasma above the buffy coat, running past both ends of the view
-            val lo = BUFFY_TOP + 0.05f; val hi = 4.2f; val sL = -3.6f; val sR = glassSide - 0.02f
+            val lo = BUFFY_TOP + 0.05f; val hi = 2.2f; val sL = -2.4f; val sR = glassSide - 0.02f
             val corners = listOf(floatArrayOf(sL, lo), floatArrayOf(sL, hi), floatArrayOf(sR, hi), floatArrayOf(sR, lo))
             for (q in 0 until 3) {
                 val c0 = corners[q]; val c1 = corners[q + 1]
-                mb.gridFd(40, 2, { u, v -> val a = -10f + 50f * u; wAt(b, a, c0[0] + (c1[0] - c0[0]) * v, c0[1] + (c1[1] - c0[1]) * v) }) { u, v, p -> rfv(b, -10f + 50f * u).at((sL + sR) / 2f, (lo + hi) / 2f) - p }
+                mb.gridFd(40, 2, { u, v -> val a = -10f + 43f * u; wAt(b, a, c0[0] + (c1[0] - c0[0]) * v, c0[1] + (c1[1] - c0[1]) * v) }) { u, v, p -> rfv(b, -10f + 43f * u).at((sL + sR) / 2f, (lo + hi) / 2f) - p }
             }
         }
         6 -> mb.gridFd(8, 2, { u, v -> wAt(b, -8f + 42f * u, glassSide, -3.4f + 7.4f * v) }) { u, _, _ -> -rfv(b, -8f + 42f * u).s }
@@ -1920,7 +1920,7 @@ internal fun StereoBodyRenderer.drawTransfusion(n: TourNode, i: Int, seconds: Fl
     val camA = run { val f0 = rfv(b, 0f); (V3(camNowX, camNowY, camNowZ) - f0.c).dot(f0.d) }
     fun block(mesh: LitMesh, a: Float, spin: Float) {
         if (a < -8f || a > 24f) return
-        if (abs(a + tileL * 0.5f - camA) < tileL * 0.75f) return      // not right at the lens
+        if (a + tileL > camA - 1f && a < camA + 2.2f) return           // nothing right at the lens
         val f = rfv(b, a)
         drawLocal(mesh, f.c, f.d, f.radial(spin + 1.57f), T3_RBC, T3_RBC_RIM3, 1f, 0.05f)
     }
@@ -2708,9 +2708,9 @@ private fun StereoBodyRenderer.cutMesh(b: Float, um: Float, part: Int): T3Mesh {
     // of those on the cut face crushed by the splinter.
     val sp = kerR * 2.1f; val pitch = sp * sqrt(3f) / 2f
     fun cellHash(sg: Float, row: Int, col: Int, k: Int): Float { val h = sin((row * 127.1f + col * 311.7f + sg * 74.7f + k * 19.3f)) * 43758.547f; return h - floor(h) }
-    fun aspectAt(up: Float) = (1f - 0.35f * ((up + 6f) / (CUT_GRANULAR_BASE + 6f)).coerceIn(0f, 1f))
-    fun cellR(sg: Float, row: Int, col: Int) = (sp / 2f / cos(30f * DEG)) * 0.86f * (0.9f + 0.15f * cellHash(sg, row, col, 1))
-    fun crushed(sg: Float, row: Int, col: Int) = cellHash(sg, row, col, 2) < 0.33f
+    fun aspectAt(up: Float) = (1f - 0.2f * ((up + 6f) / (CUT_GRANULAR_BASE + 6f)).coerceIn(0f, 1f))
+    fun cellR(sg: Float, row: Int, col: Int) = (sp / 2f / cos(30f * DEG)) * 0.93f * (0.93f + 0.1f * cellHash(sg, row, col, 1))
+    fun crushed(sg: Float, row: Int, col: Int) = cellHash(sg, row, col, 2) < 0.2f
     fun spinous(visit: (Float, Float, Float, Int, Int) -> Unit) {
         for (sg in floatArrayOf(-1f, 1f)) {
             var row = 0
@@ -2792,7 +2792,8 @@ private fun StereoBodyRenderer.cutMesh(b: Float, um: Float, part: Int): T3Mesh {
                 val asp1 = aspectAt(up); val asp2 = aspectAt(up + ey * dist)
                 fun rb(r: Float, asp: Float) = r / sqrt(ex * ex + (ey / asp) * (ey / asp))
                 val gap = dist - rb(cellR(sg, row, col), asp1) - rb(cellR(sg, r2, c2), asp2)
-                val half = (gap / 2f + 0.05f).coerceIn(0.07f, 0.4f)
+                if (gap > 0.35f) continue                                   // only across the narrow gaps
+                val half = (gap / 2f + 0.04f).coerceIn(0.06f, 0.18f)
                 for (q in 0 until 4) {
                     val off = (q - 1.5f) * 0.11f
                     val ta = midA - ey * off; val tu = midU + ex * off
@@ -2948,7 +2949,7 @@ internal fun StereoBodyRenderer.drawSepsis(n: TourNode, i: Int, seconds: Float) 
         var k = 0
         var a = -8f - tileL + off
         while (a < 24f) {
-            if (abs(a + tileL * 0.5f - camA) >= tileL * 0.75f) {
+            if (!(a + tileL > camA - 1f && a < camA + 2.2f)) {
                 val f = rfv(b, a)
                 drawLocal(tiles[k % 4], f.c, f.d, f.radial(k * 1.7f), T3_RBC_DEOXY, T3_RBC_RIM3, 1f, 0.05f)
             }
