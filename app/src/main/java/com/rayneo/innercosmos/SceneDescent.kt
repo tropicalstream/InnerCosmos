@@ -481,6 +481,61 @@ private class T1Builder {
     }
 
     fun build(cullBack: Boolean = false): T1Batch = T1Batch(d.toFloatArray(), cullBack)
+    fun raw(): FloatArray = d.toFloatArray()
+}
+
+/** Many copies of one small lit template (pos + normal interleaved), placed and oriented on the CPU and drawn
+ *  in one call; the orientation follows drawBasis (local z along the first axis, local y toward the second). */
+private class T1InstBatch(private val tpl: FloatArray, private val capacity: Int) : LitMesh() {
+    private val data = FloatArray(capacity * tpl.size)
+    private val buf = ByteBuffer.allocateDirect(data.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer()
+    private var vbo = 0
+    private var count = 0
+    var stamp = -1f
+    fun reset() { count = 0 }
+    fun add(x: Float, y: Float, z: Float, zx: Float, zy: Float, zz: Float, yx0: Float, yy0: Float, yz0: Float) {
+        if (count >= capacity) return
+        var zl = sqrt(zx * zx + zy * zy + zz * zz).coerceAtLeast(1e-6f)
+        val Zx = zx / zl; val Zy = zy / zl; val Zz = zz / zl
+        val d = yx0 * Zx + yy0 * Zy + yz0 * Zz
+        var Yx = yx0 - d * Zx; var Yy = yy0 - d * Zy; var Yz = yz0 - d * Zz
+        zl = sqrt(Yx * Yx + Yy * Yy + Yz * Yz)
+        if (zl < 1e-5f) { Yx = if (abs(Zy) < 0.9f) 0f else 1f; Yy = if (abs(Zy) < 0.9f) 1f else 0f; Yz = 0f
+            val d2 = Yx * Zx + Yy * Zy + Yz * Zz; Yx -= d2 * Zx; Yy -= d2 * Zy; Yz -= d2 * Zz; zl = sqrt(Yx * Yx + Yy * Yy + Yz * Yz) }
+        Yx /= zl; Yy /= zl; Yz /= zl
+        val Xx = Yy * Zz - Yz * Zy; val Xy = Yz * Zx - Yx * Zz; val Xz = Yx * Zy - Yy * Zx
+        var w = count * tpl.size; var k = 0
+        while (k < tpl.size) {
+            val px = tpl[k]; val py = tpl[k + 1]; val pz = tpl[k + 2]; val nx = tpl[k + 3]; val ny = tpl[k + 4]; val nz = tpl[k + 5]
+            data[w] = x + Xx * px + Yx * py + Zx * pz; data[w + 1] = y + Xy * px + Yy * py + Zy * pz; data[w + 2] = z + Xz * px + Yz * py + Zz * pz
+            data[w + 3] = Xx * nx + Yx * ny + Zx * nz; data[w + 4] = Xy * nx + Yy * ny + Zy * nz; data[w + 5] = Xz * nx + Yz * ny + Zz * nz
+            w += 6; k += 6
+        }
+        count++
+    }
+    fun upload() {
+        if (vbo == 0) { val ids = IntArray(1); GLES20.glGenBuffers(1, ids, 0); vbo = ids[0]
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbo)
+            GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, data.size * 4, null, GLES20.GL_DYNAMIC_DRAW) }
+        else GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbo)
+        val n = count * tpl.size
+        if (n > 0) { buf.position(0); buf.put(data, 0, n); buf.position(0); GLES20.glBufferSubData(GLES20.GL_ARRAY_BUFFER, 0, n * 4, buf) }
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
+    }
+    override fun draw(positionHandle: Int, normalHandle: Int) {
+        if (count == 0 || vbo == 0) return
+        GLES20.glDisable(GLES20.GL_CULL_FACE)
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbo)
+        GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 24, 0)
+        GLES20.glEnableVertexAttribArray(positionHandle)
+        GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT, false, 24, 12)
+        GLES20.glEnableVertexAttribArray(normalHandle)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, count * tpl.size / 6)
+        GLES20.glDisableVertexAttribArray(positionHandle)
+        GLES20.glDisableVertexAttribArray(normalHandle)
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
+        GLES20.glEnable(GLES20.GL_CULL_FACE)
+    }
 }
 
 /** Endothelial lining of a vessel wall: zig-zag cell borders on the wall, and one flat bulging nucleus per cell. */
@@ -3143,6 +3198,7 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
     val pinchH = T1_FIL + sqrt(T1_RV * T1_RV + 2f * T1_RV * T1_FIL)
     val h = max(-T1_RV, sShip)
     val pinched = h >= pinchH - 0.01f
+    val foldingNow = !pinched && h > -T1_RV + 0.01f      // the pit is folding: its head points carry the surface
     // ---- proteins (opaque)
     t1Lit(st.proteins, fm, 0f, so, uo, T1_RECEPTOR, T1_WHITE, 1f, 0.2f)
     t1Lit(st.channels, fm, 0f, so, uo, T1_CH_DIM, T1_WHITE, 1f, 0.12f)
@@ -3177,33 +3233,36 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
     t1Color(st.headsB, fm, 0f, so - 0.016f * cos(seconds * 7.1f), uo + 0.016f * sin(seconds * 9.2f), 3f, true)
     t1Color(st.headsC, fm, 0f, so + 0.016f * sin(seconds * 5.7f + 2f), uo + 0.016f * cos(seconds * 7.9f + 1f), 3f, true)
     t1Color(st.rim, fm, 0f, so, uo, 3.5f, true)
-    if (quality < 2) t1Color(st.tails, fm, 0f, so, uo, 1f, false, 0.9f)
+    if (quality == 0) t1Color(st.tails, fm, 0f, so, uo, 1f, false, 0.9f)
     // ---- the pit (or, once pinched, the flat membrane with the vesicle below)
-    if (abs(h - m.lastH) > 0.002f || m.headVerts == 0) {
+    if (abs(h - m.lastH) > 0.006f || m.headVerts == 0) {
         m.lastH = h
         t1PitProfile(h, m, pinched)
         val dd = m.heads.data
         var v = 0
         var acc = 0f
         val hc = floatArrayOf(1f, 0.78f, 0.45f)
+        // while the pit folds, only the outer (extracellular) leaflet's heads, the one facing the craft in
+        // the pit: half the points on the GL thread through the heaviest stretch of this stop
+        val sides = if (foldingNow) floatArrayOf(1f) else SIGNS
         for (k in 0 until m.np) {
             if (k > 0) acc += sqrt((m.pr[k] - m.pr[k - 1]).pow(2) + (m.pz[k] - m.pz[k - 1]).pow(2))
-            if (k > 0 && acc < 0.055f) continue
+            if (k > 0 && acc < 0.07f) continue
             acc = 0f
             val r = m.pr[k]
-            val cnt = max(1, (TAU * r / 0.055f).toInt())
+            val cnt = max(1, (TAU * r / 0.07f).toInt())
             for (j in 0 until cnt) {
-                if (v + 2 >= 12000) break
+                if (v + 2 >= 8000) break                  // capped: the pit stays light on the GL thread
                 val a = TAU * (j + t1Hash(k * 977 + j)) / cnt
                 val jr = (t1Hash(k * 131 + j * 7) - 0.5f) * 0.04f
-                for (sg in SIGNS) {
+                for (sg in sides) {
                     val rr = r + jr + m.nr[k] * T1_LEAF * sg; val zz = m.pz[k] + m.nz[k] * T1_LEAF * sg
                     v = t1Put(dd, v, cos(a) * rr, sin(a) * rr, -zz, hc, 0.95f)
                 }
             }
         }
         m.headVerts = v
-        m.pit.update { u, vv, out ->
+        if (!foldingNow) m.pit.update { u, vv, out ->
             val fk = u * (m.np - 1); val k0 = fk.toInt().coerceAtMost(m.np - 2); val t = fk - k0
             val r = m.pr[k0] + (m.pr[k0 + 1] - m.pr[k0]) * t; val z = m.pz[k0] + (m.pz[k0 + 1] - m.pz[k0]) * t
             val a = vv * TAU
@@ -3217,16 +3276,21 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
     // cargo receptors gathered in the coated pit (the same stalked, glycosylated receptors as on the flat
     // membrane), carried down with the membrane as it invaginates
     if (!pinched && m.np > 1) {
-        val rec = t1Mesh("mem.rec") { val bb = T1Builder()
+        val rec = t1Mesh("mem.recTpl") { val bb = T1Builder()
             bb.ellipsoid(0f, 0f, 0f, floatArrayOf(0.045f, 0f, 0f), floatArrayOf(0f, 0.06f, 0f), floatArrayOf(0f, 0f, 0.045f), 4, 7)
             bb.ellipsoid(0f, 0.1f, 0f, floatArrayOf(0.018f, 0f, 0f), floatArrayOf(0f, 0.05f, 0f), floatArrayOf(0f, 0f, 0.018f), 3, 5)
             bb.ellipsoid(0.01f, 0.17f, 0f, floatArrayOf(0.045f, 0f, 0f), floatArrayOf(0f, 0.035f, 0f), floatArrayOf(0f, 0f, 0.04f), 4, 7)
             for (g in 0 until 3) { val ga = g * 2.1f
                 bb.rod(0f, 0.2f, 0f, cos(ga) * 0.03f, 0.25f, sin(ga) * 0.03f, 0.008f, 2, 4)
                 bb.rod(cos(ga) * 0.03f, 0.25f, sin(ga) * 0.03f, cos(ga + 0.8f) * 0.05f, 0.28f, sin(ga + 0.8f) * 0.05f, 0.008f, 2, 4) }
-            bb.build() }
+            bb.raw() }
+        // all 14 in one draw, placed once per frame (both eyes share it)
+        val rb = t1Mesh("mem.recBatch") { T1InstBatch(rec, 14) }
+        val fill = rb.stamp != nowSeconds
+        if (fill) rb.reset()
         val pw = FloatArray(6)
         for (j in 0 until 14) {
+            if (!fill) break
             val r0 = 0.6f + 0.7f * t1Hash(j + 300); val ang = TAU * j / 14f + 0.4f * t1Hash(j + 310)
             val fk = (r0 / T1_PIT_R * (m.np - 1)).coerceIn(0f, m.np - 1.001f); val k0 = fk.toInt(); val t = fk - k0
             val pr = m.pr[k0] + (m.pr[k0 + 1] - m.pr[k0]) * t; val pz = m.pz[k0] + (m.pz[k0 + 1] - m.pz[k0]) * t
@@ -3242,8 +3306,10 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
             var zx = ny * fm.sz - nz2 * fm.sy; var zy = nz2 * fm.sx - nx * fm.sz; var zz = nx * fm.sy - ny * fm.sx
             val zl2 = sqrt(zx * zx + zy * zy + zz * zz)
             if (zl2 < 1e-3f) { zx = fm.dx; zy = fm.dy; zz = fm.dz } else { zx /= zl2; zy /= zl2; zz /= zl2 }
-            drawBasis(pw[0], pw[1], pw[2], zx, zy, zz, nx, ny, nz2, 1f, 1f, 1f, rec, T1_RECEPTOR, T1_WHITE, 1f, 0f, 0.25f)
+            rb.add(pw[0], pw[1], pw[2], zx, zy, zz, nx, ny, nz2)
         }
+        if (fill) { rb.upload(); rb.stamp = nowSeconds }
+        t1LitWorld(rb, T1_RECEPTOR, T1_WHITE, 1f, 0.25f)
     }
     // The named Na+/K+ pump, on the pit's lip where the membrane curves down: the one place the camera sees
     // this membrane side-on. Its transmembrane body a cylinder spanning exactly the bilayer between the two
@@ -3270,22 +3336,35 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
         val lx2 = cos(ta) * rr0 + T1_SHEAR * zl0; val ly2 = sin(ta) * rr0
         var tx = fm.cx + fm.sx * lx2 + fm.ux * ly2 - fm.dx * zl0 - c0[0]; var ty = fm.cy + fm.sy * lx2 + fm.uy * ly2 - fm.dy * zl0 - c0[1]; var tz = fm.cz + fm.sz * lx2 + fm.uz * ly2 - fm.dz * zl0 - c0[2]
         val tl = sqrt(tx * tx + ty * ty + tz * tz).coerceAtLeast(1e-6f); tx /= tl; ty /= tl; tz /= tl
-        drawBasis(c0[0], c0[1], c0[2], nx, ny, nz, tx, ty, tz, 0.06f, 0.06f, T1_LEAF, cylinder, T1_PUMP, T1_WHITE, landmarkFade, 0f, 0.3f)
+        // T1_PUMP orange, low glow and no pale rim (accent = base), so it stays orange at display size
+        drawBasis(c0[0], c0[1], c0[2], nx, ny, nz, tx, ty, tz, 0.06f, 0.06f, T1_LEAF, cylinder, T1_PUMP, T1_PUMP, landmarkFade, 0f, 0.1f)
         for (sg in SIGNS) drawBasis(c0[0] + nx * sg * T1_LEAF, c0[1] + ny * sg * T1_LEAF, c0[2] + nz * sg * T1_LEAF, nx * sg, ny * sg, nz * sg, tx, ty, tz,
-            0.06f, 0.06f, 1f, t1Disc(), T1_PUMP, T1_WHITE, landmarkFade, 0f, 0.3f)
+            0.06f, 0.06f, 1f, t1Disc(), T1_PUMP, T1_PUMP, landmarkFade, 0f, 0.1f)
         // the head, in the cytoplasm (the side away from the receptors' stalks)
         val hd = T1_LEAF + 0.06f + 0.05f
-        drawBasis(c0[0] - nx * hd, c0[1] - ny * hd, c0[2] - nz * hd, nx, ny, nz, tx, ty, tz, 0.05f, 0.05f, 0.05f, sphere, T1_PUMP, T1_WHITE, landmarkFade, 0f, 0.3f)
+        drawBasis(c0[0] - nx * hd, c0[1] - ny * hd, c0[2] - nz * hd, nx, ny, nz, tx, ty, tz, 0.05f, 0.05f, 0.05f, sphere, T1_PUMP, T1_PUMP, landmarkFade, 0f, 0.1f)
         // the two leaflet lines, 3 px, running along the membrane's profile across the pump's body
         var lv = 0
         val lc = floatArrayOf(1f, 0.80f, 0.55f)
-        val ka = max(0, kb - 3); val kz = min(m.np - 1, kb + 3)
+        val ka = max(0, kb - 5); val kz = min(m.np - 1, kb + 5)
         for (sg in SIGNS) for (k in ka until kz) {
             wp(k, sg * T1_LEAF, q); lv = t1Put(d, lv, q[0], q[1], q[2], lc, 1f)
             wp(k + 1, sg * T1_LEAF, q); lv = t1Put(d, lv, q[0], q[1], q[2], lc, 1f)
         }
         GLES20.glDisable(GLES20.GL_DEPTH_TEST)
-        t1DynDraw(lv, GLES20.GL_LINES, 3f, 1f, depthWrite = false)
+        t1DynDraw(lv, GLES20.GL_LINES, 4f, 1f, depthWrite = false)
+        // its ions, on the same 1.5 s cycle as the other pumps: 3 Na+ (yellow) from the cytoplasm out through
+        // the body, then 2 K+ (violet) in
+        var iv2 = 0
+        val naC = floatArrayOf(1f, 0.92f, 0.3f); val kC = floatArrayOf(0.75f, 0.5f, 1f)
+        val ph = ((seconds / 1.5f + 0.33f) % 1f)
+        if (ph < 0.45f) { val t = ph / 0.45f
+            for (j in 0 until 3) { val o = -0.14f * (1f - t) + 0.2f * t; val sd = 0.025f * (j - 1)
+                iv2 = t1Put(d, iv2, c0[0] + nx * o + tx * sd, c0[1] + ny * o + ty * sd, c0[2] + nz * o + tz * sd, naC, 1f - t * 0.3f) } }
+        else if (ph > 0.5f && ph < 0.95f) { val t = (ph - 0.5f) / 0.45f
+            for (j in 0 until 2) { val o = 0.2f * (1f - t) - 0.14f * t; val sd = 0.025f * (j * 2 - 1)
+                iv2 = t1Put(d, iv2, c0[0] + nx * o + tx * sd, c0[1] + ny * o + ty * sd, c0[2] + nz * o + tz * sd, kC, 1f) } }
+        t1DynDraw(iv2, GLES20.GL_POINTS, 4.5f, 1f, depthWrite = false)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
     }
     // clathrin coat on the cytoplasmic face of the pit (on the vesicle after scission, until it falls away)
@@ -3294,7 +3373,7 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
     }
     val coat = if (pinched) 1f - t1Smooth(7.14f, 7.2f, rp) else t1Smooth(0.2f, 0.6f, psi)
     if (coat > 0.02f && psi > 0.1f) {
-        if (abs(psi - m.lastPsi) > 0.01f) {
+        if (abs(psi - m.lastPsi) > 0.03f) {         // the cage re-cut every 0.03 rad of wrap
             m.lastPsi = psi
             val e = t1Clathrin; val dd = m.cage.data
             var v = 0
@@ -3302,7 +3381,7 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
             val cc = floatArrayOf(0.88f, 0.92f, 1f)
             var k = 0
             val cosLim = cos(psi)
-            while (k < e.size && v + 2 < 4200) {
+            while (k < e.size && v + 2 < 3000) {       // capped at 3000 vertices
                 if (e[k + 2] >= cosLim && e[k + 5] >= cosLim) {
                     v = t1Put(dd, v, e[k] * cr, e[k + 1] * cr, -(e[k + 2] * cr), cc, 0.9f)
                     v = t1Put(dd, v, e[k + 3] * cr, e[k + 4] * cr, -(e[k + 5] * cr), cc, 0.9f)
@@ -3315,7 +3394,7 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
         else { t1Model(fm, 0f, so, uo); t1ApplyShear(); Matrix.translateM(model, 0, 0f, 0f, -h) }
         Matrix.multiplyMM(mv, 0, view, 0, model, 0); Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
         val keep = colorShader.globalFade; colorShader.globalFade = keep * coat
-        colorShader.use(mvp, 1f); lineWidth(2f)
+        colorShader.use(mvp, 1f); lineWidth(1f)
         m.cage.draw(colorShader.positionHandle, colorShader.colorHandle, GLES20.GL_LINES, m.cageVerts)
         lineWidth(1f); colorShader.globalFade = keep
     }
@@ -3334,7 +3413,8 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
     GLES20.glDepthMask(false)
     t1Lit(core, fm, 0f, so, uo, T1_BILAYER, T1_WHITE, 0.35f, 0.12f)
     t1Model(fm, 0f, so, uo); t1ApplyShear()
-    drawLitModel(m.pit, T1_BILAYER, T1_WHITE, 0.3f * landmarkFade, 0f, 0.12f)
+    // (not while the pit folds: its head points carry the surface then, and it is the heaviest stretch)
+    if (!foldingNow) drawLitModel(m.pit, T1_BILAYER, T1_WHITE, 0.3f * landmarkFade, 0f, 0.12f)
     if (pinched) {
         val va = 1f - t1Smooth(7.18f, 7.26f, rp)
         if (va > 0.01f) {
