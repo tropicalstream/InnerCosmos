@@ -70,6 +70,7 @@ internal val T1_DNA = floatArrayOf(1f, 0.86f, 0.52f, 1f)
 internal val T1_TRNA2 = floatArrayOf(1f, 0.45f, 0.55f, 1f)
 internal val T1_LIP = floatArrayOf(0.86f, 0.44f, 0.46f, 1f)
 internal val T1_MOUTH = floatArrayOf(0.30f, 0.12f, 0.12f, 1f)
+internal val T1_LIP2 = floatArrayOf(0.78f, 0.36f, 0.40f, 1f)
 internal val T1_PUMP_DIM = floatArrayOf(0.85f, 0.55f, 0.38f, 1f)
 internal val T1_RING_UNDER = floatArrayOf(0.95f, 0.86f, 0.84f, 1f)
 internal val T1_DUSTG = floatArrayOf(0.30f, 0.20f, 0.10f, 1f)
@@ -802,8 +803,8 @@ private fun t1FaceDepth(X: Float, Y: Float): Float {
     for (sg in SIGNS) h -= 0.07f * exp(-((X + 2.0f) * (X + 2.0f) / 0.8f + (ym - sg * 0.35f) * (ym - sg * 0.35f) / 0.02f))
     h -= 0.06f * exp(-((X + 3.15f) * (X + 3.15f) / 0.015f)) * exp(-ym * ym / 2.5f)
     // below the upper lip, the mouth: the lips meet at the stomion, the lower lip's red below
-    h += 0.12f * exp(-((X + 4.2f) * (X + 4.2f) / 0.02f)) * exp(-ym * ym / 5f)
-    h -= 0.3f * exp(-((X + 4.7f) * (X + 4.7f) / 0.3f + ym * ym / 3.5f))
+    h += 0.1f * exp(-((X + 3.82f) * (X + 3.82f) / 0.01f)) * exp(-ym * ym / 5f)
+    h -= 0.45f * exp(-((X + 4.25f) * (X + 4.25f) / 0.25f + ym * ym / 3.5f))
     // the punch-biopsy pit: a 6 mm cylindrical defect, 2 mm deep, cut into the lip
     val pr = sqrt((X - T1_PIT_X).pow(2) + (Y - T1_PIT_Y).pow(2))
     h += 0.25f * t1Smooth(0.42f, 0.34f, pr)
@@ -1064,40 +1065,41 @@ internal fun StereoBodyRenderer.drawThreshold(n: TourNode, i: Int, seconds: Floa
         val nb = 22
         for (b in 0 until nb) {
             val u0 = if (b == 0) 0f else 0.75f + 0.25f * (b - 1) / (nb - 1f); val u1 = 0.75f + 0.25f * b / (nb - 1f)   // opaque out to 0.75, so the lower lip is in it
-            val skin = t1Mesh("face8.$b") { ParamMesh(if (b == 0) 64 else 2, 144) { u, v, out -> t1FacePoint(u0 + (u1 - u0) * u, v, tmp, out) } }
+            val skin = t1Mesh("face9.$b") { ParamMesh(if (b == 0) 64 else 2, 144) { u, v, out -> t1FacePoint(u0 + (u1 - u0) * u, v, tmp, out) } }
             val al = if (b == 0) 1f else 1f - t1Smooth(0f, 1f, (b - 0.5f) / (nb - 1f))
             if (b > 0 || face < 0.999f) GLES20.glDepthMask(false)
             t1Lit(skin, fT, 0f, 0f, 0f, T1_SKIN, if (b == 0) T1_SKIN_RIM else T1_SKIN, face * al, 0.12f)
             GLES20.glDepthMask(true)
         }
         // the red of the upper lip, below the white roll
-        val lip = t1Mesh("face8.lip") { ParamMesh(4, 30) { u, v, out ->
+        val lip = t1Mesh("face9.lip") { ParamMesh(4, 30) { u, v, out ->
             // the upper-lip vermilion, corner to corner: its upper edge a Cupid's bow (peaks under the philtral
-            // columns), fullest at the midline tubercle and thinning to the corners, rolling out toward us
+            // columns), fullest at the midline tubercle and thinning to the corners
             val w = 2f * v - 1f; val Y = T1_MID + w * 2.3f
-            val top = -3.2f + 0.1f * exp(-((abs(Y - T1_MID) - 0.35f) / 0.25f).pow(2)) - 0.35f * w * w
-            val X = top - 0.95f * u * (1f - w * w).pow(0.6f)
-            out[0] = X; out[1] = Y; out[2] = -(t1FaceDepth(X, Y) - 0.015f - 0.25f * u * (1f - w * w)) } }
+            val top = -3.2f + 0.1f * exp(-((abs(Y - T1_MID) - 0.35f) / 0.25f).pow(2)) - 0.3f * w * w
+            val X = top - 0.55f * u * (1f - w * w).pow(0.6f)
+            out[0] = X; out[1] = Y; out[2] = -(t1FaceDepth(X, Y) - 0.015f) } }
         t1Lit(lip, fT, 0f, 0f, 0f, T1_LIP, T1_SKIN_RIM, face, 0.12f)
         // a cue that this is a face, at the patch's fading lower edge: the mouth line and the lower lip
         GLES20.glDepthMask(false)
-        val mouth = t1Mesh("face8.mouth") { ParamMesh(2, 30) { u, v, out ->
-            val w = 2f * v - 1f; val Y = T1_MID + w * 2.4f
-            val X = -4.17f - 0.06f * u + 0.12f * w * w
+        val mouth = t1Mesh("face9.mouth") { ParamMesh(2, 30) { u, v, out ->
+            // the line where the lips meet (stomion), 1.2 mm wide so it reads at display resolution
+            val w = 2f * v - 1f; val Y = T1_MID + w * 2.35f
+            val X = -3.75f - 0.15f * u + 0.3f * w * w
             out[0] = X; out[1] = Y; out[2] = -(t1FaceDepth(X, Y) - 0.02f) } }
         t1Lit(mouth, fT, 0f, 0f, 0f, T1_MOUTH, T1_MOUTH, face, 0f)
-        val lip2 = t1Mesh("face8.lip2") { ParamMesh(3, 30) { u, v, out ->
+        val lip2 = t1Mesh("face9.lip2") { ParamMesh(3, 30) { u, v, out ->
             val w = 2f * v - 1f; val Y = T1_MID + w * 2.2f
-            val X = -4.25f + 0.12f * w * w - 0.85f * u * (1f - w * w).pow(0.6f)
+            val X = -3.92f + 0.3f * w * w - 0.7f * u * (1f - w * w).pow(0.6f)
             out[0] = X; out[1] = Y; out[2] = -(t1FaceDepth(X, Y) - 0.015f) } }
-        t1Lit(lip2, fT, 0f, 0f, 0f, T1_LIP, T1_SKIN_RIM, face, 0.12f)
+        t1Lit(lip2, fT, 0f, 0f, 0f, T1_LIP2, T1_SKIN_RIM, face, 0.12f)
         GLES20.glDepthMask(true)
         val vest = t1Mesh("vestibule") { ParamMesh(10, 48) { u, v, out ->
             t1NostrilRim(v * TAU, tmp)
             val sh = 1f - 0.15f * u
             out[0] = tmp[0] * sh - T1_TILT_K * 1.7f * u; out[1] = tmp[1] * sh; out[2] = -(t1FaceDepth(tmp[0], tmp[1]) + 0.4f + 1.7f * u)
         } }
-        val lines = t1Mesh("face8.lines") { t1FaceMeshes() }
+        val lines = t1Mesh("face9.lines") { t1FaceMeshes() }
         if (face < 0.999f) GLES20.glDepthMask(false)
         t1Lit(vest, fT, 0f, 0f, 0f, T1_VESTIBULE, T1_MUCOSA_RIM, face, 0.12f)
         // the other nostril: the same vestibule, mirrored across the columella, its lumen dark red deep inside
@@ -3153,10 +3155,18 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
     for (k in 0 until 3) {
         val x = T1_PUMP_XY[2 * k]; val y = T1_PUMP_XY[2 * k + 1]
         val ks = 1f; val gl = if (k == 1) 0.3f else 0.35f   // the edge pump, seen side-on at its true size: its profile across the cut edge does the work
+        if (k == 1) {
+            // the edge pump, in profile on the cut edge: its transmembrane body a cylinder spanning exactly the
+            // bilayer (between the two leaflet lines drawn below), the cytoplasmic head a separate ball beneath
+            t1Shape(cylinder, fm, 0f, x, y, 1f, 0f, 0f, 0f, 1f, 0f, 0.06f, 0.06f, T1_LEAF, T1_PUMP, T1_WHITE, 1f, gl)
+            for (sg in SIGNS) t1Shape(t1Disc(), fm, sg * T1_LEAF, x, y, sg, 0f, 0f, 0f, 1f, 0f, 0.06f, 0.06f, 1f, T1_PUMP, T1_WHITE, 1f, gl)
+            t1Lit(sphere, fm, T1_LEAF + 0.06f + 0.05f, x, y, T1_PUMP, T1_WHITE, 1f, gl, 0.05f, 0.05f, 0.05f)
+        } else {
         t1Lit(sphere, fm, 0f, x, y, T1_PUMP, T1_WHITE, 1f, gl, 0.06f * ks, 0.06f * ks, 0.07f * ks)            // transmembrane body (alpha subunit)
         t1Lit(sphere, fm, 0.085f * ks, x, y, T1_PUMP, T1_WHITE, 1f, gl, 0.03f * ks, 0.03f * ks, 0.03f * ks)   // neck
         t1Lit(sphere, fm, 0.18f * ks, x, y, T1_PUMP, T1_WHITE, 1f, gl, 0.09f * ks, 0.09f * ks, 0.1f * ks)     // cytoplasmic head: the N and P (ATP-binding) domains
         t1Lit(sphere, fm, -0.085f * ks, x + 0.02f, y, T1_RECEPTOR, T1_WHITE, 1f, gl, 0.04f * ks, 0.04f * ks, 0.04f * ks) // beta subunit, outside
+        }
         val ph = ((seconds / 1.5f + k * 0.33f) % 1f)
         if (ph < 0.45f) { val t = ph / 0.45f
             for (j in 0 until 3) { val al = 0.12f * (1f - t) + (-0.2f) * t; val ss = x + 0.02f * (j - 1); val uu = y + 0.015f * (j % 2)
@@ -3173,10 +3183,10 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
         val lc = floatArrayOf(1f, 0.80f, 0.55f)
         for (sg in SIGNS) for (m in 0 until 6) for (hh in 0..1) {
             val t = -0.25f + 0.5f * (m + hh) / 6f; val ss = x + tx * t; val uu = y + ty * t; val al = sg * T1_LEAF
-            lv = t1Put(d, lv, fx(fm, al, ss, uu), fy(fm, al, ss, uu), fz(fm, al, ss, uu), lc, 0.55f)
+            lv = t1Put(d, lv, fx(fm, al, ss, uu), fy(fm, al, ss, uu), fz(fm, al, ss, uu), lc, 1f)
         }
         GLES20.glDisable(GLES20.GL_DEPTH_TEST)
-        t1DynDraw(lv, GLES20.GL_LINES, 2f, 1f, depthWrite = false)
+        t1DynDraw(lv, GLES20.GL_LINES, 3f, 1f, depthWrite = false)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
     }
     // ---- flat bilayer: heads (jiggling), tails, and the cut edge in profile
