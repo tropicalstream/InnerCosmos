@@ -1780,7 +1780,7 @@ internal fun StereoBodyRenderer.drawAlveolus(n: TourNode, i: Int, seconds: Float
     val d = t1Dyn.data
     var v = 0
     val cDark = floatArrayOf(0.50f, 0.06f, 0.10f); val cBright = floatArrayOf(0.90f, 0.12f, 0.14f); val col = FloatArray(3)
-    val nDisc = if (quality == 0) 9 else 4
+    val nDisc = if (quality == 0) 8 else 4
     t1Cells("alv.rbc2", 70, 0f, COL_RBC_OXY, 0.3f) { b ->
         for ((j, path) in net.paths.withIndex()) {
             val segs = path.size / 3 - 1
@@ -4150,6 +4150,7 @@ private fun t1BuildAtom(set: Int): Pair<PointMesh, PointMesh> {
         val rr2 = x * x + y * y + z * z
         if (rr2 > 100f && rnd.nextFloat() > 0.1f) return
         if (z > 5f) return                                   // nothing between the craft and the atom
+        if (toPi && rr2 > 110f) return                       // the pi lobes inside ~85 pm, so they read as two lobes, not a speckle
         val l = if (toPi) piPts else pts
         l.add(x); l.add(y); l.add(z); l.add(c[0]); l.add(c[1]); l.add(c[2]); l.add(a)
     }
@@ -4177,7 +4178,7 @@ private fun t1BuildAtom(set: Int): Pair<PointMesh, PointMesh> {
             val accept: Float; var pc = col; var pa = a2
             if (hyb) {
                 // three sp2 hybrids (1/sqrt3 s + sqrt(2/3) p) sampled 1.5x, and one p (pi) orbital across the plane
-                val which = if (rnd.nextFloat() < 0.68f) rnd.nextInt(3) else 3
+                val which = if (rnd.nextFloat() < 0.72f) rnd.nextInt(3) else 3
                 accept = if (which < 3) { val c = u[0] * bonds[which][0] + u[1] * bonds[which][1] + u[2] * bonds[which][2]; val a = 0.57735f + 1.41421f * c; a * a / 3.96f }
                 else { val c = u[1] * T1_PI_N[1] + u[2] * T1_PI_N[2]; c * c }
                 if (which == 3) { pc = cPi; pa = 0.8f } else { pc = cC; pa = 0.3f }
@@ -4266,7 +4267,7 @@ internal fun StereoBodyRenderer.drawAtom(n: TourNode, i: Int, seconds: Float) {
     val tick = floor(seconds / 0.12f).toInt()
     val lead = (t1Hash(tick) * 4f).toInt().coerceIn(0, 3)
     for (m in 0 until 4) {
-        val cl = t1Mesh("atom6.$m") { t1BuildAtom(m) }
+        val cl = t1Mesh("atom7.$m") { t1BuildAtom(m) }
         t1Model(f, a0, s0, u0, k)
         Matrix.multiplyMM(mv, 0, view, 0, model, 0); Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
         val keep = colorShader.globalFade; colorShader.globalFade = keep * (if (m == lead) 1f else 0.35f)
@@ -4279,7 +4280,7 @@ internal fun StereoBodyRenderer.drawAtom(n: TourNode, i: Int, seconds: Float) {
     GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
     // nuclei: fixed-size points of light, never resolved - the carbon, its three neighbours, and
     // (fainter) the rest of the aromatic ring
-    val nuc = t1Mesh("atom6.nuclei") {
+    val nuc = t1Mesh("atom7.nuclei") {
         val dd = FloatArray(7 * 7)
         t1Put(dd, 0, 0f, 0f, 0f, floatArrayOf(1f, 0.96f, 0.88f), 1f)
         val bl = floatArrayOf(140f, 135f, 108f); val bd = t1AtomBonds()
@@ -4307,7 +4308,7 @@ internal fun StereoBodyRenderer.drawAtom(n: TourNode, i: Int, seconds: Float) {
     colorShader.use(mvp, 8f, points = true); nuc.draw(colorShader.positionHandle, colorShader.colorHandle)
     // the rest of the aromatic ring: dim bonding density between its atoms; and a faint contour at the
     // radius holding 90% of the carbon's own electron density (~70 pm), in the ring plane and across it
-    val ring = t1Mesh("atom6.ring") {
+    val ring = t1Mesh("atom7.ring") {
         val bd = t1AtomBonds()
         var cx = bd[0][0] + bd[1][0]; var cy = bd[0][1] + bd[1][1]; var cz = bd[0][2] + bd[1][2]
         val cl = sqrt(cx * cx + cy * cy + cz * cz); cx /= cl; cy /= cl; cz /= cl
@@ -4336,7 +4337,7 @@ internal fun StereoBodyRenderer.drawAtom(n: TourNode, i: Int, seconds: Float) {
     colorShader.use(mvp, 2.6f, points = true); ring.draw(colorShader.positionHandle, colorShader.colorHandle)
     colorShader.globalFade = keep2
     // extent: a very faint filled halo in the ring plane (radius ~70 pm), fading out at its edge - not a line
-    val halo = t1Mesh("atom6.halo") {
+    val halo = t1Mesh("atom7.halo") {
         val l = ArrayList<Float>()
         fun pt(r: Float, a: Float, al: Float) { l.add(cos(a) * r); l.add(T1_E2[1] * sin(a) * r); l.add(T1_E2[2] * sin(a) * r); l.add(0.5f); l.add(0.7f); l.add(1f); l.add(al) }
         for (k in 0 until 48) for (ring in 0..1) {
