@@ -151,7 +151,7 @@ internal val T2_JG = floatArrayOf(0.95f, 0.85f, 0.6f, 1f)
 internal val T2_JG_GRANULE = floatArrayOf(0.8f, 0.55f, 0.25f, 1f)
 internal val T2_DISTAL = floatArrayOf(0.9f, 0.72f, 0.72f, 1f)
 internal val T2_MACULA = floatArrayOf(0.9f, 0.7f, 0.7f, 1f)
-internal val T2_EFFERENT = floatArrayOf(0.7f, 0.14f, 0.22f, 1f)
+internal val T2_EFFERENT = floatArrayOf(0.55f, 0.12f, 0.22f, 1f)
 internal val T2_MESANGIUM_D = floatArrayOf(0.22f, 0.05f, 0.07f, 1f)
 internal val T2_CAP_GLASS = floatArrayOf(0.95f, 0.7f, 0.72f, 1f)
 internal val T2_PARIETAL_NUC = floatArrayOf(0.75f, 0.65f, 0.85f, 1f)
@@ -2391,8 +2391,9 @@ private fun StereoBodyRenderer.t2KidneyMeshes(i: Int): Array<ColorVboMesh> = t2G
             val tn = tans[k]; val oRaw = (c - T).unit(); val o = (oRaw - tn * (oRaw dot tn)).unit(); val b = tn cross o
             val a60 = 1.05f
             if (k % 3 == 0) { procA.add(c + (o * cos(a60) + b * sin(a60)) * 0.54f); procB.add(c + (o * cos(a60) - b * sin(a60)) * 0.54f) }
-            if (k % 2 == 0) g.torus(c, tn, 0.47f, 0.035f, colA, 1f, 4, 3, a60, -0.45f, o)
-            else g.torus(c, tn, 0.47f, 0.035f, colB, 1f, 4, 3, -a60, 0.45f, o)
+            val fg2 = if (pts in nearLoops) glass else g; val fal = if (pts in nearLoops) 0.6f else 1f
+            if (k % 2 == 0) fg2.torus(c, tn, 0.47f, 0.035f, colA, fal, 4, 3, a60, -0.45f, o)
+            else fg2.torus(c, tn, 0.47f, 0.035f, colB, fal, 4, 3, -a60, 0.45f, o)
         }
         if (procA.size > 1) g.path(procA, { 0.1f }, colA, 1f, 5, true)
         if (procB.size > 1) g.path(procB, { 0.1f }, colB, 1f, 5, true)
@@ -2437,13 +2438,20 @@ private fun StereoBodyRenderer.t2KidneyMeshes(i: Int): Array<ColorVboMesh> = t2G
         val q = t2v(x, y, z) - T; val d = q dot vdir; val rad = (q - vdir * d).unit()
         !(d > sh0 + shL * 0.2f && d < sh0 + shL * 0.8f && (rad dot lane) > winCos)
     }
-    for (k in 0 until 12) {   // the juxtaglomerular cuff (granular cells: they make renin), in the window
-        val a = k * T2PI / 6f; val zAlong = sh0 + shL * 0.5f + (k / 6 - 0.5f) * 0.55f
-        val cc = T + vdir * zAlong + side * 0.6f * flare(zAlong)
-        val rdir = lane * cos(a) + side * sin(a)
-        val c = cc + rdir * 1.12f
-        g.box(c, rdir * 0.22f, (vdir cross rdir) * 0.26f, vdir * 0.26f, T2_JG)
-        for (dd in 0 until 4) g.ball(c + rdir * 0.23f + (vdir cross rdir) * ((dd % 2 - 0.5f) * 0.26f) + vdir * ((dd / 2 - 0.5f) * 0.26f), 0.07f, T2_JG_GRANULE, 1f, 3, 4)
+    run {   // the juxtaglomerular cuff: granular cells (they make renin) set in the afferent's wall, a
+            // continuous collar 1.2 units long in the window, renin granules seen inside each cell
+        val jr = java.util.Random(71L); val zMid = sh0 + shL * 0.5f
+        for (ring in 0 until 2) for (k in 0 until 7) {
+            val a = (k + 0.5f * ring) * 2f * T2PI / 7f; val zAlong = zMid + (ring - 0.5f) * 0.6f
+            val cc = T + vdir * zAlong + side * 0.6f * flare(zAlong)
+            val rdir = lane * cos(a) + side * sin(a); val tdir = vdir cross rdir
+            val c = cc + rdir * 0.98f
+            glass.ell(c, tdir * 0.45f, rdir * 0.35f, vdir * 0.4f, T2_JG, 0.6f, 6, 9)
+            for (q in 0 until 5) {
+                val u = (jr.nextFloat() - 0.5f) * 1.1f; val w = (jr.nextFloat() - 0.5f) * 1.0f; val h = (jr.nextFloat() - 0.5f) * 0.9f
+                g.ball(c + tdir * (0.45f * u) + rdir * (0.35f * w) + vdir * (0.4f * h), 0.06f, T2_JG_GRANULE, 1f, 3, 4)
+            }
+        }
     }
     run {   // the distal tubule touching the pole, its macula densa plaque facing the arterioles
         val c0 = T + vdir * (tOut + 0.3f) + ve2 * 2.4f
