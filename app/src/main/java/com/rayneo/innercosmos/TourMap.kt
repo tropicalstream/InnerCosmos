@@ -44,22 +44,32 @@ object Tours {
     val DESCENT = TourMap(
         id = 1, title = "THE DESCENT", subtitle = "NOSE TO ATOM  ·  13 STOPS", hudTitle = "INNERCOSMOS EXPEDITION", scriptAsset = "tour_script.json",
         nodes = listOf(
-            TourNode("THE THRESHOLD", 0.0f, 0.0f, 0f, 4.2f, rgb(0.96f, 0.62f, 0.56f), 12.0, Scene.THRESHOLD, Amb.AIR, 50f, 19f, "NOSE", "12 m → 12 mm"),
-            TourNode("THE AIRWAY", 2.4f, 0.3f, -16f, 2.6f, rgb(0.90f, 0.42f, 0.48f), 1.2e-3, Scene.AIRWAY, Amb.AIR, 50f, 34f, "TRACHEA", "1.2 mm"),
-            TourNode("THE ALVEOLUS", -2.2f, -0.2f, -32f, 3.6f, rgb(0.96f, 0.78f, 0.78f), 1.2e-4, Scene.ALVEOLUS, Amb.AIR, 59f, 60f, "LUNG · ALVEOLUS", "120 µm"),
-            TourNode("THE BLOODSTREAM", 2.0f, 0.4f, -48f, 1.6f, rgb(0.62f, 0.08f, 0.10f), 1.2e-5, Scene.BLOOD, Amb.BLOOD, 56f, 53f, "PULMONARY VEIN", "12 µm"),
-            TourNode("THE HEART", -2.6f, 0.0f, -64f, 6.0f, rgb(0.55f, 0.10f, 0.16f), 1.2e-5, Scene.HEART, Amb.BLOOD, 54f, 50f, "HEART", "12 µm"),
-            TourNode("THE SENTINEL", 2.4f, -0.3f, -80f, 3.0f, rgb(0.60f, 0.12f, 0.16f), 1.2e-5, Scene.SENTINEL, Amb.BLOOD, 51f, 30f, "CAROTID ARTERY", "12 µm"),
-            TourNode("THE NEURON", -2.0f, 0.3f, -96f, 2.2f, rgb(0.45f, 0.32f, 0.80f), 1.2e-6, Scene.NEURON, Amb.NEURAL, 50f, 12f, "BRAIN · NEURON", "1.2 µm → 120 nm"),
-            TourNode("THE MEMBRANE", 2.2f, 0.2f, -112f, 2.8f, rgb(0.20f, 0.68f, 0.64f), 1.2e-7, Scene.MEMBRANE, Amb.CYTO, 50f, 12f, "CELL MEMBRANE", "120 nm"),
-            TourNode("THE MITOCHONDRION", -2.4f, -0.2f, -128f, 2.0f, rgb(0.88f, 0.48f, 0.20f), 1.2e-7, Scene.MITOCHONDRION, Amb.CYTO, 50f, 12f, "MITOCHONDRION", "120 nm"),
-            TourNode("THE NUCLEUS", 2.0f, 0.3f, -144f, 3.2f, rgb(0.32f, 0.28f, 0.82f), 1.2e-8, Scene.NUCLEUS, Amb.CYTO, 50f, 12f, "CELL NUCLEUS", "12 nm"),
-            TourNode("THE RIBOSOME", -2.2f, 0.0f, -160f, 2.4f, rgb(0.20f, 0.58f, 0.60f), 1.2e-8, Scene.RIBOSOME, Amb.CYTO, 50f, 12f, "RIBOSOME", "12 nm"),
-            TourNode("THE ATOM", 1.6f, -0.2f, -176f, 7.0f, rgb(0.06f, 0.06f, 0.14f), 1.2e-11, Scene.ATOM, Amb.ATOM, 50f, 12f, "CARBON ATOM", "12 pm"),
+            // Passage radius per stop is the real lumen at that stop's rung (1.5 units = the Mote): the
+            // open air before the face (black: nothing), a 2 cm trachea at 12 mm, a 270 um alveolus at
+            // 120 um, a 26 um pulmonary venule at 12 um, a 5 cm left heart at 12 mm, a 48 um neck
+            // venule at 12 um, a cleared patch of cortex, 480 nm of extracellular space, a 0.7 um
+            // mitochondrion's surroundings, 128 nm of nucleoplasm round the pore, 64 nm of cytosol,
+            // 250 pm round a carbon atom. See SceneDescent.kt for each scene's scale.
+            TourNode("THE THRESHOLD", 0.0f, 0.0f, 0f, 14.0f, rgb(0.0f, 0.0f, 0.0f), 12.0, Scene.THRESHOLD, Amb.AIR, 50f, 19f, "NOSE", "12 m → 12 mm"),
+            TourNode("THE AIRWAY", 2.4f, 0.3f, -16f, 1.25f, rgb(0.90f, 0.56f, 0.56f), 1.2e-2, Scene.AIRWAY, Amb.AIR, 50f, 34f, "TRACHEA", "12 mm"),
+            TourNode("THE ALVEOLUS", -2.2f, -0.2f, -32f, 1.7f, rgb(0.96f, 0.80f, 0.80f), 1.2e-4, Scene.ALVEOLUS, Amb.AIR, 59f, 60f, "LUNG · ALVEOLUS", "120 µm"),
+            TourNode("THE BLOODSTREAM", 2.0f, 0.4f, -48f, 1.6f, rgb(0.74f, 0.28f, 0.30f), 1.2e-5, Scene.BLOOD, Amb.BLOOD, 56f, 53f, "LUNG · VENULE", "12 µm"),
+            TourNode("THE HEART", -2.6f, 0.0f, -64f, 3.2f, rgb(0.66f, 0.16f, 0.20f), 1.2e-2, Scene.HEART, Amb.BLOOD, 54f, 50f, "HEART", "12 mm"),
+            TourNode("THE SENTINEL", 2.4f, -0.3f, -80f, 3.0f, rgb(0.70f, 0.26f, 0.30f), 1.2e-5, Scene.SENTINEL, Amb.BLOOD, 51f, 30f, "NECK · VENULE", "12 µm"),
+            TourNode("THE NEURON", -2.0f, 0.3f, -96f, 5.5f, rgb(0.14f, 0.10f, 0.22f), 1.2e-5, Scene.NEURON, Amb.NEURAL, 50f, 12f, "BRAIN · NEURON", "12 µm → 120 nm"),
+            TourNode("THE MEMBRANE", 2.2f, 0.2f, -112f, 3.0f, rgb(0.12f, 0.24f, 0.32f), 1.2e-7, Scene.MEMBRANE, Amb.CYTO, 50f, 12f, "CELL MEMBRANE", "120 nm"),
+            TourNode("THE MITOCHONDRION", -2.4f, -0.2f, -128f, 4.4f, rgb(0.30f, 0.50f, 0.48f), 1.2e-7, Scene.MITOCHONDRION, Amb.CYTO, 50f, 12f, "MITOCHONDRION", "120 nm"),
+            TourNode("THE NUCLEUS", 2.0f, 0.3f, -144f, 8.0f, rgb(0.26f, 0.22f, 0.55f), 1.2e-8, Scene.NUCLEUS, Amb.CYTO, 50f, 12f, "CELL NUCLEUS", "12 nm"),
+            TourNode("THE RIBOSOME", -2.2f, 0.0f, -160f, 4.0f, rgb(0.20f, 0.48f, 0.50f), 1.2e-8, Scene.RIBOSOME, Amb.CYTO, 50f, 12f, "RIBOSOME", "12 nm"),
+            TourNode("THE ATOM", 1.6f, -0.2f, -176f, 16.0f, rgb(0.03f, 0.03f, 0.08f), 1.2e-11, Scene.ATOM, Amb.ATOM, 50f, 12f, "CARBON ATOM", "12 pm"),
             TourNode("THE LOOK BACK", 0.0f, 0.2f, -194f, 9.0f, rgb(0.38f, 0.22f, 0.36f), 12.0, Scene.LOOKBACK, Amb.LOOKBACK, 50f, 60f, "WHOLE BODY", "12 pm → 12 m")
         ),
-        lengthKeys = floatArrayOf(0f, 0.3f, 0.5f, 1f, 2f, 3f, 5f, 6f, 6.5f, 8f, 9f, 10f, 11f, 12f),
-        lengthM = doubleArrayOf(12.0, 12.0, 1.2e-2, 1.2e-3, 1.2e-4, 1.2e-5, 1.2e-5, 1.2e-6, 1.2e-7, 1.2e-7, 1.2e-8, 1.2e-8, 1.2e-11, 12.0),
+        // Mote length vs rail progress, stepping where the script's shrink / grow cues land: 12 m ->
+        // 12 mm at the first drop, 12 mm through the nose and trachea, 120 um in the alveolus, 12 um
+        // in the venule, back up to 12 mm for the heart, 12 um for the sentinel and the neuron, 120 nm
+        // from the synapse to the mitochondrion, 12 nm in the nucleus, 12 pm in the atom, then home.
+        lengthKeys = floatArrayOf(0f, 0.155f, 0.30f, 1.21f, 1.25f, 2.20f, 2.24f, 3.47f, 3.53f, 4.36f, 4.42f, 6.20f, 6.25f, 8.19f, 8.24f, 10.20f, 10.26f, 11f, 12f),
+        lengthM = doubleArrayOf(12.0, 12.0, 1.2e-2, 1.2e-2, 1.2e-4, 1.2e-4, 1.2e-5, 1.2e-5, 1.2e-2, 1.2e-2, 1.2e-5, 1.2e-5, 1.2e-7, 1.2e-7, 1.2e-8, 1.2e-8, 1.2e-11, 1.2e-11, 12.0),
         armStops = floatArrayOf(2.05f, 5.05f, 7.02f, 9.15f, 10.05f)   // alveolus, sentinel, membrane, helix, ribosome
     )
 
