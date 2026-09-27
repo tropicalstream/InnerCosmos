@@ -62,6 +62,12 @@ internal val T1_ALV_SM = floatArrayOf(0.85f, 0.45f, 0.45f, 1f)
 internal val T1_ENDO_H = floatArrayOf(0.84f, 0.50f, 0.48f, 1f)
 internal val T1_ROUGH = floatArrayOf(0.88f, 0.72f, 0.64f, 1f)
 internal val T1_PERICYTE = floatArrayOf(0.80f, 0.60f, 0.85f, 1f)
+internal val T1_ICS = floatArrayOf(0.70f, 0.36f, 0.22f, 1f)
+internal val T1_GRANULE = floatArrayOf(0.62f, 0.56f, 0.70f, 1f)
+internal val T1_MITO_OUT2 = floatArrayOf(0.98f, 0.80f, 0.55f, 1f)
+internal val T1_H1 = floatArrayOf(0.95f, 0.85f, 1f, 1f)
+internal val T1_DNA = floatArrayOf(1f, 0.86f, 0.52f, 1f)
+internal val T1_TRNA2 = floatArrayOf(1f, 0.45f, 0.55f, 1f)
 internal val T1_DERMIS = floatArrayOf(0.93f, 0.60f, 0.60f, 1f)
 internal val T1_FAT = floatArrayOf(0.98f, 0.88f, 0.52f, 1f)
 internal val T1_MUCOSA = floatArrayOf(0.95f, 0.60f, 0.62f, 1f)
@@ -104,7 +110,7 @@ internal val T1_PUMP = floatArrayOf(0.98f, 0.62f, 0.34f, 1f)
 internal val T1_RECEPTOR = floatArrayOf(0.92f, 0.56f, 0.78f, 1f)
 internal val T1_DYNAMIN = floatArrayOf(1f, 0.62f, 0.30f, 1f)
 internal val T1_MITO_OUT = floatArrayOf(0.96f, 0.64f, 0.36f, 1f)
-internal val T1_MITO_IN = floatArrayOf(0.98f, 0.56f, 0.30f, 1f)
+internal val T1_MITO_IN = floatArrayOf(0.95f, 0.52f, 0.28f, 1f)
 internal val T1_CRISTA = floatArrayOf(0.97f, 0.58f, 0.30f, 1f)
 internal val T1_F1_A = floatArrayOf(0.55f, 0.92f, 0.86f, 1f)
 internal val T1_F1_B = floatArrayOf(0.34f, 0.72f, 0.84f, 1f)
@@ -2921,128 +2927,143 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
     GLES20.glDepthMask(true)
 }
 
-// ================================================================ stop 8: THE MITOCHONDRION (120 nm rung)
-// 1 unit = 80 nm. A mitochondrion 0.5 um across (and microns long) seen from its tip: a
-// translucent outer membrane dotted with porins, a 20 nm intermembrane space, the inner boundary
-// membrane, and lamellar cristae across the long axis (like bellows): each a flattened sac (two
-// membranes round a ~25 nm intracristal space) hanging from the inner membrane by narrow crista
-// junctions, alternating sides, leaving the matrix open down the middle. ATP synthase dimers
-// line every crista rim (F1 heads 10 nm, into the matrix); on the nearest crista each synthase
-// is drawn whole: F0 c-ring in the membrane with the central stalk (the rotor, turning ~1/s here,
-// ~100/s in life), the fixed alpha3-beta3 head, the peripheral stalk (stator), protons flowing
-// in from the intracristal side. Respiratory-chain complexes sit in the crista membranes; the
-// mtDNA nucleoid (a small tangled loop) and matrix granules float between the cristae.
+// ================================================================ stop 8: THE MITOCHONDRION (40 nm rung)
+// The craft drops half a power of ten on the approach, to 40 nm (1 unit = 26.7 nm), so the turbines
+// read. A mitochondrion 1 um across, entered at its rounded tip: the outer membrane riddled with porins,
+// a 20 nm intermembrane space, the inner boundary membrane, and lamellar cristae across the long axis
+// like the bellows of an accordion - each a flattened sac (two membranes round a 20 nm intracristal
+// space) hanging from the inner membrane by narrow crista junctions, of varying depth, leaving a
+// channel of matrix down the middle. ATP synthase dimers line every crista rim (the enzyme 12 nm
+// tall: F0 c-ring in the membrane, central stalk, alpha3-beta3 head in the matrix, peripheral stalk);
+// on the crista ahead the c-rings and central stalks visibly turn (1 rev/s here; ~100 in life) under
+// fixed heads, fed by protons from the intracristal space. Respiratory complexes sit in the crista
+// membranes; a nucleoid of mtDNA and dense matrix granules float between the cristae. Before the drop
+// the same organelle is drawn at 120 nm, a third the size, dead ahead.
 
-private const val T1_MITO_TIP = 7.93f
-private const val T1_MITO_END = 8.8f
-private const val T1_MITO_R = 3.1f
-private const val T1_IBM_R = 2.85f
-private const val T1_CR_IN = 1.0f
-private const val T1_CR_OUT = 2.55f
-private const val T1_CR_T = 0.16f
-private val T1_CRISTAE = FloatArray(9) { 7.99f + it * 0.085f }
+private const val T1_MITO_TIP = 7.80f
+private const val T1_MO_R = 18.75f
+private const val T1_MI_R = 18.0f
+private val T1_CRISTA_A = floatArrayOf(2.6f, 6.1f, 9.8f, 13.3f, 16.9f)
+private val T1_CRISTA_IN = floatArrayOf(2.35f, 2.7f, 2.2f, 2.6f, 2.3f)
+private const val T1_CR_HT = 0.63f          // half-thickness of a crista (two 7 nm membranes round a 20 nm space)
 
-private class T1Mito(val outer: T1Batch, val inner: T1Batch, val cristae: T1Batch, val etc: T1Batch, val porins: PointMesh, val heads: PointMesh, val stalks: LineMesh, val dna: LineMesh)
-
-private fun StereoBodyRenderer.t1MitoShell(b: T1Builder, radius: Float, lead: Float) {
-    val cap = radius * PI_F / 2f
-    val len = (T1_MITO_END - T1_MITO_TIP) * 16f - lead
-    b.surface(46, 40) { u, v, out ->
-        val s = u * (cap + len - radius)
-        val r: Float; val a: Float
-        if (s < cap) { val g = s / radius; r = radius * sin(g); a = lead + radius * (1f - cos(g)) }
-        else { r = radius; a = lead + radius + (s - cap) }
-        t1RailPoint(T1_MITO_TIP + a / 16f, v * TAU, r, out)
-    }
+private fun t1CapR(a: Float, R: Float, lead: Float): Float {
+    val x = a - lead
+    return if (x <= 0f) 0f else if (x >= R) R else sqrt((2f * R * x - x * x).coerceAtLeast(0f))
 }
 
-private fun t1CristaTheta(j: Int) = (if (j % 2 == 0) 90f else 270f) * DEG
+private fun t1CristaGap(j: Int) = (if (j % 2 == 0) 90f else 270f) * DEG
+
+private class T1Mito(val outer: T1Batch, val inner: T1Batch, val sacs: T1Batch, val lumens: T1Batch, val junctions: T1Batch, val heads: T1Batch,
+                     val stalks: T1Batch, val etc: T1Batch, val porins: PointMesh, val dna: LineMesh, val granules: T1Batch, val synth: FloatArray)
 
 private fun StereoBodyRenderer.t1BuildMito(): T1Mito {
-    val outer = T1Builder(); val inner = T1Builder(); val cr = T1Builder(); val etc = T1Builder()
-    t1MitoShell(outer, T1_MITO_R, 0f)
-    t1MitoShell(inner, T1_IBM_R, 0.25f)
-    val rc = (T1_CR_IN + T1_CR_OUT) * 0.5f; val hw = (T1_CR_OUT - T1_CR_IN) * 0.5f
+    val outer = T1Builder(); val inner = T1Builder(); val sacs = T1Builder(); val lum = T1Builder(); val junc = T1Builder()
+    val heads = T1Builder(); val stalks = T1Builder(); val etc = T1Builder(); val gran = T1Builder()
+    fun shell(b: T1Builder, R: Float, lead: Float) = b.surface(40, 40) { u, v, out ->
+        val a = lead + 22f * u * u; val r = t1CapR(a, R, lead).coerceAtLeast(0.02f)
+        t1RailPoint(T1_MITO_TIP + a / 16f, v * TAU, r, out)
+    }
+    shell(outer, T1_MO_R, 0f); shell(inner, T1_MI_R, 0.75f)
     val q = FloatArray(3); val q2 = FloatArray(3)
-    val heads = ArrayList<Float>(); val stalks = ArrayList<Float>()
-    val hc = floatArrayOf(0.55f, 0.92f, 0.86f, 1f); val sc = floatArrayOf(0.95f, 0.92f, 0.62f, 1f)
-    fun add(l: ArrayList<Float>, p: FloatArray, c: FloatArray) { l.add(p[0]); l.add(p[1]); l.add(p[2]); l.add(c[0]); l.add(c[1]); l.add(c[2]); l.add(c[3]) }
+    val synth = ArrayList<Float>()        // per synthase: crista index, base xyz, head direction xyz
     val rnd = java.util.Random(88)
-    for ((j, pj) in T1_CRISTAE.withIndex()) {
-        val thc = t1CristaTheta(j); val span = 125f * DEG
-        val f = frameAt(pj)
-        // the sac: a flattened tube (superellipse section) swept round 250 degrees, closed at its ends
-        cr.surface(16, 40) { u, v, out ->
-            val b = u * TAU; val th = thc - span + 2f * span * v
+    for ((j, aj) in T1_CRISTA_A.withIndex()) {
+        val f = frameAt(T1_MITO_TIP + aj / 16f)
+        val rin = T1_CRISTA_IN[j]; val rout = t1CapR(aj, T1_MI_R, 0.75f) - 0.6f
+        val gap = t1CristaGap(j); val span = 150f * DEG
+        fun sac(b: T1Builder, ht: Float, inset: Float) = b.surface(14, 44) { u, v, out ->
+            val bb = u * TAU; val th = gap + PI_F - span + 2f * span * v
             val k = sin(PI_F * v).coerceAtLeast(0f).pow(0.3f)
-            val cb = cos(b); val sb = sin(b)
-            val r = rc + hw * k * sign(cb) * abs(cb).pow(0.3f) + (1f - k) * 0.4f
-            val z = T1_CR_T * k * sign(sb) * abs(sb).pow(0.8f)
+            val cb = cos(bb); val sb = sin(bb)
+            val r0 = rin + inset; val r1 = rout - inset
+            val rc = (r0 + r1) * 0.5f; val hw = (r1 - r0) * 0.5f
+            val r = rc + hw * k * sign(cb) * abs(cb).pow(0.25f) + (1f - k) * 0.5f
+            val z = ht * k * sign(sb) * abs(sb).pow(0.6f)
             val c = cos(th); val s = sin(th)
             out[0] = f.cx + f.dx * z + (f.sx * c + f.ux * s) * r
             out[1] = f.cy + f.dy * z + (f.sy * c + f.uy * s) * r
             out[2] = f.cz + f.dz * z + (f.sz * c + f.uz * s) * r
         }
-        // crista junctions: narrow necks to the inner boundary membrane
-        for (m in 0 until 4) {
-            val th = thc - span * 0.8f + span * 1.6f * m / 3f
-            t1RailPoint(pj, th, T1_CR_OUT - 0.1f, q); t1RailPoint(pj, th, T1_IBM_R + 0.03f, q2)
-            cr.rod(q[0], q[1], q[2], q2[0], q2[1], q2[2], 0.1f, 5, 8)
+        sac(sacs, T1_CR_HT, 0f); sac(lum, T1_CR_HT - 0.26f, 0.2f)
+        // crista junctions: narrow necks (~25 nm) to the inner boundary membrane
+        for (m in 0 until 5) {
+            val th = gap + PI_F - span * 0.85f + span * 1.7f * m / 4f
+            t1RailPoint(T1_MITO_TIP + aj / 16f, th, rout - 0.2f, q); t1RailPoint(T1_MITO_TIP + aj / 16f, th, t1CapR(aj, T1_MI_R, 0.75f) + 0.05f, q2)
+            junc.rod(q[0], q[1], q[2], q2[0], q2[1], q2[2], 0.45f, 4, 8)
         }
-        // ATP synthase dimer rows along the rim: heads out into the matrix, stalks back to the membrane
-        var th = thc - span + 0.12f
-        while (th < thc + span - 0.12f) {
+        // ATP synthase dimers along the rim, every ~24 nm; the two heads splay ~86 degrees apart
+        var th = gap + PI_F - span + 0.2f
+        while (th < gap + PI_F + span - 0.2f) {
+            val c = cos(th); val s = sin(th)
+            val rx = f.sx * c + f.ux * s; val ry = f.sy * c + f.uy * s; val rz = f.sz * c + f.uz * s
             for (sg in SIGNS) {
-                val c = cos(th); val s = sin(th)
-                val rx = f.sx * c + f.ux * s; val ry = f.sy * c + f.uy * s; val rz = f.sz * c + f.uz * s
-                val base = floatArrayOf(f.cx + rx * T1_CR_IN + f.dx * sg * 0.07f, f.cy + ry * T1_CR_IN + f.dy * sg * 0.07f, f.cz + rz * T1_CR_IN + f.dz * sg * 0.07f)
-                val head = floatArrayOf(base[0] - rx * 0.12f + f.dx * sg * 0.09f, base[1] - ry * 0.12f + f.dy * sg * 0.09f, base[2] - rz * 0.12f + f.dz * sg * 0.09f)
-                add(stalks, base, sc); add(stalks, head, sc); add(heads, head, hc)
+                val bx = f.cx + rx * (rin + 0.1f) + f.dx * sg * 0.42f; val by = f.cy + ry * (rin + 0.1f) + f.dy * sg * 0.42f; val bz = f.cz + rz * (rin + 0.1f) + f.dz * sg * 0.42f
+                val cd = cos(43f * DEG); val sd = sin(43f * DEG)
+                var nx = -rx * cd + f.dx * sg * sd; var ny = -ry * cd + f.dy * sg * sd; var nz = -rz * cd + f.dz * sg * sd
+                val nl = sqrt(nx * nx + ny * ny + nz * nz); nx /= nl; ny /= nl; nz /= nl
+                // F0 c-ring, central stalk, head, peripheral stalk
+                stalks.rod(bx - nx * 0.1f, by - ny * 0.1f, bz - nz * 0.1f, bx + nx * 0.1f, by + ny * 0.1f, bz + nz * 0.1f, 0.14f, 3, 8)
+                stalks.rod(bx, by, bz, bx + nx * 0.3f, by + ny * 0.3f, bz + nz * 0.3f, 0.045f, 3, 5)
+                val tx = -f.sx * s + f.ux * c; val ty = -f.sy * s + f.uy * c; val tz = -f.sz * s + f.uz * c
+                stalks.rod(bx + tx * 0.16f, by + ty * 0.16f, bz + tz * 0.16f, bx + nx * 0.55f + tx * 0.12f, by + ny * 0.55f + ty * 0.12f, bz + nz * 0.55f + tz * 0.12f, 0.03f, 3, 5)
+                val hx = bx + nx * 0.45f; val hy = by + ny * 0.45f; val hz = bz + nz * 0.45f
+                heads.ellipsoid(hx, hy, hz, floatArrayOf(tx * 0.19f, ty * 0.19f, tz * 0.19f), floatArrayOf(nx * 0.16f, ny * 0.16f, nz * 0.16f),
+                    floatArrayOf((ny * tz - nz * ty) * 0.19f, (nz * tx - nx * tz) * 0.19f, (nx * ty - ny * tx) * 0.19f), 5, 8)
+                synth.add(j.toFloat()); synth.add(bx); synth.add(by); synth.add(bz); synth.add(nx); synth.add(ny); synth.add(nz); synth.add(tx); synth.add(ty); synth.add(tz)
             }
-            th += 0.2f / T1_CR_IN
+            th += 0.9f / rin
         }
-        // respiratory-chain complexes in the crista faces (I: L-shaped; III, IV: blobs)
-        for (m in 0 until 4) {
-            val th2 = thc - span * 0.7f + span * 1.4f * rnd.nextFloat()
-            val r = 1.35f + rnd.nextFloat() * 1.0f
+        // respiratory-chain complexes in the crista faces: I (L-shaped, a membrane arm and a matrix arm), III, IV
+        for (m in 0 until 6) {
+            val th2 = gap + PI_F - span * 0.8f + span * 1.6f * rnd.nextFloat()
+            val r = rin + 0.9f + rnd.nextFloat() * 2.2f
             val sg = if (m % 2 == 0) 1f else -1f
             val c = cos(th2); val s = sin(th2)
             val rx = f.sx * c + f.ux * s; val ry = f.sy * c + f.uy * s; val rz = f.sz * c + f.uz * s
             val tx = -f.sx * s + f.ux * c; val ty = -f.sy * s + f.uy * c; val tz = -f.sz * s + f.uz * c
-            val px = f.cx + rx * r + f.dx * sg * (T1_CR_T + 0.02f); val py = f.cy + ry * r + f.dy * sg * (T1_CR_T + 0.02f); val pz = f.cz + rz * r + f.dz * sg * (T1_CR_T + 0.02f)
-            if (m < 2) {
-                etc.ellipsoid(px, py, pz, floatArrayOf(tx * 0.22f, ty * 0.22f, tz * 0.22f), floatArrayOf(f.dx * 0.07f, f.dy * 0.07f, f.dz * 0.07f), floatArrayOf(rx * 0.08f, ry * 0.08f, rz * 0.08f), 5, 8)
-                etc.ellipsoid(px + tx * 0.2f + f.dx * sg * 0.12f, py + ty * 0.2f + f.dy * sg * 0.12f, pz + tz * 0.2f + f.dz * sg * 0.12f,
-                    floatArrayOf(tx * 0.08f, ty * 0.08f, tz * 0.08f), floatArrayOf(f.dx * 0.17f, f.dy * 0.17f, f.dz * 0.17f), floatArrayOf(rx * 0.08f, ry * 0.08f, rz * 0.08f), 5, 8)
-            } else {
-                etc.ellipsoid(px, py, pz, floatArrayOf(tx * 0.11f, ty * 0.11f, tz * 0.11f), floatArrayOf(f.dx * 0.1f, f.dy * 0.1f, f.dz * 0.1f), floatArrayOf(rx * 0.1f, ry * 0.1f, rz * 0.1f), 5, 8)
+            val px = f.cx + rx * r + f.dx * sg * T1_CR_HT; val py = f.cy + ry * r + f.dy * sg * T1_CR_HT; val pz = f.cz + rz * r + f.dz * sg * T1_CR_HT
+            when (m % 3) {
+                0 -> {
+                    etc.ellipsoid(px, py, pz, floatArrayOf(tx * 0.36f, ty * 0.36f, tz * 0.36f), floatArrayOf(f.dx * 0.12f, f.dy * 0.12f, f.dz * 0.12f), floatArrayOf(rx * 0.14f, ry * 0.14f, rz * 0.14f), 5, 8)
+                    etc.ellipsoid(px + tx * 0.34f + f.dx * sg * 0.28f, py + ty * 0.34f + f.dy * sg * 0.28f, pz + tz * 0.34f + f.dz * sg * 0.28f,
+                        floatArrayOf(tx * 0.14f, ty * 0.14f, tz * 0.14f), floatArrayOf(f.dx * 0.28f, f.dy * 0.28f, f.dz * 0.28f), floatArrayOf(rx * 0.14f, ry * 0.14f, rz * 0.14f), 5, 8)
+                }
+                1 -> for (w in SIGNS) etc.ellipsoid(px + tx * 0.13f * w, py + ty * 0.13f * w, pz + tz * 0.13f * w, floatArrayOf(tx * 0.13f, ty * 0.13f, tz * 0.13f),
+                    floatArrayOf(f.dx * 0.2f, f.dy * 0.2f, f.dz * 0.2f), floatArrayOf(rx * 0.13f, ry * 0.13f, rz * 0.13f), 5, 8)
+                else -> etc.ellipsoid(px, py, pz, floatArrayOf(tx * 0.16f, ty * 0.16f, tz * 0.16f), floatArrayOf(f.dx * 0.17f, f.dy * 0.17f, f.dz * 0.17f), floatArrayOf(rx * 0.16f, ry * 0.16f, rz * 0.16f), 5, 8)
             }
         }
     }
-    // porins on the outer membrane
+    // porins on the outer membrane near the tip
     val por = ArrayList<Float>()
     val pc = floatArrayOf(1f, 0.86f, 0.62f, 0.95f)
-    for (k in 0 until 1100) {
-        val a = rnd.nextFloat() * ((T1_MITO_END - T1_MITO_TIP) * 16f); val th = rnd.nextFloat() * TAU
-        val r = if (a < T1_MITO_R) T1_MITO_R * sin(acos((1f - a / T1_MITO_R).coerceIn(-1f, 1f))) else T1_MITO_R
-        t1RailPoint(T1_MITO_TIP + a / 16f, th, r + 0.01f, q); add(por, q, pc)
+    for (k in 0 until 1400) {
+        val a = 7f * rnd.nextFloat().pow(0.6f); val th = rnd.nextFloat() * TAU
+        t1RailPoint(T1_MITO_TIP + a / 16f, th, t1CapR(a, T1_MO_R, 0f) + 0.02f, q)
+        por.add(q[0]); por.add(q[1]); por.add(q[2]); por.addAll(pc.toList())
     }
-    // the nucleoid: a small tangled loop of mtDNA between cristae 3 and 4
+    // the nucleoid: a compact tangle of mtDNA (~100 nm) in the matrix between cristae 2 and 3
     val dna = ArrayList<Float>()
     val dc = floatArrayOf(0.88f, 0.78f, 1f, 1f)
-    val fN = frameAt((T1_CRISTAE[3] + T1_CRISTAE[4]) * 0.5f)
-    val th0 = 200f * DEG
-    val ncx = fN.cx + (fN.sx * cos(th0) + fN.ux * sin(th0)) * 1.85f; val ncy = fN.cy + (fN.sy * cos(th0) + fN.uy * sin(th0)) * 1.85f; val ncz = fN.cz + (fN.sz * cos(th0) + fN.uz * sin(th0)) * 1.85f
-    for (k in 0 until 220) {
-        for (h in 0..1) {
-            val t = TAU * (k + h) / 220f
-            val a = 0.28f * sin(3f * t) + 0.08f * sin(11f * t); val s = 0.4f * cos(2f * t) + 0.1f * cos(7f * t); val u = 0.4f * sin(t) + 0.12f * sin(5f * t + 1f)
-            q[0] = ncx + fN.dx * a + fN.sx * s + fN.ux * u; q[1] = ncy + fN.dy * a + fN.sy * s + fN.uy * u; q[2] = ncz + fN.dz * a + fN.sz * s + fN.uz * u
-            add(dna, q, dc)
-        }
+    val aN = (T1_CRISTA_A[1] + T1_CRISTA_A[2]) * 0.5f
+    val fN = frameAt(T1_MITO_TIP + aN / 16f)
+    val th0 = 215f * DEG
+    val ncx = fN.cx + (fN.sx * cos(th0) + fN.ux * sin(th0)) * 5.5f; val ncy = fN.cy + (fN.sy * cos(th0) + fN.uy * sin(th0)) * 5.5f; val ncz = fN.cz + (fN.sz * cos(th0) + fN.uz * sin(th0)) * 5.5f
+    for (k in 0 until 300) for (hh in 0..1) {
+        val t = TAU * (k + hh) / 300f
+        val a = 0.7f * sin(3f * t) + 0.3f * sin(13f * t); val s = 1.4f * cos(2f * t) + 0.35f * cos(9f * t); val u = 1.4f * sin(t) + 0.4f * sin(7f * t + 1f)
+        dna.add(ncx + fN.dx * a + fN.sx * s + fN.ux * u); dna.add(ncy + fN.dy * a + fN.sy * s + fN.uy * u); dna.add(ncz + fN.dz * a + fN.sz * s + fN.uz * u); dna.addAll(dc.toList())
     }
-    return T1Mito(outer.build(), inner.build(), cr.build(), etc.build(), PointMesh(por.toFloatArray()), PointMesh(heads.toFloatArray()),
-        LineMesh(stalks.toFloatArray()), LineMesh(dna.toFloatArray()))
+    // dense matrix granules (30-50 nm)
+    for (k in 0 until 4) {
+        val aa = T1_CRISTA_A[k] + 1.8f; val th = (40f + 95f * k) * DEG; val r = 4.5f + 1.5f * (k % 2)
+        t1RailPoint(T1_MITO_TIP + aa / 16f, th, r, q)
+        val rr = 0.6f + 0.25f * (k % 3)
+        gran.ellipsoid(q[0], q[1], q[2], floatArrayOf(rr, 0f, 0f), floatArrayOf(0f, rr, 0f), floatArrayOf(0f, 0f, rr), 6, 10)
+    }
+    return T1Mito(outer.build(), inner.build(), sacs.build(), lum.build(), junc.build(), heads.build(), stalks.build(), etc.build(),
+        PointMesh(por.toFloatArray()), LineMesh(dna.toFloatArray()), gran.build(), synth.toFloatArray())
 }
 
 /** Unit meshes for a whole ATP synthase: the c-ring (8 subunits) and the alpha3 / beta3 halves of F1. */
@@ -3055,89 +3076,116 @@ private fun t1BuildLobes(n: Int, r: Float, lobe: FloatArray, phase: Float): T1Ba
     return b.build()
 }
 
+// Scale about the craft: everything is built at 40 nm; at 120 nm it is drawn a third the size.
+private var t1K = 1f; private var t1Ox = 0f; private var t1Oy = 0f; private var t1Oz = 0f
+private fun StereoBodyRenderer.t1ModelK() {
+    Matrix.setIdentityM(model, 0)
+    Matrix.translateM(model, 0, shipX, shipY, shipZ)
+    Matrix.scaleM(model, 0, t1K, t1K, t1K)
+    Matrix.translateM(model, 0, t1Ox - shipX, t1Oy - shipY, t1Oz - shipZ)
+}
+private fun StereoBodyRenderer.t1LitK(mesh: LitMesh, base: FloatArray, accent: FloatArray, alpha: Float, glow: Float) {
+    t1ModelK(); drawLitModel(mesh, base, accent, alpha * landmarkFade, 0f, glow)
+}
+private fun StereoBodyRenderer.t1ColorK(mesh: ColorVboMesh, size: Float, points: Boolean, alpha: Float, depthWrite: Boolean = true) {
+    t1ModelK()
+    Matrix.multiplyMM(mv, 0, view, 0, model, 0); Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
+    val keep = colorShader.globalFade; colorShader.globalFade = keep * alpha
+    if (!depthWrite) GLES20.glDepthMask(false)
+    if (points) colorShader.use(mvp, size, points = true) else { colorShader.use(mvp, 1f); lineWidth(size) }
+    mesh.draw(colorShader.positionHandle, colorShader.colorHandle)
+    if (!points) lineWidth(1f)
+    if (!depthWrite) GLES20.glDepthMask(true)
+    colorShader.globalFade = keep
+}
+private fun StereoBodyRenderer.t1Kx(x: Float) = shipX + t1K * (x + t1Ox - shipX)
+private fun StereoBodyRenderer.t1Ky(y: Float) = shipY + t1K * (y + t1Oy - shipY)
+private fun StereoBodyRenderer.t1Kz(z: Float) = shipZ + t1K * (z + t1Oz - shipZ)
+
 internal fun StereoBodyRenderer.drawMitochondrion(n: TourNode, i: Int, seconds: Float) {
     val rp = routeProgress
-    if (rp < 7.2f || rp > 8.3f) return
-    val vis = t1Smooth(7.2f, 7.32f, rp) * (1f - t1Smooth(8.18f, 8.26f, rp))
+    if (rp < 7.28f || rp > 8.26f) return
+    val vis = t1Smooth(7.28f, 7.4f, rp) * (1f - t1Smooth(8.18f, 8.24f, rp))
     landmarkFade *= vis; colorShader.globalFade *= vis
-    val ow = t1ShipOffWorld(); val ox = ow[0]; val oy = ow[1]; val oz = ow[2]
-    val mt = t1Mesh("mito") { t1BuildMito() }
-    t1LitWorld(mt.cristae, T1_CRISTA, T1_WHITE, 1f, 0.16f, ox, oy, oz)
-    t1LitWorld(mt.etc, T1_ETC, T1_WHITE, 1f, 0.2f, ox, oy, oz)
-    t1Color(mt.stalks, null, 0f, 0f, 0f, 1.5f, false, 1f, ox = ox, oy = oy, oz = oz)
-    t1Color(mt.heads, null, 0f, 0f, 0f, 7f, true, 1f, ox = ox, oy = oy, oz = oz)
-    t1Color(mt.dna, null, 0f, 0f, 0f, 2f, false, 1f, ox = ox, oy = oy, oz = oz)
-    // matrix granules
-    for (k in 0 until 3) {
-        val pg = (T1_CRISTAE[1 + 2 * k] + T1_CRISTAE[2 + 2 * k]) * 0.5f; val th = (40f + 110f * k) * DEG
-        val f = frameAt(pg)
-        drawSphereAt(f.cx + (f.sx * cos(th) + f.ux * sin(th)) * 1.6f + ox, f.cy + (f.sy * cos(th) + f.uy * sin(th)) * 1.6f + oy,
-            f.cz + (f.sz * cos(th) + f.uz * sin(th)) * 1.6f + oz, 0.2f, 0.2f, 0.2f, T1_ETC, T1_WHITE, 1f, 0f, 0f, 1f, 0f, blob, 0f, 0.15f)
-    }
-    // whole synthases on the next crista ahead of the craft
-    var j = T1_CRISTAE.indexOfFirst { it > rp + 0.012f }
-    if (j < 0) j = T1_CRISTAE.lastIndex
+    val ow = t1ShipOffWorld(); t1Ox = ow[0]; t1Oy = ow[1]; t1Oz = ow[2]
+    t1K = (4e-8 / shipLengthM(rp)).toFloat().coerceIn(0.2f, 1f)
+    val mt = t1Mesh("mito2") { t1BuildMito() }
+    // opaque: intracristal spaces, junctions, synthases, complexes, nucleoid, granules
+    t1LitK(mt.lumens, T1_ICS, T1_WHITE, 1f, 0.2f)
+    t1LitK(mt.junctions, T1_CRISTA, T1_WHITE, 1f, 0.15f)
+    t1LitK(mt.stalks, T1_FO, T1_WHITE, 1f, 0.25f)
+    t1LitK(mt.heads, T1_F1_A, T1_WHITE, 1f, 0.3f)
+    t1LitK(mt.etc, T1_ETC, T1_WHITE, 1f, 0.25f)
+    t1LitK(mt.granules, T1_GRANULE, T1_WHITE, 1f, 0.2f)
+    t1ColorK(mt.dna, 2f, false, 1f)
+    // the synthases on the crista ahead of the craft: c-ring and central stalk turning (1 rev/s here,
+    // ~100 in life) under the fixed alpha3-beta3 head; protons flooding in from the intracristal side
+    val aShip = (rp - T1_MITO_TIP) * 16f
+    var jN = T1_CRISTA_A.indexOfFirst { it > aShip + 1.2f }
+    if (jN < 0) jN = T1_CRISTA_A.lastIndex
     val cring = t1Mesh("atp.c") { t1BuildLobes(8, 1f, floatArrayOf(0.32f, 0.32f, 1f), 0f) }
     val f1a = t1Mesh("atp.a") { t1BuildLobes(3, 0.5f, floatArrayOf(0.5f, 0.5f, 0.85f), 0f) }
     val f1b = t1Mesh("atp.b") { t1BuildLobes(3, 0.5f, floatArrayOf(0.5f, 0.5f, 0.85f), PI_F / 3f) }
-    val f = frameAt(T1_CRISTAE[j]); val thc = t1CristaTheta(j)
-    val spin = seconds * TAU                       // 1 rev/s here; ~100 rev/s in life
+    val spin = seconds * TAU
     val d = t1Dyn.data
     var v = 0
-    val pcol = floatArrayOf(1f, 0.95f, 0.55f, 1f)
-    for (k in 0 until 6) {
-        val th = thc + floatArrayOf(-100f, -60f, -20f, 20f, 60f, 100f)[k] * DEG
-        val sg = if (k % 2 == 0) 1f else -1f
-        val c = cos(th); val s = sin(th)
-        val rx = f.sx * c + f.ux * s; val ry = f.sy * c + f.uy * s; val rz = f.sz * c + f.uz * s
-        // head axis: in from the rim and tilted out of the crista plane (the dimer's two heads splay apart)
-        var nx = -rx * 0.77f + f.dx * sg * 0.64f; var ny = -ry * 0.77f + f.dy * sg * 0.64f; var nz = -rz * 0.77f + f.dz * sg * 0.64f
-        val nl = sqrt(nx * nx + ny * ny + nz * nz); nx /= nl; ny /= nl; nz /= nl
-        val tx = -f.sx * s + f.ux * c; val ty = -f.sy * s + f.uy * c; val tz = -f.sz * s + f.uz * c
-        val bx = f.cx + rx * T1_CR_IN + f.dx * sg * 0.08f + ox; val by = f.cy + ry * T1_CR_IN + f.dy * sg * 0.08f + oy; val bz = f.cz + rz * T1_CR_IN + f.dz * sg * 0.08f + oz
-        // perpendiculars to the axis
+    val pcol = floatArrayOf(1f, 0.95f, 0.55f)
+    val sy = mt.synth
+    var shown = 0
+    var seen = 0
+    for (k in 0 until sy.size / 10) {
+        val o = k * 10
+        if (sy[o].toInt() != jN) continue
+        seen++
+        if (seen % 2 == 0 || shown >= 12) continue       // every other enzyme along the crista's rim
+        shown++
+        val bx = t1Kx(sy[o + 1]); val by = t1Ky(sy[o + 2]); val bz = t1Kz(sy[o + 3])
+        val nx = sy[o + 4]; val ny = sy[o + 5]; val nz = sy[o + 6]; val tx = sy[o + 7]; val ty = sy[o + 8]; val tz = sy[o + 9]
         val p2x = ny * tz - nz * ty; val p2y = nz * tx - nx * tz; val p2z = nx * ty - ny * tx
-        val cw = cos(spin); val sw = sin(spin)
+        val cw = cos(spin + k); val sw = sin(spin + k)
         val yx = tx * cw + p2x * sw; val yy = ty * cw + p2y * sw; val yz = tz * cw + p2z * sw
-        drawBasis(bx, by, bz, nx, ny, nz, yx, yy, yz, 0.04f, 0.04f, 0.035f, cring, T1_FO, T1_WHITE, 1f, 0f, 0.25f)
-        // the central stalk, slightly eccentric so its turning shows
-        val ex = yx * 0.012f; val ey = yy * 0.012f; val ez = yz * 0.012f
-        drawStrut(bx + ex, by + ey, bz + ez, bx + nx * 0.12f + ex, by + ny * 0.12f + ey, bz + nz * 0.12f + ez, 0.014f, T1_FO, T1_WHITE, 0.3f)
-        // the F1 head, held still by the stator
-        val hx = bx + nx * 0.15f; val hy = by + ny * 0.15f; val hz = bz + nz * 0.15f
-        drawBasis(hx, hy, hz, nx, ny, nz, tx, ty, tz, 0.06f, 0.06f, 0.06f, f1a, T1_F1_A, T1_WHITE, 1f, 0f, 0.25f)
-        drawBasis(hx, hy, hz, nx, ny, nz, tx, ty, tz, 0.06f, 0.06f, 0.06f, f1b, T1_F1_B, T1_WHITE, 1f, 0f, 0.25f)
-        drawStrut(bx + p2x * 0.065f, by + p2y * 0.065f, bz + p2z * 0.065f, hx + nx * 0.06f + p2x * 0.03f, hy + ny * 0.06f + p2y * 0.03f, hz + nz * 0.06f + p2z * 0.03f,
-            0.011f, T1_STATOR, T1_WHITE, 0.3f)
-        // protons coming in from the intracristal space through the rotor
+        val K = t1K
+        drawBasis(bx, by, bz, nx, ny, nz, yx, yy, yz, 0.15f * K, 0.15f * K, 0.11f * K, cring, T1_FO, T1_WHITE, 1f, 0f, 0.35f)
+        val ex = yx * 0.05f * K; val ey = yy * 0.05f * K; val ez = yz * 0.05f * K
+        drawStrut(bx + ex, by + ey, bz + ez, bx + nx * 0.34f * K + ex, by + ny * 0.34f * K + ey, bz + nz * 0.34f * K + ez, 0.05f * K, T1_AP, T1_WHITE, 0.6f)
+        // the head, drawn whole (alternating alpha and beta subunits), held still
+        val hx = bx + nx * 0.45f * K; val hy = by + ny * 0.45f * K; val hz = bz + nz * 0.45f * K
+        drawBasis(hx, hy, hz, nx, ny, nz, tx, ty, tz, 0.205f * K, 0.205f * K, 0.17f * K, f1a, T1_F1_A, T1_WHITE, 1f, 0f, 0.3f)
+        drawBasis(hx, hy, hz, nx, ny, nz, tx, ty, tz, 0.205f * K, 0.205f * K, 0.17f * K, f1b, T1_F1_B, T1_WHITE, 1f, 0f, 0.3f)
         for (m in 0..1) {
             val t = ((seconds * 1.4f + m * 0.5f + k * 0.17f) % 1f)
-            val sx = bx + rx * 0.3f; val sy = by + ry * 0.3f; val sz = bz + rz * 0.3f
-            v = t1Put(d, v, sx + (bx - sx) * t, sy + (by - sy) * t, sz + (bz - sz) * t, pcol, 1f - t * 0.5f)
+            // from inside the crista (the intracristal space, away from the matrix) into the c-ring
+            val sx = bx - nx * 0.5f * K; val sy2 = by - ny * 0.5f * K; val sz = bz - nz * 0.5f * K
+            v = t1Put(d, v, sx + (bx - sx) * t, sy2 + (by - sy2) * t, sz + (bz - sz) * t, pcol, 1f - t * 0.4f)
         }
     }
-    t1DynDraw(v, GLES20.GL_POINTS, 3.5f)
-    // membranes last (translucent): the inner boundary membrane, then the outer membrane with its porins
+    t1DynDraw(v, GLES20.GL_POINTS, 4f)
+    // translucent: the cristae's membranes, the inner boundary membrane, the outer membrane and its porins
     GLES20.glDepthMask(false)
-    t1LitWorld(mt.inner, T1_MITO_IN, T1_WHITE, 0.28f, 0.12f, ox, oy, oz)
-    t1LitWorld(mt.outer, T1_MITO_OUT, T1_WHITE, 0.34f, 0.15f, ox, oy, oz)
+    t1LitK(mt.sacs, T1_CRISTA, T1_WHITE, 0.8f, 0.15f)
+    t1LitK(mt.inner, T1_MITO_IN, T1_WHITE, 0.26f, 0.15f)
+    t1LitK(mt.outer, T1_MITO_OUT2, T1_WHITE, 0.3f, 0.18f)
     GLES20.glDepthMask(true)
-    if (quality < 2) t1Color(mt.porins, null, 0f, 0f, 0f, 2.2f, true, 0.9f, depthWrite = false, ox = ox, oy = oy, oz = oz)
+    if (quality < 2) t1ColorK(mt.porins, 2.4f, true, 0.9f, depthWrite = false)
 }
 
 // ================================================================ stop 9: THE NUCLEUS (12 nm rung)
-// 1 unit = 8 nm. The nuclear envelope (outer and inner membranes 8 nm thick, a 27 nm perinuclear
-// space, fused round the pore) with a nuclear pore complex in it: eightfold cytoplasmic ring,
-// spokes lining a 48 nm channel, nucleoplasmic ring, luminal ring, cytoplasmic filaments, the
-// nuclear basket, and FG-repeat strands filling the channel (they part round the craft). Inside,
-// chromatin as 10 nm fibres - nucleosomes (histone octamers 11 x 5.7 nm) each wrapped by 1.65
-// left-handed turns of DNA, joined by linker DNA - and a stretch of bare B-DNA (2 nm wide, 3.4 nm
-// per turn, right-handed, major and minor grooves) being read by RNA polymerase II at ~20 nt/s,
-// its messenger RNA trailing out behind.
+// 1 unit = 8 nm. The nuclear envelope - one continuous membrane folded into the outer and inner
+// membranes (each a bilayer 7 nm thick) round a 35 nm perinuclear space, fused at the pore - with a
+// nuclear pore complex in it, right ahead of the craft: eightfold cytoplasmic ring, spokes lining a
+// 48 nm channel, nucleoplasmic ring, luminal ring, cytoplasmic filaments, the nuclear basket, and
+// FG-repeat strands filling the channel (they part round the craft). Inside, chromatin as compact
+// 10 nm fibres - nucleosomes, each a histone octamer (6.5 nm) with 147 bp of DNA wrapped 1.65
+// left-handed turns round its outside (superhelix radius 4.2 nm), H1 at the entry and exit, joined by
+// short linkers - and a stretch of bare B-DNA (2 nm wide, 3.4 nm per turn, right-handed, major and
+// minor grooves) being read by RNA polymerase II at ~20 nt/s: the DNA runs through the clamp, its
+// strands parted over ~14 bp (the transcription bubble), the RNA paired with the template strand for
+// 8 bp before it leaves through the exit channel and trails behind.
 
-private const val T1_NPC_P = 8.815f
+private const val T1_NPC_P = 8.90f
 
-private class T1Nucleus(val envelope: ParamMesh, val heads: PointMesh, val npc: T1Batch, val fil: LineMesh, val histones: T1Batch, val dna: LineMesh, val helix: LineMesh)
+private class T1Nucleus(val envA: ParamMesh, val envB: ParamMesh, val heads: PointMesh, val npc: T1Batch, val cyto: LineMesh, val basket: LineMesh,
+                        val histones: T1Batch, val h1: T1Batch, val dna: T1Batch)
 
 private fun t1EnvProfile(s: Float, out: FloatArray) {        // (r, along) of the envelope's mid-surface; s in [0, 1]
     val l1 = 9.8f - 8.4f; val l2 = PI_F * 2.2f; val tot = 2f * l1 + l2
@@ -3149,19 +3197,59 @@ private fun t1EnvProfile(s: Float, out: FloatArray) {        // (r, along) of th
     }
 }
 
+/** A tube of radius r swept along a polyline (parallel-transported frames). */
+private fun T1Builder.t1Tube(pts: FloatArray, r: Float, sides: Int = 6) {
+    val n = pts.size / 3
+    if (n < 2) return
+    val px = FloatArray(n); val py = FloatArray(n); val pz = FloatArray(n)
+    val nx = FloatArray(n); val ny = FloatArray(n); val nz = FloatArray(n)
+    for (k in 0 until n) { px[k] = pts[3 * k]; py[k] = pts[3 * k + 1]; pz[k] = pts[3 * k + 2] }
+    // tangent and a normal carried along
+    var tx = px[1] - px[0]; var ty = py[1] - py[0]; var tz = pz[1] - pz[0]
+    var tl = sqrt(tx * tx + ty * ty + tz * tz).coerceAtLeast(1e-6f); tx /= tl; ty /= tl; tz /= tl
+    var ax = if (abs(tx) < 0.9f) 1f else 0f; var ay = if (abs(tx) < 0.9f) 0f else 1f; var az = 0f
+    var d = ax * tx + ay * ty + az * tz; ax -= d * tx; ay -= d * ty; az -= d * tz
+    var al = sqrt(ax * ax + ay * ay + az * az); ax /= al; ay /= al; az /= al
+    for (k in 0 until n) {
+        val k0 = max(0, k - 1); val k1 = min(n - 1, k + 1)
+        tx = px[k1] - px[k0]; ty = py[k1] - py[k0]; tz = pz[k1] - pz[k0]
+        tl = sqrt(tx * tx + ty * ty + tz * tz).coerceAtLeast(1e-6f); tx /= tl; ty /= tl; tz /= tl
+        d = ax * tx + ay * ty + az * tz; ax -= d * tx; ay -= d * ty; az -= d * tz
+        al = sqrt(ax * ax + ay * ay + az * az).coerceAtLeast(1e-6f); ax /= al; ay /= al; az /= al
+        nx[k] = ax; ny[k] = ay; nz[k] = az
+    }
+    surface(n - 1, sides) { u, v, out ->
+        val fk = u * (n - 1); val k = fk.toInt().coerceAtMost(n - 2); val t = fk - k
+        val cx = px[k] + (px[k + 1] - px[k]) * t; val cy = py[k] + (py[k + 1] - py[k]) * t; val cz = pz[k] + (pz[k + 1] - pz[k]) * t
+        val ex = nx[k]; val ey = ny[k]; val ez = nz[k]
+        var tx2 = px[k + 1] - px[k]; var ty2 = py[k + 1] - py[k]; var tz2 = pz[k + 1] - pz[k]
+        val l2 = sqrt(tx2 * tx2 + ty2 * ty2 + tz2 * tz2).coerceAtLeast(1e-6f); tx2 /= l2; ty2 /= l2; tz2 /= l2
+        val bx = ty2 * ez - tz2 * ey; val by = tz2 * ex - tx2 * ez; val bz = tx2 * ey - ty2 * ex
+        val c = cos(v * TAU) * r; val s = sin(v * TAU) * r
+        out[0] = cx + ex * c + bx * s; out[1] = cy + ey * c + by * s; out[2] = cz + ez * c + bz * s
+    }
+}
+
 private fun t1BuildNucleus(): T1Nucleus {
     val tmp = FloatArray(2)
-    val env = ParamMesh(40, 72) { u, v, out -> t1EnvProfile(u, tmp); val a = v * TAU; out[0] = cos(a) * tmp[0]; out[1] = sin(a) * tmp[0]; out[2] = -tmp[1] }
+    // the bilayer's two faces
+    fun env(off: Float) = ParamMesh(40, 72) { u, v, out ->
+        t1EnvProfile(u, tmp)
+        val t3 = FloatArray(2); t1EnvProfile((u + 0.01f).coerceAtMost(1f), t3)
+        val tr = t3[0] - tmp[0]; val ta = t3[1] - tmp[1]; val tl = sqrt(tr * tr + ta * ta).coerceAtLeast(1e-5f)
+        val r = tmp[0] - ta / tl * off; val al = tmp[1] + tr / tl * off
+        val a = v * TAU; out[0] = cos(a) * r; out[1] = sin(a) * r; out[2] = -al }
+    val envA = env(0.45f); val envB = env(-0.45f)
     val heads = ArrayList<Float>()
     val hc = floatArrayOf(1f, 0.80f, 0.55f, 0.9f)
     fun add(l: ArrayList<Float>, x: Float, y: Float, z: Float, c: FloatArray) { l.add(x); l.add(y); l.add(z); l.add(c[0]); l.add(c[1]); l.add(c[2]); l.add(c[3]) }
     val t2 = FloatArray(2); val t3 = FloatArray(2)
-    val np = 60
+    val np = 90
     for (k in 0 until np) {
         t1EnvProfile(k / (np - 1f), t2); t1EnvProfile(((k + 0.5f) / (np - 1f)).coerceAtMost(1f), t3)
         val tr = t3[0] - t2[0]; val ta = t3[1] - t2[1]; val tl = sqrt(tr * tr + ta * ta).coerceAtLeast(1e-5f)
         val nr = -ta / tl; val na = tr / tl
-        val cnt = (TAU * t2[0] / 0.3f).toInt()
+        val cnt = (TAU * t2[0] / 0.2f).toInt()
         for (m in 0 until cnt) {
             val a = TAU * (m + 0.5f * (k % 2)) / cnt
             for (sg in SIGNS) {
@@ -3178,91 +3266,120 @@ private fun t1BuildNucleus(): T1Nucleus {
         b.ellipsoid(c * 4.3f, s * 4.3f, 0f, floatArrayOf(c * 1.3f, s * 1.3f, 0f), floatArrayOf(-s * 0.9f, c * 0.9f, 0f), floatArrayOf(0f, 0f, 1.9f), 7, 10)   // spokes
         b.ellipsoid(c * 7.2f, s * 7.2f, 0f, floatArrayOf(c * 0.6f, s * 0.6f, 0f), floatArrayOf(-s * 0.9f, c * 0.9f, 0f), floatArrayOf(0f, 0f, 0.8f), 5, 8)    // luminal ring
     }
-    val fil = ArrayList<Float>()
+    val cyto = ArrayList<Float>(); val basket = ArrayList<Float>()
     val fc = floatArrayOf(0.80f, 0.76f, 1f, 1f)
     for (k in 0 until 8) {
         val a = TAU * k / 8f + 0.2f
-        // cytoplasmic filaments, curling out toward the cytoplasm
-        for (m in 0 until 14) for (h in 0..1) {
+        for (m in 0 until 14) for (h in 0..1) {             // cytoplasmic filaments, curling out
             val t = (m + h) / 14f
             val r = 5.0f + 0.9f * sin(t * 5f + k); val aa = a + 0.35f * sin(t * 4f)
-            add(fil, cos(aa) * r, sin(aa) * r, 3.6f + 5.5f * t, fc)
+            add(cyto, cos(aa) * r, sin(aa) * r, 3.6f + 5.5f * t, fc)
         }
-        // basket filaments converging on the distal ring
-        for (m in 0 until 10) for (h in 0..1) {
+        for (m in 0 until 10) for (h in 0..1) {             // basket filaments converging on the distal ring
             val t = (m + h) / 10f
             val r = 5.0f + (2.4f - 5.0f) * t
-            add(fil, cos(a) * r, sin(a) * r, -(3.4f + 5.6f * t), fc)
+            add(basket, cos(a) * r, sin(a) * r, -(3.4f + 5.6f * t), fc)
         }
     }
-    for (m in 0 until 32) for (h in 0..1) { val a = TAU * (m + h) / 32f; add(fil, cos(a) * 2.4f, sin(a) * 2.4f, -9.0f, fc) }
-    // chromatin fibres (node-local, relative to the node 9 frame: x side, y up, z = -along)
-    val hb = T1Builder(); val dna = ArrayList<Float>()
-    val dcA = floatArrayOf(1f, 0.86f, 0.52f, 1f)
+    for (m in 0 until 32) for (h in 0..1) { val a = TAU * (m + h) / 32f; add(basket, cos(a) * 2.4f, sin(a) * 2.4f, -9.0f, fc) }
+    // chromatin: compact 10 nm fibres (node-9-frame local: x side, y up, z = -along), gently curving,
+    // 2 units or more off the craft's lane
+    val hb = T1Builder(); val h1 = T1Builder(); val dna = T1Builder()
     val rnd = java.util.Random(19)
     for (fib in 0 until 6) {
         val ang = fib * 1.05f + 0.4f
-        val rad = 3.4f + (fib % 3) * 1.0f
-        var px = cos(ang) * rad; var py = sin(ang) * rad; var pz = -(1.0f + rnd.nextFloat() * 2f)
-        var dx = (rnd.nextFloat() - 0.5f) * 0.6f; var dy = (rnd.nextFloat() - 0.5f) * 0.6f; var dz = -1f
-        var lastX = px; var lastY = py; var lastZ = pz
-        for (nuc in 0 until 11) {
-            // wander, staying off the craft's lane
-            dx += (rnd.nextFloat() - 0.5f) * 0.9f; dy += (rnd.nextFloat() - 0.5f) * 0.9f; dz += (rnd.nextFloat() - 0.5f) * 0.5f - 0.1f
-            val dl = sqrt(dx * dx + dy * dy + dz * dz); dx /= dl; dy /= dl; dz /= dl
-            val step = 2.2f + rnd.nextFloat() * 1.2f
-            px += dx * step; py += dy * step; pz += dz * step
-            val rr = sqrt(px * px + py * py)
-            if (rr < 2.4f) { px *= 2.4f / rr; py *= 2.4f / rr }
-            if (rr > 6.6f) { px *= 6.6f / rr; py *= 6.6f / rr }
-            if (pz < -14f) pz = -14f
-            // octamer disc axis: roughly perpendicular to the fibre
-            var axx = dy; var axy = -dx; var axz = 0.3f
+        val rad = 3.6f + (fib % 3) * 1.1f
+        var px = cos(ang) * rad; var py = sin(ang) * rad; var pz = -(2.0f + rnd.nextFloat() * 2f)
+        var dx = -sin(ang); var dy = cos(ang); var dz = -0.6f
+        var dl = sqrt(dx * dx + dy * dy + dz * dz); dx /= dl; dy /= dl; dz /= dl
+        var path = ArrayList<Float>()
+        path.add(px); path.add(py); path.add(pz)
+        for (nuc in 0 until 16) {
+            // turn by up to ~20 degrees per nucleosome
+            val rx = rnd.nextFloat() - 0.5f; val ry = rnd.nextFloat() - 0.5f; val rz = rnd.nextFloat() - 0.5f
+            dx += rx * 0.6f; dy += ry * 0.6f; dz += rz * 0.6f
+            // keep the fibre in the shell 2.5..7 off the lane, and between the envelope and the far side
+            val rr0 = sqrt(px * px + py * py)
+            if (rr0 < 3.0f) { dx += px / rr0 * 0.3f; dy += py / rr0 * 0.3f }
+            if (rr0 > 6.5f) { dx -= px / rr0 * 0.3f; dy -= py / rr0 * 0.3f }
+            if (pz > -2f) dz -= 0.3f
+            if (pz < -14f) dz += 0.3f
+            dl = sqrt(dx * dx + dy * dy + dz * dz); dx /= dl; dy /= dl; dz /= dl
+            val step = 1.8f + rnd.nextFloat() * 0.6f
+            val cx = px + dx * step * 0.5f; val cy = py + dy * step * 0.5f; val cz = pz + dz * step * 0.5f
+            // octamer: a disc (radius 0.41, half-thickness 0.3) whose axis is across the fibre
+            var axx = dy; var axy = -dx; var axz = 0.35f * (if (nuc % 2 == 0) 1f else -1f)
             val al = sqrt(axx * axx + axy * axy + axz * axz); axx /= al; axy /= al; axz /= al
             var e1x = dy * axz - dz * axy; var e1y = dz * axx - dx * axz; var e1z = dx * axy - dy * axx
             val el = sqrt(e1x * e1x + e1y * e1y + e1z * e1z).coerceAtLeast(1e-5f); e1x /= el; e1y /= el; e1z /= el
             val e2x = axy * e1z - axz * e1y; val e2y = axz * e1x - axx * e1z; val e2z = axx * e1y - axy * e1x
-            hb.ellipsoid(px, py, pz, floatArrayOf(e1x * 0.62f, e1y * 0.62f, e1z * 0.62f), floatArrayOf(axx * 0.33f, axy * 0.33f, axz * 0.33f),
-                floatArrayOf(e2x * 0.62f, e2y * 0.62f, e2z * 0.62f), 6, 10)
-            // 1.65 left-handed turns of DNA round the octamer (axis radius 4.2 nm, pitch 2.6 nm)
-            val turns = 1.65f; val steps = 40
-            var prevX = 0f; var prevY = 0f; var prevZ = 0f
+            hb.ellipsoid(cx, cy, cz, floatArrayOf(e1x * 0.41f, e1y * 0.41f, e1z * 0.41f), floatArrayOf(axx * 0.3f, axy * 0.3f, axz * 0.3f),
+                floatArrayOf(e2x * 0.41f, e2y * 0.41f, e2z * 0.41f), 6, 10)
+            // 1.65 left-handed turns of DNA round the octamer's outside (superhelix radius 0.52, pitch ~0.2)
+            val turns = 1.65f; val steps = 24
+            val th0 = atan2(-(dx * e2x + dy * e2y + dz * e2z), -(dx * e1x + dy * e1y + dz * e1z))
             for (m in 0..steps) {
-                val t = -turns * TAU * m / steps
-                val h = (0.33f * m / steps - 0.165f) * 1.0f
-                val wx = px + (e1x * cos(t) + e2x * sin(t)) * 0.56f + axx * h
-                val wy = py + (e1y * cos(t) + e2y * sin(t)) * 0.56f + axy * h
-                val wz = pz + (e1z * cos(t) + e2z * sin(t)) * 0.56f + axz * h
-                if (m == 0) { add(dna, lastX, lastY, lastZ, dcA); add(dna, wx, wy, wz, dcA) }       // linker in
-                else { add(dna, prevX, prevY, prevZ, dcA); add(dna, wx, wy, wz, dcA) }
-                prevX = wx; prevY = wy; prevZ = wz
+                val t = th0 - turns * TAU * m / steps
+                val hgt = 0.33f * m / steps - 0.165f
+                path.add(cx + (e1x * cos(t) + e2x * sin(t)) * 0.52f + axx * hgt)
+                path.add(cy + (e1y * cos(t) + e2y * sin(t)) * 0.52f + axy * hgt)
+                path.add(cz + (e1z * cos(t) + e2z * sin(t)) * 0.52f + axz * hgt)
             }
-            lastX = prevX; lastY = prevY; lastZ = prevZ
+            // H1 on the dyad, where the DNA enters and leaves
+            h1.ellipsoid(cx + (e1x * cos(th0) + e2x * sin(th0)) * 0.72f, cy + (e1y * cos(th0) + e2y * sin(th0)) * 0.72f, cz + (e1z * cos(th0) + e2z * sin(th0)) * 0.72f,
+                floatArrayOf(0.15f, 0f, 0f), floatArrayOf(0f, 0.15f, 0f), floatArrayOf(0f, 0f, 0.15f), 4, 6)
+            px = cx + dx * step * 0.5f; py = cy + dy * step * 0.5f; pz = cz + dz * step * 0.5f
         }
+        dna.t1Tube(path.toFloatArray(), 0.125f)
     }
-    // a stretch of bare B-DNA beside the lane, being transcribed (local to the node frame)
-    val hx = ArrayList<Float>()
-    val bpCol = arrayOf(floatArrayOf(0.4f, 0.95f, 0.5f, 1f), floatArrayOf(1f, 0.45f, 0.45f, 1f), floatArrayOf(0.45f, 0.7f, 1f, 1f), floatArrayOf(1f, 0.9f, 0.35f, 1f))
+    return T1Nucleus(envA, envB, PointMesh(heads.toFloatArray()), b.build(), LineMesh(cyto.toFloatArray()), LineMesh(basket.toFloatArray()), hb.build(), h1.build(), dna.build())
+}
+
+/** Colour lines whose vertex ranges can be drawn in part (the helix, minus the bubble inside Pol II). */
+private class T1RangeLines(data: FloatArray) {
+    val vbo = makeVbo(data)
+    fun draw(ph: Int, ch: Int, first: Int, count: Int) {
+        if (count <= 0) return
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbo)
+        GLES20.glVertexAttribPointer(ph, 3, GLES20.GL_FLOAT, false, 28, 0)
+        GLES20.glEnableVertexAttribArray(ph)
+        GLES20.glVertexAttribPointer(ch, 4, GLES20.GL_FLOAT, false, 28, 12)
+        GLES20.glEnableVertexAttribArray(ch)
+        GLES20.glDrawArrays(GLES20.GL_LINES, first, count)
+        GLES20.glDisableVertexAttribArray(ph); GLES20.glDisableVertexAttribArray(ch)
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0)
+    }
+}
+
+// B-DNA beside the lane in the node-9 frame: axis at (side, up) below, along from -2.5; 10.5 bp/turn.
+private const val T1_HX_S = -2.0f
+private const val T1_HX_U = 0.9f
+private const val T1_HX_A0 = -2.5f
+private const val T1_BP = 0.0425f           // 3.4 A rise
+private const val T1_NBP = 320
+private const val T1_HX_R = 0.125f
+
+/** Backbone angles of the two strands at base pair k (the minor groove spans 143 degrees). */
+private fun t1HxAng(k: Int) = -TAU * k / 10.5f
+
+private fun t1BuildHelix(): T1RangeLines {
+    val out = ArrayList<Float>()
+    fun add(x: Float, y: Float, z: Float, c: FloatArray) { out.add(x); out.add(y); out.add(z); out.add(c[0]); out.add(c[1]); out.add(c[2]); out.add(c[3]) }
+    val at = floatArrayOf(0.4f, 0.95f, 0.5f, 1f); val gc = floatArrayOf(0.45f, 0.7f, 1f, 1f)
     val bA = floatArrayOf(1f, 0.74f, 0.45f, 1f); val bB = floatArrayOf(0.55f, 0.82f, 1f, 1f)
-    val nbp = 330
-    var pa = 0f; var pb = 0f
-    for (k in 0 until nbp) {
-        val along = -2.5f + k * 0.0405f
-        val w = -TAU * k / 10.5f                        // right-handed in this frame (see header)
-        val ax = cos(w) * 0.125f; val ay = sin(w) * 0.125f
-        val bx = cos(w + 2.5f) * 0.125f; val by = sin(w + 2.5f) * 0.125f   // strands 143 degrees apart: minor and major grooves
-        val cx = -2.0f; val cy = 0.9f; val z = -along
-        if (k > 0) {
-            add(hx, cx + cos(pa) * 0.125f, cy + sin(pa) * 0.125f, z + 0.0405f, bA); add(hx, cx + ax, cy + ay, z, bA)
-            add(hx, cx + cos(pb) * 0.125f, cy + sin(pb) * 0.125f, z + 0.0405f, bB); add(hx, cx + bx, cy + by, z, bB)
-        }
-        val base = rnd.nextInt(4)
-        val mx = (ax + bx) * 0.5f; val my = (ay + by) * 0.5f
-        add(hx, cx + ax, cy + ay, z, bpCol[base]); add(hx, cx + mx, cy + my, z, bpCol[base])
-        add(hx, cx + mx, cy + my, z, bpCol[base xor 1]); add(hx, cx + bx, cy + by, z, bpCol[base xor 1])
-        pa = w; pb = w + 2.5f
+    val rnd = java.util.Random(4)
+    for (k in 0 until T1_NBP) {
+        val w = t1HxAng(k); val w0 = t1HxAng(k - 1)
+        val z = -(T1_HX_A0 + k * T1_BP); val z0 = z + T1_BP
+        // backbone segments from the previous pair (8 vertices per pair, always)
+        add(T1_HX_S + cos(w0) * T1_HX_R, T1_HX_U + sin(w0) * T1_HX_R, z0, bA); add(T1_HX_S + cos(w) * T1_HX_R, T1_HX_U + sin(w) * T1_HX_R, z, bA)
+        add(T1_HX_S + cos(w0 + 2.5f) * T1_HX_R, T1_HX_U + sin(w0 + 2.5f) * T1_HX_R, z0, bB); add(T1_HX_S + cos(w + 2.5f) * T1_HX_R, T1_HX_U + sin(w + 2.5f) * T1_HX_R, z, bB)
+        val c = if (rnd.nextBoolean()) at else gc
+        val ax = cos(w) * T1_HX_R; val ay = sin(w) * T1_HX_R; val bx = cos(w + 2.5f) * T1_HX_R; val by = sin(w + 2.5f) * T1_HX_R
+        add(T1_HX_S + ax, T1_HX_U + ay, z, c); add(T1_HX_S + (ax + bx) * 0.5f, T1_HX_U + (ay + by) * 0.5f, z, c)
+        add(T1_HX_S + (ax + bx) * 0.5f, T1_HX_U + (ay + by) * 0.5f, z, c); add(T1_HX_S + bx, T1_HX_U + by, z, c)
     }
-    return T1Nucleus(env, PointMesh(heads.toFloatArray()), b.build(), LineMesh(fil.toFloatArray()), hb.build(), LineMesh(dna.toFloatArray()), LineMesh(hx.toFloatArray()))
+    return T1RangeLines(out.toFloatArray())
 }
 
 internal fun StereoBodyRenderer.drawNucleus(n: TourNode, i: Int, seconds: Float) {
@@ -3270,14 +3387,15 @@ internal fun StereoBodyRenderer.drawNucleus(n: TourNode, i: Int, seconds: Float)
     if (rp < 8.2f || rp > 9.75f) return
     val vis = t1Smooth(8.2f, 8.3f, rp) * (1f - t1Smooth(9.55f, 9.75f, rp))
     landmarkFade *= vis; colorShader.globalFade *= vis
-    val nu = t1Mesh("nucleus") { t1BuildNucleus() }
+    val nu = t1Mesh("nucleus2") { t1BuildNucleus() }
     val fp = frameAt(T1_NPC_P)
     val off = t1ShipOff(fp); val so = off[0]; val uo = off[1]
-    t1Lit(nu.npc, fp, 0f, so, uo, T1_NPC, T1_WHITE, 1f, 0.2f)
-    t1Color(nu.fil, fp, 0f, so, uo, 2f, false)
-    t1Color(nu.heads, fp, 0f, so, uo, 2.2f, true, 0.9f)
-    // FG-repeat strands filling the channel, pushed aside where the craft is
+    t1Lit(nu.npc, fp, 0f, so, uo, T1_NPC, T1_WHITE, 1f, 0.25f)
+    t1Color(nu.cyto, fp, 0f, so, uo, 2f, false)
     val sA = t1Along(fp, shipX, shipY, shipZ)
+    t1Color(nu.basket, fp, 0f, so, uo, 2f, false, 1f - t1Smooth(4f, 6f, sA))
+    t1Color(nu.heads, fp, 0f, so, uo, 2f, true, 0.9f)
+    // FG-repeat strands filling the channel, pushed aside where the craft is
     val d = t1Dyn.data
     var v = 0
     val fg = floatArrayOf(0.88f, 0.88f, 1f, 0.85f)
@@ -3288,7 +3406,7 @@ internal fun StereoBodyRenderer.drawNucleus(n: TourNode, i: Int, seconds: Float)
             val t = m / 5f
             val r = 3.0f - 2.4f * t + 0.3f * sin(seconds * 1.3f + k + m)
             val a = a0 + 0.9f * t * (if (k % 2 == 0) 1f else -1f)
-            var al = al0 + 0.8f * sin(t * 3f + k)
+            val al = al0 + 0.8f * sin(t * 3f + k)
             var rr = r
             val dsh = al - sA
             if (abs(dsh) < 1.4f) rr = max(rr, 1.3f * (1f - abs(dsh) / 1.4f) + rr * abs(dsh) / 1.4f)
@@ -3297,37 +3415,74 @@ internal fun StereoBodyRenderer.drawNucleus(n: TourNode, i: Int, seconds: Float)
             val wx = fx(fp, al, x, y); val wy = fy(fp, al, x, y); val wz = fz(fp, al, x, y)
             if (m > 0) { v = t1Put(d, v, px, py, pz, fg, fg[3]); v = t1Put(d, v, wx, wy, wz, fg, fg[3]) }
             px = wx; py = wy; pz = wz
-            al += 0f
         }
     }
     t1DynDraw(v, GLES20.GL_LINES, 2.5f, 1f, depthWrite = false)
     // chromatin, the gene and its polymerase (node frame)
     val f9 = frameAt(i.toFloat())
     val o9 = t1ShipOff(f9); val s9 = o9[0]; val u9 = o9[1]
-    t1Lit(nu.histones, f9, 0f, s9, u9, T1_HISTONE, T1_WHITE, 1f, 0.18f)
-    t1Color(nu.dna, f9, 0f, s9, u9, 2f, false)
-    t1Color(nu.helix, f9, 0f, s9, u9, 2f, false)
-    val slide = (seconds * 0.8f) % 12.5f             // 0.8 units/s = 6.4 nm/s ~ 20 nt/s
-    val aP = -2.2f + slide
-    t1Lit(sphere, f9, aP, s9 - 2.0f + 0.35f, u9 + 0.9f + 0.15f, T1_POL, T1_WHITE, 1f, 0.22f, 0.85f, 0.75f, 1.0f)
-    t1Lit(sphere, f9, aP + 0.1f, s9 - 2.0f - 0.45f, u9 + 0.9f - 0.1f, T1_POL, T1_WHITE, 1f, 0.22f, 0.65f, 0.7f, 0.85f)
-    // the transcript: out of the exit channel, trailing behind the enzyme
+    t1Lit(nu.histones, f9, 0f, s9, u9, T1_HISTONE, T1_WHITE, 1f, 0.2f)
+    t1Lit(nu.h1, f9, 0f, s9, u9, T1_H1, T1_WHITE, 1f, 0.25f)
+    t1Lit(nu.dna, f9, 0f, s9, u9, T1_DNA, T1_WHITE, 1f, 0.3f)
+    // Pol II slides 0.8 units/s (6.4 nm/s ~ 20 nt/s); the helix is drawn in two parts either side of
+    // the bubble inside the enzyme
+    val hx = t1Mesh("helix2") { t1BuildHelix() }
+    val slide = (seconds * 0.8f) % 12.0f
+    val kP = ((slide + 0.3f) / T1_BP).toInt().coerceIn(10, T1_NBP - 10)
+    val k0 = kP - 7; val k1 = kP + 7
+    t1Model(f9, 0f, s9, u9)
+    Matrix.multiplyMM(mv, 0, view, 0, model, 0); Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
+    colorShader.use(mvp, 1f); lineWidth(2.5f)
+    hx.draw(colorShader.positionHandle, colorShader.colorHandle, 0, k0 * 8)
+    hx.draw(colorShader.positionHandle, colorShader.colorHandle, (k1 + 1) * 8, (T1_NBP - k1 - 1) * 8)
+    lineWidth(1f)
+    // the bubble: template (below) and coding (above) strands parted by 0.35; RNA paired to the template
+    v = 0
+    val bA = floatArrayOf(1f, 0.74f, 0.45f); val bB = floatArrayOf(0.55f, 0.82f, 1f); val rc = floatArrayOf(1f, 0.45f, 0.40f)
+    fun hp(k: Int, strand: Int, split: Float, c: FloatArray, al: Float) {
+        val w = t1HxAng(k) + (if (strand == 0) 0f else 2.5f)
+        val a = T1_HX_A0 + k * T1_BP
+        val sp = if (strand == 0) -split else split
+        val s = s9 + T1_HX_S + cos(w) * T1_HX_R; val u = u9 + T1_HX_U + sin(w) * T1_HX_R + sp
+        v = t1Put(d, v, fx(f9, a, s, u), fy(f9, a, s, u), fz(f9, a, s, u), c, al)
+    }
+    for (k in k0..k1) {
+        val t = (k - k0).toFloat() / (k1 - k0)
+        val split = 0.175f * sin(PI_F * t).coerceAtLeast(0f).pow(0.5f)
+        hp(k, 0, split, bA, 1f); hp(k + 1, 0, 0.175f * sin(PI_F * ((k + 1 - k0).toFloat() / (k1 - k0))).coerceAtLeast(0f).pow(0.5f), bA, 1f)
+        hp(k, 1, split, bB, 1f); hp(k + 1, 1, 0.175f * sin(PI_F * ((k + 1 - k0).toFloat() / (k1 - k0))).coerceAtLeast(0f).pow(0.5f), bB, 1f)
+    }
+    // RNA-DNA hybrid: the transcript paired to the template for 8 bp behind the active site
+    for (k in kP - 8 until kP) {
+        for (kk in k..k + 1) {
+            val w = t1HxAng(kk); val a = T1_HX_A0 + kk * T1_BP
+            val s = s9 + T1_HX_S + cos(w) * T1_HX_R * 0.5f; val u = u9 + T1_HX_U + sin(w) * T1_HX_R * 0.5f - 0.1f
+            v = t1Put(d, v, fx(f9, a, s, u), fy(f9, a, s, u), fz(f9, a, s, u), rc, 1f)
+        }
+    }
+    t1DynDraw(v, GLES20.GL_LINES, 3f)
+    // the enzyme: a clamp of two jaws either side of the DNA, and a bridge over it
+    val aP = T1_HX_A0 + kP * T1_BP
+    for (sg in SIGNS) t1Lit(sphere, f9, aP, s9 + T1_HX_S + sg * 0.62f, u9 + T1_HX_U - 0.05f, T1_POL, T1_WHITE, 0.92f, 0.22f, 0.45f, 0.6f, 0.9f)
+    t1Lit(sphere, f9, aP + 0.15f, s9 + T1_HX_S, u9 + T1_HX_U + 0.55f, T1_POL, T1_WHITE, 0.92f, 0.22f, 0.55f, 0.28f, 0.75f)
+    // the transcript: out of the exit channel above the enzyme, trailing behind it
     var w = 0
-    val rc = floatArrayOf(1f, 0.55f, 0.48f, 1f)
+    val rc4 = floatArrayOf(1f, 0.55f, 0.48f, 1f)
     val len = min(slide, 7f)
     val segs = 30
     var qx = 0f; var qy = 0f; var qz = 0f
     for (m in 0..segs) {
         val t = len * m / segs
-        val a = aP - 0.3f - t * 0.8f; val sx = s9 - 2.0f + 0.2f + 0.25f * sin(t * 2.3f); val uy = u9 + 0.9f + 0.9f + t * 0.25f + 0.2f * sin(t * 1.7f)
+        val a = aP - 0.35f - t * 0.8f; val sx = s9 + T1_HX_S + 0.2f + 0.25f * sin(t * 2.3f); val uy = u9 + T1_HX_U + 0.85f + t * 0.25f + 0.2f * sin(t * 1.7f)
         val wx = fx(f9, a, sx, uy); val wy = fy(f9, a, sx, uy); val wz = fz(f9, a, sx, uy)
-        if (m > 0) { w = t1Put(d, w, qx, qy, qz, rc, 1f); w = t1Put(d, w, wx, wy, wz, rc, 1f) }
+        if (m > 0) { w = t1Put(d, w, qx, qy, qz, rc4, 1f); w = t1Put(d, w, wx, wy, wz, rc4, 1f) }
         qx = wx; qy = wy; qz = wz
     }
     t1DynDraw(w, GLES20.GL_LINES, 3f)
-    // the envelope (translucent) last
+    // the envelope's two faces (translucent) last
     GLES20.glDepthMask(false)
-    t1Lit(nu.envelope, fp, 0f, so, uo, T1_ENVELOPE, T1_WHITE, 0.4f, 0.12f)
+    t1Lit(nu.envA, fp, 0f, so, uo, T1_ENVELOPE, T1_WHITE, 0.45f, 0.15f)
+    t1Lit(nu.envB, fp, 0f, so, uo, T1_ENVELOPE, T1_WHITE, 0.45f, 0.15f)
     GLES20.glDepthMask(true)
 }
 
@@ -3355,18 +3510,28 @@ private fun t1BuildRibo(): T1Ribo {
     L.rod(0.6f, 0.95f, -1.1f, 1.0f, 1.35f, -1.9f, 0.14f)                 // P stalk (A-site side)
     L.rod(-0.5f, 0.95f, 1.1f, -0.95f, 1.35f, 1.9f, 0.16f)                // L1 stalk (E-site side)
     e(S, 0.3f, -0.72f, 0f, 0.95f, 0.5f, 1.25f)                           // body
-    e(S, -0.78f, -0.78f, -0.15f, 0.52f, 0.5f, 0.55f)                      // head
-    e(S, -1.2f, -0.9f, -0.45f, 0.2f, 0.18f, 0.22f)                        // beak
+    e(S, -0.98f, -0.8f, -0.15f, 0.5f, 0.48f, 0.55f)                       // head, across a narrow neck
+    e(S, -1.42f, -0.92f, -0.45f, 0.2f, 0.18f, 0.22f)                      // beak
     e(S, 0.95f, -0.55f, 0.6f, 0.35f, 0.3f, 0.35f)                         // platform
+    // ribosomal proteins: flattened patches on the rRNA's outer surface (not on the subunit interface)
     val rnd = java.util.Random(3)
-    for (k in 0 until 30) {
-        val lg = k < 18
-        val th = rnd.nextFloat() * TAU; val ph = (0.15f + rnd.nextFloat() * 0.7f) * PI_F
-        val (cs, cu, ca, rs, ru, ra) = if (lg) arrayOf(0f, 0.62f, 0f, 1.3f, 0.95f, 1.4f) else arrayOf(0.3f, -0.72f, 0f, 0.95f, 0.5f, 1.25f)
-        var ny = cos(ph); if (lg) ny = abs(ny) else ny = -abs(ny)
-        val x = cs + rs * sin(ph) * cos(th); val y = cu + ru * ny; val z = -(ca + ra * sin(ph) * sin(th))
-        val r = 0.13f + rnd.nextFloat() * 0.1f
-        P.ellipsoid(x, y, z, floatArrayOf(r, 0f, 0f), floatArrayOf(0f, r, 0f), floatArrayOf(0f, 0f, r), 5, 8)
+    for (k in 0 until 14) {
+        val lg = k < 9
+        val th = rnd.nextFloat() * TAU; val ph = (0.1f + rnd.nextFloat() * 0.35f) * PI_F
+        val cs: Float; val cu: Float; val rs: Float; val ru: Float; val ra: Float
+        if (lg) { cs = 0f; cu = 0.62f; rs = 1.3f; ru = 0.95f; ra = 1.4f } else { cs = 0.3f; cu = -0.72f; rs = 0.95f; ru = 0.5f; ra = 1.25f }
+        val sgn = if (lg) 1f else -1f
+        val lx = sin(ph) * cos(th); val ly = cos(ph) * sgn; val lz = sin(ph) * sin(th)
+        val x = cs + rs * lx; val y = cu + ru * ly; val z = -(ra * lz)
+        // surface normal of the ellipsoid there, and two tangents
+        var nx = lx / rs; var ny = ly / ru; var nz = -lz / ra
+        val nl = sqrt(nx * nx + ny * ny + nz * nz); nx /= nl; ny /= nl; nz /= nl
+        var t1x = -nz; var t1y = 0f; var t1z = nx
+        val tl = sqrt(t1x * t1x + t1z * t1z).coerceAtLeast(1e-4f); t1x /= tl; t1z /= tl
+        val t2x = ny * t1z - nz * t1y; val t2y = nz * t1x - nx * t1z; val t2z = nx * t1y - ny * t1x
+        val w = 0.26f + 0.08f * rnd.nextFloat()
+        P.ellipsoid(x + nx * 0.02f, y + ny * 0.02f, z + nz * 0.02f, floatArrayOf(t1x * w, t1y * w, t1z * w), floatArrayOf(nx * 0.08f, ny * 0.08f, nz * 0.08f),
+            floatArrayOf(t2x * w * 0.8f, t2y * w * 0.8f, t2z * w * 0.8f), 5, 8)
     }
     // the messenger (ribosome-local), with the codon ticks drawn per frame
     val m = ArrayList<Float>()
@@ -3374,7 +3539,7 @@ private fun t1BuildRibo(): T1Ribo {
     val segs = 200
     for (k in 0 until segs) for (h in 0..1) {
         val a = -17f + 29f * (k + h) / segs
-        val wig = if (abs(a) < 1.6f || abs(a - 4.4f) < 1.6f || abs(a - 8.8f) < 1.6f) 0f else 1f
+        val wig = if (abs(a) < 1.6f || abs(a - 6f) < 1.6f || abs(a + 6f) < 1.6f) 0f else 1f
         val s = -0.2f + 0.25f * wig * sin(a * 0.9f); val u = -0.42f + 0.3f * wig * sin(a * 0.6f + 1f)
         m.add(s); m.add(u); m.add(-a); m.add(mc[0]); m.add(mc[1]); m.add(mc[2]); m.add(mc[3])
     }
@@ -3395,9 +3560,17 @@ internal fun StereoBodyRenderer.drawRibosome(n: TourNode, i: Int, seconds: Float
     if (rp < 9.3f || rp > 10.26f) return
     val vis = t1Smooth(9.3f, 9.45f, rp) * (1f - t1Smooth(10.19f, 10.25f, rp))
     landmarkFade *= vis; colorShader.globalFade *= vis
-    val rb = t1Mesh("ribo") { t1BuildRibo() }
-    val f = frameAt(i + T1_RIBO_A / 16f)
-    val off = t1ShipOff(f); val so = off[0] + T1_RIBO_S; val uo = off[1] + T1_RIBO_U
+    val rb = t1Mesh("ribo2") { t1BuildRibo() }
+    // The ribosome's frame: centred beside the lane and turned 50 degrees about the vertical, so the
+    // messenger runs across the view and the A, P and E sites between the subunits stand side by side.
+    val f0 = frameAt(i + T1_RIBO_A / 16f)
+    val off = t1ShipOff(f0)
+    val cs0 = off[0] + T1_RIBO_S; val cu0 = off[1] + T1_RIBO_U
+    val rc = cos(50f * DEG); val rs = sin(50f * DEG)
+    val f = StereoBodyRenderer.Frame(fx(f0, 0f, cs0, cu0), fy(f0, 0f, cs0, cu0), fz(f0, 0f, cs0, cu0),
+        f0.dx * rc + f0.sx * rs, f0.dy * rc + f0.sy * rs, f0.dz * rc + f0.sz * rs,
+        f0.sx * rc - f0.dx * rs, f0.sy * rc - f0.dy * rs, f0.sz * rc - f0.dz * rs, f0.ux, f0.uy, f0.uz)
+    val so = 0f; val uo = 0f
     val cyc = seconds * 5f                                   // five elongation cycles a second
     val ph = cyc - floor(cyc)
     // mRNA and its codon ticks, sliding one codon per cycle through the ribosome
@@ -3409,17 +3582,16 @@ internal fun StereoBodyRenderer.drawRibosome(n: TourNode, i: Int, seconds: Float
     for (k in -40..40) {
         val a = k * 0.12f - (shift % 0.12f)
         if (abs(a) > 4.8f) continue
-        val x0 = fx(f, a, so - 0.2f, uo - 0.42f); val y0 = fy(f, a, so - 0.2f, uo - 0.42f); val z0 = fz(f, a, so - 0.2f, uo - 0.42f)
-        v = t1Put(d, v, x0, y0, z0, tc, 1f)
+        v = t1Put(d, v, fx(f, a, so - 0.2f, uo - 0.42f), fy(f, a, so - 0.2f, uo - 0.42f), fz(f, a, so - 0.2f, uo - 0.42f), tc, 1f)
         v = t1Put(d, v, fx(f, a, so - 0.2f, uo - 0.55f), fy(f, a, so - 0.2f, uo - 0.55f), fz(f, a, so - 0.2f, uo - 0.55f), tc, 1f)
     }
     t1DynDraw(v, GLES20.GL_LINES, 1.5f)
-    // tRNAs: incoming (with EF-Tu) -> A -> P, and P -> E -> away
+    // tRNAs (L-shaped): incoming with EF-Tu -> A -> P, and P -> E -> away
     val q = FloatArray(9)
     fun trna(x: Float, da: Float, ds: Float, du: Float, alpha: Float) {
         t1TrnaAt(x, q)
-        t1Rod(f, q[2] + da, so + q[0] + ds, uo + q[1] + du, q[5] + da, so + q[3] + ds, uo + q[4] + du, 0.13f, T1_TRNA, T1_WHITE, alpha, 0.5f)
-        t1Rod(f, q[5] + da, so + q[3] + ds, uo + q[4] + du, q[8] + da, so + q[6] + ds, uo + q[7] + du, 0.13f, T1_TRNA, T1_WHITE, alpha, 0.5f)
+        t1Rod(f, q[2] + da, so + q[0] + ds, uo + q[1] + du, q[5] + da, so + q[3] + ds, uo + q[4] + du, 0.13f, T1_TRNA2, T1_WHITE, alpha, 0.45f)
+        t1Rod(f, q[5] + da, so + q[3] + ds, uo + q[4] + du, q[8] + da, so + q[6] + ds, uo + q[7] + du, 0.13f, T1_TRNA2, T1_WHITE, alpha, 0.45f)
     }
     val tIn = t1Smooth(0f, 0.3f, ph)
     val move = t1Smooth(0.45f, 0.75f, ph)
@@ -3427,64 +3599,67 @@ internal fun StereoBodyRenderer.drawRibosome(n: TourNode, i: Int, seconds: Float
     if (ph < 0.3f) {
         val k = 1f - tIn
         trna(1f, 2.4f * k, -1.8f * k, -1.4f * k, 1f)
-        t1Lit(sphere, f, 0.14f + 2.4f * k + 0.1f, so + 0.55f - 1.8f * k, uo + 0.5f - 1.4f * k, T1_EFTU, T1_WHITE, 1f, 0.2f, 0.36f, 0.32f, 0.36f)
+        t1Lit(sphere, f, 0.14f + 2.4f * k + 0.1f, so + 0.55f - 1.8f * k, uo + 0.5f - 1.4f * k, T1_EFTU, T1_WHITE, 1f, 0.3f, 0.36f, 0.32f, 0.36f)
     } else trna(1f - move, 0f, 0f, 0f, 1f)
     if (ph < 0.75f) trna(-move, 0f, 0f, 0f, 1f) else trna(-1f, -1.6f * away, -1.4f * away, 0.6f * away, 1f - away)
-    // nascent chain: from the P-site acceptor (the A site's after transfer) up the exit tunnel and out the top
+    // nascent chain: from the P-site acceptor up the exit tunnel, ~30 residues out of it, then already
+    // collapsed into a compact folded domain still attached to it, growing as residues are added
     val holder = if (ph > 0.4f) 1f - move else 0f
     t1TrnaAt(holder, q)
     val pa0 = q[8]; val ps0 = q[6]; val pu0 = q[7]
     var w = 0
-    val colA = floatArrayOf(1f, 0.78f, 0.42f, 1f); val colB = floatArrayOf(0.5f, 0.92f, 0.82f, 1f)
-    val colC = floatArrayOf(0.95f, 0.55f, 0.75f, 1f); val colD = floatArrayOf(0.7f, 0.8f, 1f, 1f)
-    val cols = arrayOf(colA, colB, colC, colD)
+    val cols = arrayOf(floatArrayOf(1f, 0.78f, 0.42f, 1f), floatArrayOf(0.5f, 0.92f, 0.82f, 1f), floatArrayOf(0.95f, 0.55f, 0.75f, 1f), floatArrayOf(0.7f, 0.8f, 1f, 1f))
     val step = 0.045f
     val grow = ph * step
-    for (k in 0 until 64) {
+    var endA = 0f; var endS = 0f; var endU = 0f
+    for (k in 0 until 60) {
         val t = k * step + grow
         val sP: Float; val uP: Float; val aP: Float
         if (t < 1.3f) { val g = t / 1.3f; sP = ps0 + (0.35f - ps0) * g; uP = pu0 + (1.6f - pu0) * g; aP = pa0 + (0.3f - pa0) * g }
         else {
-            val e = t - 1.3f                                  // outside: an alpha-helix-like coil drifting up and away
-            sP = 0.35f + 0.07f * cos(e * 38f) + e * 0.25f; uP = 1.6f + e * 0.55f; aP = 0.3f + 0.07f * sin(e * 38f) + e * 0.12f
+            val e = (t - 1.3f).coerceAtMost(1.35f)            // ~30 residues, extended, out of the tunnel
+            sP = 0.35f + 0.1f * sin(e * 9f); uP = 1.6f + e * 0.45f; aP = 0.3f + 0.1f * cos(e * 7f)
+            if (t - 1.3f > 1.35f) break
         }
+        endA = aP; endS = sP; endU = uP
         w = t1Put(d, w, fx(f, aP, so + sP, uo + uP), fy(f, aP, so + sP, uo + uP), fz(f, aP, so + sP, uo + uP), cols[(k + floor(cyc).toInt()) and 3], 1f)
     }
     t1DynDraw(w, GLES20.GL_POINTS, 4f)
-    // the folded domain the chain has already become
-    t1Lit(blob, f, 0.3f + 0.4f, so + 0.35f + 0.75f, uo + 1.6f + 1.55f, T1_FOLD, T1_WHITE, 1f, 0.2f, 0.42f, 0.36f, 0.4f)
+    val kr = 0.28f + 0.1f * ((seconds / 12f) % 1f)
+    t1Lit(blob, f, endA, so + endS, uo + endU + kr * 0.9f, T1_FOLD, T1_WHITE, 1f, 0.2f, kr, kr * 0.85f, kr * 0.95f)
     // subunits: proteins opaque, rRNA translucent so the tRNAs and the tunnel show through
     t1Lit(rb.prot, f, 0f, so, uo, T1_RPROT, T1_WHITE, 1f, 0.15f)
-    for (k in 0..1) {       // two more ribosomes along the same messenger: a polysome
-        val da = if (k == 0) 4.4f else 8.8f
-        t1Lit(rb.prot, f, da, so, uo, T1_RPROT, T1_WHITE, 1f, 0.15f)
-        t1Lit(rb.large, f, da, so, uo, T1_RRNA_L, T1_WHITE, 1f, 0.2f)
-        t1Lit(rb.small, f, da, so, uo, T1_RRNA_S, T1_WHITE, 1f, 0.2f)
+    for (k in 0..1) {       // two more ribosomes along the same messenger, turned about it: a spiral polysome
+        val da = if (k == 0) 6f else -6f
+        t1Model(f, da, so, uo); Matrix.rotateM(model, 0, if (k == 0) 35f else -35f, 0f, 0f, 1f)
+        drawLitModel(rb.prot, T1_RPROT, T1_WHITE, landmarkFade, 0f, 0.15f)
+        t1Model(f, da, so, uo); Matrix.rotateM(model, 0, if (k == 0) 35f else -35f, 0f, 0f, 1f)
+        drawLitModel(rb.large, T1_RRNA_L, T1_WHITE, landmarkFade, 0f, 0.2f)
+        t1Model(f, da, so, uo); Matrix.rotateM(model, 0, if (k == 0) 35f else -35f, 0f, 0f, 1f)
+        drawLitModel(rb.small, T1_RRNA_S, T1_WHITE, landmarkFade, 0f, 0.2f)
     }
     GLES20.glDepthMask(false)
-    t1Lit(rb.large, f, 0f, so, uo, T1_RRNA_L, T1_WHITE, 0.5f, 0.2f)
+    t1Lit(rb.large, f, 0f, so, uo, T1_RRNA_L, T1_WHITE, 0.35f, 0.2f)
     t1Lit(rb.small, f, 0f, so, uo, T1_RRNA_S, T1_WHITE, 0.5f, 0.2f)
     GLES20.glDepthMask(true)
 }
 
 // ================================================================ stop 11: THE ATOM (12 pm rung)
-// 1 unit = 8 pm. A carbon atom in an aromatic ring of a base: no orbits, a probability cloud.
-// Points are sampled from Slater-type orbital densities (Clementi-Raimondi exponents): the 1s core
-// (2 electrons, peak at 9 pm), and the valence shell as three sp2 hybrid lobes in the ring plane
-// plus the p orbital across it (peaks near 65 pm, fading out beyond 100 pm), reaching toward its
-// neighbours: C at 140 pm, N at 135 pm, H at 108 pm, whose own clouds meet it along the bonds.
-// Nuclei are fixed-size points (a carbon nucleus is ~3 fm: 25,000 times smaller than the atom).
-// The cloud does not orbit or rotate; four interleaved samplings flicker to show probability.
+// 1 unit = 8 pm. A carbon atom in the aromatic ring of a base: no orbits, a probability cloud.
+// Points are sampled from Slater-type orbital densities (Clementi-Raimondi exponents): the dense 1s
+// core (2 electrons, peak at 9 pm) and the valence shell as three sp2 hybrid lobes in the ring plane
+// plus the p orbital across it (peaks near 65 pm, thinning out beyond 100 pm), reaching toward its
+// neighbours - C at 140 pm, N at 135 pm, H at 108 pm - with the shared sigma-bond density (gold)
+// along each bond and the neighbours' own clouds, dimmer. The other ring atoms' nuclei complete the
+// hexagon. Nuclei are fixed-size points (a carbon nucleus is ~3 fm: 25,000 times smaller than the
+// atom). Drawn additively so the density builds up; nothing orbits or rotates - four samplings of the
+// same distribution take turns, a flicker of probability. The ring plane faces us, tipped 30 degrees.
 
 private const val BOHR_PM = 52.92f
-
-/**
- * The ring plane is tipped 40 degrees off face-on so the three sp2 lobes fan out across the view
- * (local x = side, y = up, z = -along): e1 = side, e2 = up*cos50 + along*sin50; the p (pi) orbital
- * lies along the plane's normal.
- */
-private val T1_E2 = floatArrayOf(0f, cos(50f * DEG), -sin(50f * DEG))
-private val T1_PI_N = floatArrayOf(0f, sin(50f * DEG), cos(50f * DEG))
+private const val T1_RING_TILT = 30f * DEG
+// local x = side, y = up, z = -along: the ring plane contains x and e2; the p orbital lies along its normal
+private val T1_E2 = floatArrayOf(0f, cos(T1_RING_TILT), -sin(T1_RING_TILT))
+private val T1_PI_N = floatArrayOf(0f, sin(T1_RING_TILT), cos(T1_RING_TILT))
 private fun t1AtomBonds(): Array<FloatArray> = Array(3) { k ->
     val th = (90f + 120f * k) * DEG
     floatArrayOf(cos(th), sin(th) * T1_E2[1], sin(th) * T1_E2[2])
@@ -3499,8 +3674,11 @@ private fun t1Gamma(k: Int, rate: Float, rnd: java.util.Random): Float {
 private fun t1BuildAtom(set: Int): PointMesh {
     val rnd = java.util.Random(100L + set)
     val pts = ArrayList<Float>()
-    fun add(x: Float, y: Float, z: Float, r: Float, g: Float, b: Float, a: Float) { pts.add(x); pts.add(y); pts.add(z); pts.add(r); pts.add(g); pts.add(b); pts.add(a) }
-    // unit direction helpers
+    fun add(x: Float, y: Float, z: Float, c: FloatArray, a: Float) {
+        // thin the far haze: beyond 100 pm keep one point in five
+        if (x * x + y * y + z * z > 144f && rnd.nextFloat() > 0.2f) return
+        pts.add(x); pts.add(y); pts.add(z); pts.add(c[0]); pts.add(c[1]); pts.add(c[2]); pts.add(a)
+    }
     fun dir(out: FloatArray) {
         while (true) {
             val x = rnd.nextFloat() * 2f - 1f; val y = rnd.nextFloat() * 2f - 1f; val z = rnd.nextFloat() * 2f - 1f
@@ -3509,60 +3687,56 @@ private fun t1BuildAtom(set: Int): PointMesh {
         }
     }
     val u = FloatArray(3)
-    // local frame: x = side, y = up, z = -along. Bond directions in the (along, side) plane.
+    val cC = floatArrayOf(0.55f, 0.85f, 1f); val cB = floatArrayOf(1f, 0.84f, 0.45f); val cN = floatArrayOf(0.45f, 0.65f, 0.85f)
     val bonds = t1AtomBonds()
-    fun cloud(cx: Float, cy: Float, cz: Float, zeta1: Float, n1: Int, zeta2: Float, nHyb: Int, hyb: Boolean, dim: Float, lobes: Array<FloatArray>?) {
-        // 1s core: r^2 e^{-2 zeta r} -> Gamma(3, 2 zeta)
-        for (k in 0 until n1) {
+    fun cloud(cx: Float, cy: Float, cz: Float, zeta1: Float, n1: Int, zeta2: Float, nHyb: Int, hyb: Boolean, col: FloatArray, a1: Float, a2: Float) {
+        for (k in 0 until n1) {                                    // 1s: r^2 e^{-2 zeta r} -> Gamma(3, 2 zeta)
             val r = t1Gamma(3, 2f * zeta1, rnd) * BOHR_PM / 8f
-            dir(u); add(cx + u[0] * r, cy + u[1] * r, cz + u[2] * r, 0.92f, 0.96f, 1f, 0.8f * dim)
+            dir(u); add(cx + u[0] * r, cy + u[1] * r, cz + u[2] * r, col, a1)
         }
         if (zeta2 <= 0f) return
-        // valence: r^4 e^{-2 zeta r} -> Gamma(5, 2 zeta), angular part by rejection
         var placed = 0
-        while (placed < nHyb) {
+        while (placed < nHyb) {                                    // valence: r^4 e^{-2 zeta r} -> Gamma(5, 2 zeta)
             val r = t1Gamma(5, 2f * zeta2, rnd) * BOHR_PM / 8f
             dir(u)
-            val accept: Float; val pi: Boolean
-            if (hyb && lobes != null) {
-                // three sp2 hybrids (1/sqrt3 s + sqrt(2/3) p) and one p (pi) orbital across the plane
+            val accept: Float
+            if (hyb) {
+                // three sp2 hybrids (1/sqrt3 s + sqrt(2/3) p), and one p (pi) orbital across the plane
                 val which = rnd.nextInt(4)
-                if (which < 3) { val c = u[0] * lobes[which][0] + u[1] * lobes[which][1] + u[2] * lobes[which][2]; val a = 0.57735f + 1.41421f * c; accept = a * a / 3.96f; pi = false }
-                else { val c = u[1] * T1_PI_N[1] + u[2] * T1_PI_N[2]; accept = c * c; pi = true }
-            } else { accept = 1f; pi = false }
+                accept = if (which < 3) { val c = u[0] * bonds[which][0] + u[1] * bonds[which][1] + u[2] * bonds[which][2]; val a = 0.57735f + 1.41421f * c; a * a / 3.96f }
+                else { val c = u[1] * T1_PI_N[1] + u[2] * T1_PI_N[2]; c * c }
+            } else accept = 1f
             if (rnd.nextFloat() > accept) continue
-            if (pi) add(cx + u[0] * r, cy + u[1] * r, cz + u[2] * r, 0.80f, 0.55f, 1f, 0.6f * dim)
-            else add(cx + u[0] * r, cy + u[1] * r, cz + u[2] * r, 0.45f, 0.95f, 1f, 0.6f * dim)
+            add(cx + u[0] * r, cy + u[1] * r, cz + u[2] * r, col, a2)
             placed++
         }
     }
     // the carbon (Clementi-Raimondi: 1s 5.673, 2p 1.568 per bohr)
-    cloud(0f, 0f, 0f, 5.673f, 320, 1.568f, 1000, true, 1f, bonds)
-    // sigma-bond density: electrons shared along each bond, peaking between the nuclei
-    val bl0 = floatArrayOf(140f, 135f, 108f)
+    cloud(0f, 0f, 0f, 5.673f, 1500, 1.568f, 4000, true, cC, 0.3f, 0.25f)
+    // sigma-bond density along each bond, peaking between the nuclei
+    val bl = floatArrayOf(140f, 135f, 108f)
     for (k in 0..2) {
-        val d = bl0[k] / 8f
+        val d = bl[k] / 8f
         var placed = 0
-        while (placed < 260) {
+        while (placed < 500) {
             val t = rnd.nextFloat()
             if (rnd.nextFloat() > 0.35f + 0.65f * sin(PI_F * t)) continue
             dir(u)
-            val g = t1Gamma(2, 1.5f, rnd)                      // spread across the bond, ~0.1 A
+            val g = t1Gamma(2, 1.5f, rnd)
             val c = u[0] * bonds[k][0] + u[1] * bonds[k][1] + u[2] * bonds[k][2]
             val px = u[0] - c * bonds[k][0]; val py = u[1] - c * bonds[k][1]; val pz = u[2] - c * bonds[k][2]
-            add(bonds[k][0] * d * t + px * g, bonds[k][1] * d * t + py * g, bonds[k][2] * d * t + pz * g, 1f, 0.84f, 0.45f, 0.75f)
+            add(bonds[k][0] * d * t + px * g, bonds[k][1] * d * t + py * g, bonds[k][2] * d * t + pz * g, cB, 0.35f)
             placed++
         }
     }
-    // its neighbours along the bonds, fainter: C (140 pm), N (135 pm), H (108 pm)
-    val bl = floatArrayOf(140f, 135f, 108f)
+    // the neighbours' own clouds, dimmer: C, N, and the exocyclic H
     for (k in 0..2) {
         val d = bl[k] / 8f
         val x = bonds[k][0] * d; val y = bonds[k][1] * d; val z = bonds[k][2] * d
         when (k) {
-            0 -> cloud(x, y, z, 5.673f, 80, 1.568f, 320, false, 0.6f, null)
-            1 -> cloud(x, y, z, 6.665f, 80, 1.917f, 340, false, 0.6f, null)
-            else -> cloud(x, y, z, 1.24f, 120, 0f, 0, false, 0.6f, null)     // hydrogen 1s (in the molecule, zeta ~1.24)
+            0 -> cloud(x, y, z, 5.673f, 300, 1.568f, 800, false, cN, 0.15f, 0.12f)
+            1 -> cloud(x, y, z, 6.665f, 300, 1.917f, 800, false, cN, 0.15f, 0.12f)
+            else -> cloud(x, y, z, 1.24f, 300, 0f, 0, false, cN, 0.15f, 0.12f)
         }
     }
     return PointMesh(pts.toFloatArray())
@@ -3578,24 +3752,41 @@ internal fun StereoBodyRenderer.drawAtom(n: TourNode, i: Int, seconds: Float) {
     if (k < 0.004f) return
     val f = frameAt(i.toFloat())
     val off = t1ShipOff(f)
-    val a0 = 1.0f; val s0 = off[0] + 1.2f; val u0 = off[1] + 0.5f
-    GLES20.glDepthMask(false)
+    val a0 = 3.9f; val s0 = off[0] + 0.5f; val u0 = off[1] + 0.3f        // ~6 units ahead of the craft as it arrives
+    // additive, and not hidden by the passage wall (there is no wall here: black is empty space)
+    GLES20.glDepthMask(false); GLES20.glDisable(GLES20.GL_DEPTH_TEST)
+    GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE)
+    val tick = floor(seconds / 0.12f).toInt()
+    val lead = (t1Hash(tick) * 4f).toInt().coerceIn(0, 3)
     for (m in 0 until 4) {
-        val cl = t1Mesh("atom$m") { t1BuildAtom(m) }
-        val al = 0.55f + 0.45f * sin(TAU * (seconds * 0.9f + m / 4f))
+        val cl = t1Mesh("atom2.$m") { t1BuildAtom(m) }
         t1Model(f, a0, s0, u0, k)
         Matrix.multiplyMM(mv, 0, view, 0, model, 0); Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
-        val keep = colorShader.globalFade; colorShader.globalFade = keep * al
+        val keep = colorShader.globalFade; colorShader.globalFade = keep * (if (m == lead) 1f else 0.35f)
         colorShader.use(mvp, 3.2f, points = true)
         cl.draw(colorShader.positionHandle, colorShader.colorHandle)
         colorShader.globalFade = keep
     }
-    // nuclei: fixed-size points of light (a soft halo and a bright core), never resolved
-    val nuc = t1Mesh("atom.nuclei") {
-        val dd = FloatArray(4 * 7)
+    GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+    // nuclei: fixed-size points of light, never resolved - the carbon, its three neighbours, and
+    // (fainter) the rest of the aromatic ring
+    val nuc = t1Mesh("atom2.nuclei") {
+        val dd = FloatArray(7 * 7)
         t1Put(dd, 0, 0f, 0f, 0f, floatArrayOf(1f, 0.96f, 0.88f), 1f)
         val bl = floatArrayOf(140f, 135f, 108f); val bd = t1AtomBonds()
-        for (q in 0..2) { val d = bl[q] / 8f; t1Put(dd, q + 1, bd[q][0] * d, bd[q][1] * d, bd[q][2] * d, floatArrayOf(1f, 0.9f, 0.8f), 0.7f) }
+        for (q in 0..2) { val d = bl[q] / 8f; t1Put(dd, q + 1, bd[q][0] * d, bd[q][1] * d, bd[q][2] * d, floatArrayOf(1f, 0.9f, 0.8f), 0.8f) }
+        // ring centre: along the bisector of the two ring bonds, 140 pm from each ring atom
+        var cx = bd[0][0] + bd[1][0]; var cy = bd[0][1] + bd[1][1]; var cz = bd[0][2] + bd[1][2]
+        val cl = sqrt(cx * cx + cy * cy + cz * cz); cx /= cl; cy /= cl; cz /= cl
+        val R = 140f / 8f
+        // in-plane unit vector perpendicular to the bisector
+        val px = T1_PI_N[1] * cz - T1_PI_N[2] * cy; val py = T1_PI_N[2] * cx - 0f * cz; val pz = 0f * cy - T1_PI_N[1] * cx
+        val pl = sqrt(px * px + py * py + pz * pz)
+        for (q in 0..2) {
+            val th = PI_F + (q - 1) * 60f * DEG            // the three ring atoms beyond the two neighbours
+            val ex = -cx * cos(th) + px / pl * sin(th); val ey = -cy * cos(th) + py / pl * sin(th); val ez = -cz * cos(th) + pz / pl * sin(th)
+            t1Put(dd, q + 4, cx * R + ex * R, cy * R + ey * R, cz * R + ez * R, floatArrayOf(1f, 0.9f, 0.8f), 0.3f)
+        }
         PointMesh(dd)
     }
     t1Model(f, a0, s0, u0, k)
@@ -3605,7 +3796,7 @@ internal fun StereoBodyRenderer.drawAtom(n: TourNode, i: Int, seconds: Float) {
     colorShader.use(mvp, 12f, points = true); nuc.draw(colorShader.positionHandle, colorShader.colorHandle)
     colorShader.globalFade = keep
     colorShader.use(mvp, 4f, points = true); nuc.draw(colorShader.positionHandle, colorShader.colorHandle)
-    GLES20.glDepthMask(true)
+    GLES20.glEnable(GLES20.GL_DEPTH_TEST); GLES20.glDepthMask(true)
 }
 
 

@@ -58,18 +58,19 @@ object Tours {
             TourNode("THE SENTINEL", 2.4f, -0.3f, -80f, 3.0f, rgb(0.90f, 0.62f, 0.64f), 1.2e-5, Scene.SENTINEL, Amb.BLOOD, 51f, 30f, "NECK · VENULE", "12 µm"),
             TourNode("THE NEURON", -2.0f, 0.3f, -96f, 8.0f, rgb(0.14f, 0.10f, 0.22f), 1.2e-5, Scene.NEURON, Amb.NEURAL, 50f, 12f, "BRAIN · NEURON", "12 µm → 120 nm"),
             TourNode("THE MEMBRANE", 2.2f, 0.2f, -112f, 3.8f, rgb(0.12f, 0.24f, 0.32f), 1.2e-7, Scene.MEMBRANE, Amb.CYTO, 50f, 12f, "CELL MEMBRANE", "120 nm"),
-            TourNode("THE MITOCHONDRION", -2.4f, -0.2f, -128f, 4.4f, rgb(0.30f, 0.50f, 0.48f), 1.2e-7, Scene.MITOCHONDRION, Amb.CYTO, 50f, 12f, "MITOCHONDRION", "120 nm"),
+            TourNode("THE MITOCHONDRION", -2.4f, -0.2f, -128f, 20.0f, rgb(0.10f, 0.22f, 0.24f), 4.0e-8, Scene.MITOCHONDRION, Amb.CYTO, 50f, 12f, "MITOCHONDRION", "40 nm"),
             TourNode("THE NUCLEUS", 2.0f, 0.3f, -144f, 8.0f, rgb(0.26f, 0.22f, 0.55f), 1.2e-8, Scene.NUCLEUS, Amb.CYTO, 50f, 12f, "CELL NUCLEUS", "12 nm"),
-            TourNode("THE RIBOSOME", -2.2f, 0.0f, -160f, 4.0f, rgb(0.20f, 0.48f, 0.50f), 1.2e-8, Scene.RIBOSOME, Amb.CYTO, 50f, 12f, "RIBOSOME", "12 nm"),
-            TourNode("THE ATOM", 1.6f, -0.2f, -176f, 16.0f, rgb(0.03f, 0.03f, 0.08f), 1.2e-11, Scene.ATOM, Amb.ATOM, 50f, 12f, "CARBON ATOM", "12 pm"),
+            TourNode("THE RIBOSOME", -2.2f, 0.0f, -160f, 7.0f, rgb(0.20f, 0.48f, 0.50f), 1.2e-8, Scene.RIBOSOME, Amb.CYTO, 50f, 12f, "RIBOSOME", "12 nm"),
+            TourNode("THE ATOM", 1.6f, -0.2f, -176f, 16.0f, rgb(0.0f, 0.0f, 0.0f), 1.2e-11, Scene.ATOM, Amb.ATOM, 50f, 12f, "CARBON ATOM", "12 pm"),
             TourNode("THE LOOK BACK", 0.0f, 0.2f, -194f, 9.0f, rgb(0.38f, 0.22f, 0.36f), 12.0, Scene.LOOKBACK, Amb.LOOKBACK, 50f, 60f, "WHOLE BODY", "12 pm → 12 m")
         ),
         // Mote length vs rail progress, stepping where the script's shrink / grow cues land: 12 m ->
-        // 12 mm at the first drop, 12 mm through the nose and trachea, 120 um in the alveolus, 12 um
-        // in the venule, back up to 12 mm for the heart, 12 um for the sentinel and the neuron, 120 nm
-        // from the synapse to the mitochondrion, 12 nm in the nucleus, 12 pm in the atom, then home.
-        lengthKeys = floatArrayOf(0f, 0.155f, 0.30f, 1.21f, 1.25f, 2.20f, 2.24f, 3.47f, 3.53f, 4.36f, 4.42f, 6.20f, 6.25f, 8.19f, 8.24f, 10.20f, 10.26f, 11f, 12f),
-        lengthM = doubleArrayOf(12.0, 12.0, 1.2e-2, 1.2e-2, 1.2e-4, 1.2e-4, 1.2e-5, 1.2e-5, 1.2e-2, 1.2e-2, 1.2e-5, 1.2e-5, 1.2e-7, 1.2e-7, 1.2e-8, 1.2e-8, 1.2e-11, 1.2e-11, 12.0),
+        // 12 mm at the first drop, 12 mm through the nose and trachea (the drop comes at the carina),
+        // 120 um in the alveolus, 12 um in the venule, back up to 12 mm for the heart, 12 um for the
+        // sentinel and the neuron, 120 nm for the synapse and the membrane, 40 nm in the mitochondrion,
+        // 12 nm in the nucleus, 12 pm in the atom, then home.
+        lengthKeys = floatArrayOf(0f, 0.155f, 0.30f, 1.715f, 1.745f, 2.20f, 2.24f, 3.47f, 3.53f, 4.36f, 4.42f, 6.20f, 6.25f, 7.56f, 7.62f, 8.19f, 8.24f, 10.20f, 10.26f, 11f, 12f),
+        lengthM = doubleArrayOf(12.0, 12.0, 1.2e-2, 1.2e-2, 1.2e-4, 1.2e-4, 1.2e-5, 1.2e-5, 1.2e-2, 1.2e-2, 1.2e-5, 1.2e-5, 1.2e-7, 1.2e-7, 4.0e-8, 4.0e-8, 1.2e-8, 1.2e-8, 1.2e-11, 1.2e-11, 12.0),
         armStops = floatArrayOf(2.05f, 5.05f, 7.02f, 9.15f, 10.05f)   // alveolus, sentinel, membrane, helix, ribosome
     )
 
