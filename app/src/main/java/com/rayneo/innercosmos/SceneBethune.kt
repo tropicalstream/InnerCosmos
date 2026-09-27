@@ -125,7 +125,7 @@ internal val T3_JUNCTION = floatArrayOf(0.94f, 0.80f, 0.84f, 1f)
 internal val T3_ENDO_NUCLEUS = floatArrayOf(0.80f, 0.64f, 0.82f, 1f)
 internal val T3_ENDO_NUC_FLAT = floatArrayOf(0.70f, 0.58f, 0.78f, 1f)
 internal val T3_ENDO_NUC_PALE = floatArrayOf(0.78f, 0.70f, 0.84f, 1f)
-internal val T3_MUSCLE_NUC_LOW = floatArrayOf(0.52f, 0.40f, 0.66f, 1f)
+internal val T3_MUSCLE_NUC_LOW = floatArrayOf(0.60f, 0.46f, 0.62f, 1f)
 internal val T3_TISSUE_DARK = floatArrayOf(0.20f, 0.11f, 0.15f, 1f)
 internal val T3_ISCHAEMIC = floatArrayOf(0.52f, 0.50f, 0.60f, 1f)
 internal val T3_ISCHAEMIC_A = floatArrayOf(0.40f, 0.38f, 0.50f, 1f)
@@ -1411,7 +1411,11 @@ internal fun StereoBodyRenderer.drawStored(n: TourNode, i: Int, seconds: Float) 
     drawMesh(cached("st_plt") { storedMesh(b, um, 2) }, T3_PLATELET_LILAC, T3_COLD_RIM, 1f, 0f, 0.1f)
     // The buffy coat: a row of white cells seated in a thin pale layer on the red cells, cut
     // through so their nuclei and granules show on the section.
-    drawMesh(cached("st_crust2") { storedMesh(b, um, 13) }, T3_BUFFY, T3_BUFFY, 1f, 0f, 0.1f)
+    drawMesh(cached("st_crust3") { storedMesh(b, um, 13) }, T3_BUFFY, T3_BUFFY, 1f, 0f, 0.1f)
+    // near the craft the coat is thin and sparse: scattered pale patches and platelets lying on the
+    // red cells, the dark floor between them
+    drawMesh(cached("st_patches") { storedMesh(b, um, 16) }, T3_BUFFY, T3_BUFFY, 1f, 0f, 0.1f)
+    drawMesh(cached("st_patchplt") { storedMesh(b, um, 17) }, T3_PLATELET_LILAC, T3_PLATELET_LILAC, 1f, 0f, 0.1f)
     drawMesh(cached("st_wbc2") { storedMesh(b, um, 4) }, T3_LEUKOCYTE, T3_COLD_RIM, 1f, 0f, 0.08f)
     drawMesh(cached("st_bplt") { storedMesh(b, um, 15) }, T3_PLATELET_LILAC, T3_PLATELET_LILAC, 1f, 0f, 0.1f)
     drawMesh(cached("st_nuc2") { storedMesh(b, um, 3) }, T3_NUCLEUS, T3_NUCLEUS, 1f, 0f, 0.15f)
@@ -1439,7 +1443,7 @@ internal fun StereoBodyRenderer.drawStored(n: TourNode, i: Int, seconds: Float) 
     }
     GLES20.glDepthMask(false)
     // near the craft the coat is thin and sparse, the dark red floor showing through it
-    drawMesh(cached("st_thin") { storedMesh(b, um, 16) }, T3_BUFFY, T3_BUFFY, 0.4f, 0f, 0.1f)
+
     // Plasma: a pale straw body filling everything above the cells (seen from within it).
     drawMesh(cached("st_plasma") { storedMesh(b, um, 5) }, T3_PLASMA_PALE, T3_PLASMA_PALE, 0.35f, 0f, 0.5f)
     // The glass: cold, blue, beaded outside with condensation from the cold room (never frost
@@ -1554,7 +1558,7 @@ private fun StereoBodyRenderer.storedMesh(b: Float, um: Float, part: Int): T3Mes
                         4 -> mb.sectionedCell(c, f.u, r, 0.8f, 0.6f, 8, 16)
                         15 -> for (q in 0 until 3) {
                             val t = pr.nextFloat() * 6.28f
-                            val pc = f.at(ss + cos(t) * (r + 0.25f), BUFFY_TOP - 0.27f) + f.d * (sin(t) * (r + 0.25f))
+                            val pc = f.at(ss + cos(t) * (r + 0.25f), BUFFY_TOP - 0.2f) + f.d * (sin(t) * (r + 0.25f))
                             val tip = (f.u + V3(pr.nextFloat() - 0.5f, 0f, pr.nextFloat() - 0.5f) * 0.4f).unit()
                             mb.ellipsoidAxes(pc, tip, 0.05f, perp(tip), 0.16f, 0.15f, 5, 14)
                         }
@@ -1576,11 +1580,25 @@ private fun StereoBodyRenderer.storedMesh(b: Float, um: Float, part: Int): T3Mes
             val top = BUFFY_TOP - 0.3f
             mb.gridFd(48, 6, { u, v ->
                 val a = BUFFY_A0 - 1.5f + (24f - BUFFY_A0 + 1.5f) * u
-                val ramp = smooth01((a - (BUFFY_A0 - 1.5f)) / 1.5f)
-                wAt(b, a, -3.6f + (glassSide + 3.6f) * v, top - 0.13f * (1f - ramp))
+                wAt(b, a, -3.6f + (glassSide + 3.6f) * v, top + 0.05f)
             }) { u, _, _ -> rfv(b, BUFFY_A0 - 1.5f + (24f - BUFFY_A0 + 1.5f) * u).u }
         }
-        16 -> mb.gridFd(24, 6, { u, v -> wAt(b, -8f + (BUFFY_A0 - 1.3f + 8f) * u, -3.6f + (glassSide + 3.6f) * v, BUFFY_TOP - 0.43f) }) { u, _, _ -> rfv(b, -8f + (BUFFY_A0 - 1.3f + 8f) * u).u }
+        16, 17 -> {
+            // on top of the tallest red-cell rims, never through them
+            val pr = java.util.Random(if (part == 16) 83L else 89L)
+            val lvl = BED_TOP + rbcR * 2.1f + 0.02f
+            for (k in 0 until 40) {
+                val a = -8f + pr.nextFloat() * (BUFFY_A0 - 1.5f + 8f); val sd = -3.4f + pr.nextFloat() * (glassSide + 3.0f)
+                val f = rfv(b, a)
+                if (part == 16) {
+                    val ra = 0.3f + 0.3f * pr.nextFloat(); val rb = 0.2f + 0.2f * pr.nextFloat(); val t = pr.nextFloat() * 3.14f
+                    mb.ellipsoid(f.at(sd, lvl), f.u * 0.02f, (f.d * cos(t) + f.s * sin(t)) * ra, (f.s * cos(t) - f.d * sin(t)) * rb, 3, 14)
+                } else {
+                    val tip = (f.u + V3(pr.nextFloat() - 0.5f, 0f, pr.nextFloat() - 0.5f) * 0.4f).unit()
+                    mb.ellipsoidAxes(f.at(sd, lvl + 0.05f), tip, 0.05f, perp(tip), 0.16f, 0.15f, 5, 14)
+                }
+            }
+        }
         14 -> mb.gridFd(8, 2, { u, v -> wAt(b, -8f + 42f * u, glassSide + 0.35f, -3.4f + 7.4f * v) }) { u, _, _ -> -rfv(b, -8f + 42f * u).s }
         5 -> {
             // seen from inside: inward normals
@@ -1610,7 +1628,7 @@ private fun StereoBodyRenderer.storedMesh(b: Float, um: Float, part: Int): T3Mes
             mb.tube((0..12).map { q -> wAt(b, -5f + q * 1.5f, glassSide - 0.03f, up + 0.15f * sin(q * 0.5f)) }, FloatArray(13) { 0.05f - 0.02f * k }, 4, true)
         }
     }
-    return mb.build(twoSided = part == 6 || part == 9 || part == 11 || part == 16)
+    return mb.build(twoSided = part == 6 || part == 9 || part == 11)
 }
 
 /**
@@ -2000,7 +2018,8 @@ internal fun StereoBodyRenderer.drawTransfusion(n: TourNode, i: Int, seconds: Fl
     // its collapsed capillaries open and fill with cells as it passes.
     val T = sinceArrival(i, seconds)
     // the front starts a few units ahead of the pilot and creeps on down the vessel
-    val front = (3f + 0.14f * min(T, 40f) + 0.08f * max(0f, T - 40f)).coerceAtMost(22f)
+    // (about 6 units ahead of the pilot as the hold begins, advancing slowly)
+    val front = (3.2f + 0.1f * T).coerceAtMost(22f)
     for (seg in 0 until TF_SEGS.size - 1) {
         val t = smooth01((front - TF_SEGS[seg]) / 6f)
         val fibre = mixCol(T3_ISCHAEMIC, T3_PERFUSED, t, tmpCol0)
@@ -2013,7 +2032,9 @@ internal fun StereoBodyRenderer.drawTransfusion(n: TourNode, i: Int, seconds: Fl
         drawMesh(cached("tf_bands$seg") { transfusionMesh(b, um, 1, seg) }, band, band, lod, 0f, 0.03f)
         val lvl = (t * 3.99f).toInt()
         drawMesh(cached("tf_caps${seg}_$lvl") { transfusionMesh(b, um, 3, seg, lvl) }, cap, cap, 1f, 0f, 0.1f + 0.25f * t)
-        drawMesh(cached("tf_nuc2_$seg") { transfusionMesh(b, um, 2, seg) }, T3_MUSCLE_NUC_LOW, T3_MUSCLE_NUC_LOW, 1f, 0f, 0.05f)
+        GLES20.glDepthMask(false)
+        drawMesh(cached("tf_nuc2_$seg") { transfusionMesh(b, um, 2, seg) }, T3_MUSCLE_NUC_LOW, T3_MUSCLE_NUC_LOW, 0.6f, 0f, 0f)
+        GLES20.glDepthMask(true)
         if (t > 0.9f) {
             // red cells in single file through the reopened capillaries
             val f = rfv(b, (TF_SEGS[seg] + TF_SEGS[seg + 1]) / 2f)
@@ -2034,22 +2055,26 @@ internal fun StereoBodyRenderer.drawTransfusion(n: TourNode, i: Int, seconds: Fl
         if (a < -8f || a > 24f) return
         val f = rfv(b, a)
         val Y = f.radial(spin + 1.57f); val Z = f.d; val X = Y.cross(Z).unit()
-        if (a + tileL > camA - 2.6f && a < camA + 2.6f) {
-            // at the lens: the block's cells drawn one by one, any within 2.6 units of the eye left
-            // out (the craft sits in a clear pocket of plasma, the column all round and ahead)
+        if (a + tileL > camA - LENS_POCKET - 0.5f && a < camA + LENS_POCKET + 0.5f) {
+            // at the lens of whichever view is being drawn (the pilot's or the chase camera's): the
+            // block's cells drawn one by one, any near the eye left out, so no cell ever fills a view
             for ((c, ax) in cachedValue("${key}_cells", build)) {
                 val p = f.c + X * c.x + Y * c.y + Z * c.z
-                if ((p - cam).len() < 2.6f) continue
+                if ((p - cam).len() < LENS_POCKET) continue
                 val axW = (X * ax.x + Y * ax.y + Z * ax.z).unit()
                 drawScaled(rbc, p, perp(axW), axW, 7.5f / 2f / um, 7.5f / 2f / um, 7.5f / 2f / um, T3_RBC, T3_RBC_RIM3, 1f, 0.05f)
             }
         } else drawLocal(cached(key) { cellsMesh(cachedValue("${key}_cells", build), 7.5f / 2f / um) }, f.c, Z, Y, T3_RBC, T3_RBC_RIM3, 1f, 0.05f)
     }
     // the leading edge: a disc-shaped crowd of cells face-on to the flow, spanning the whole core
-    block("tf_edge", { redCellDisc(b, um, 30, 0.5f) }, front - 0.5f, T * 0.05f)
+    // (drawn bright-rimmed so the boundary reads against the emptied vessel beyond it)
+    run {
+        val f = rfv(b, front - 0.5f); val Y = f.radial(T * 0.05f + 1.57f)
+        if ((f.c - cam).len() > LENS_POCKET + 1.5f) drawLocal(cached("tf_edge2") { cellsMesh(redCellDisc(b, um, 40, 0.5f), 7.5f / 2f / um) }, f.c, f.d, Y, T3_RBC, T3_RBC_RIM3, 1f, 0.25f)
+    }
     block("tf_lead", { redCellCells(b, um, tileL, 16f, 99, true) }, front - 0.5f - tileL, T * 0.05f)
     var k = 1
-    while (front - 0.5f - tileL * (k + 1) > -8f - tileL) { block("tf_c${k % 6}", { redCellCells(b, um, tileL, 6.5f, 40 + k % 6, false) }, front - 0.5f - tileL * (k + 1), k * 1.7f + T * 0.05f); k++ }
+    while (front - 0.5f - tileL * (k + 1) > -8f - tileL) { block("tf_d${k % 6}", { redCellCells(b, um, tileL, 5f, 40 + k % 6, false) }, front - 0.5f - tileL * (k + 1), k * 1.7f + T * 0.05f); k++ }
     val rr = 7.5f / 2f / um
     val R = radiusAt(b, 0f) * 0.97f
     for (q in 0 until 8) {
@@ -2058,7 +2083,7 @@ internal fun StereoBodyRenderer.drawTransfusion(n: TourNode, i: Int, seconds: Fl
         if (a > 24f) continue
         val f = rfv(b, a); val th = q * 2.399f
         val p = f.pol(th, sqrt(h) * (R - 0.35f - rr))
-        if ((p.x - camNowX).pow(2) + (p.y - camNowY).pow(2) + (p.z - camNowZ).pow(2) < 6.25f) continue
+        if ((p.x - camNowX).pow(2) + (p.y - camNowY).pow(2) + (p.z - camNowZ).pow(2) < LENS_POCKET * LENS_POCKET) continue
         val tb = seconds * (0.3f + 0.5f * h) + q
         val nrm = (f.radial(th + tb * 0.3f) * 0.6f + (f.d * cos(tb) + f.radial(th + 1.57f) * sin(tb)) * 0.4f).unit()
         drawScaled(rbc, p, perp(nrm), nrm, rr, rr, rr, T3_RBC_DEOXY, T3_RBC_RIM3, 1f, 0.05f)
@@ -2074,7 +2099,7 @@ internal fun StereoBodyRenderer.drawTransfusion(n: TourNode, i: Int, seconds: Fl
     GLES20.glDepthMask(true)
     // the endothelial nuclei, flat in the wall, barely brighter than the lining they belong to
     GLES20.glDepthMask(false)
-    drawMesh(nuc, T3_ENDO_NUC_PALE, T3_ENDOTHELIUM, 0.4f, 0f, 0f)
+    drawMesh(nuc, T3_ENDO_NUC_PALE, T3_ENDOTHELIUM, 0.25f, 0f, 0f)
     GLES20.glDepthMask(true)
 }
 
@@ -2133,6 +2158,9 @@ private fun StereoBodyRenderer.redCellDisc(b: Float, um: Float, n: Int, thick: F
     }
     return out
 }
+
+/** No red cell is drawn within this distance of the eye of the view being drawn. */
+private const val LENS_POCKET = 3.5f
 
 /** Stretches of the vessel that reperfuse one after another. */
 private val TF_SEGS = floatArrayOf(-8f, -1f, 6f, 14f, 24f)
@@ -2564,7 +2592,7 @@ private fun StereoBodyRenderer.mkArmPath(b: Float, arm: Int): List<V3> {
     val (fc, fr) = faceOf(c, n, r, 1f, MK_CUT)
     val pore = rfv(b, a0).pol(th, radiusAt(b, a0))
     val toPore = (pore - fc).let { it - n * it.dot(n) }.unit()
-    val start = fc + toPore * (fr * 0.75f) + n * 0.03f
+    val start = fc + toPore * (fr * 0.92f) + n * 0.03f
     val lumen = (0..12).map { q ->
         val t = q / 12f
         val a = a0 + t * t * 5.5f
