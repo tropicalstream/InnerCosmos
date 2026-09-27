@@ -1548,8 +1548,8 @@ internal fun StereoBodyRenderer.drawSentinel(n: TourNode, i: Int, seconds: Float
 private const val T1_V_P0 = 5.3f
 private const val T1_V_P1 = 6.3f
 private const val T1_V_R = 1.6f
-private const val T1_AX_S = 1.6f
-private const val T1_AX_U = -1.6f
+private const val T1_AX_S = 1.3f
+private const val T1_AX_U = -1.35f
 
 /** The vessel's centre line (world): a brain microvessel running beside the craft's course, to port. */
 private fun StereoBodyRenderer.t1VesselLine(t: Float, out: FloatArray, tan: FloatArray) {
@@ -1662,7 +1662,7 @@ private val T1_NODES = floatArrayOf(7.8f, 12.4f, 17.0f)
 private fun StereoBodyRenderer.t1BuildNeuron(i: Int): T1Neuron {
     val f6 = frameAt(i.toFloat())
     fun w(a: Float, s: Float, u: Float, out: FloatArray) { out[0] = fx(f6, a, s, u); out[1] = fy(f6, a, s, u); out[2] = fz(f6, a, s, u) }
-    val sa = 2.6f; val ss = 1.9f; val su = 0.1f
+    val sa = 2.6f; val ss = 2.3f; val su = 1.1f
     val somaB = T1Builder(); val body = T1Builder(); val nuc = T1Builder(); val nol = T1Builder()
     val q = FloatArray(3); val q2 = FloatArray(3)
     // soma: a pyramid-shaped teardrop, base down, apex up into the apical dendrite
@@ -2424,8 +2424,8 @@ internal fun StereoBodyRenderer.drawMitochondrion(n: TourNode, i: Int, seconds: 
     t1DynDraw(v, GLES20.GL_POINTS, 3.5f)
     // membranes last (translucent): the inner boundary membrane, then the outer membrane with its porins
     GLES20.glDepthMask(false)
-    t1LitWorld(mt.inner, T1_MITO_IN, T1_WHITE, 0.24f, 0.12f, ox, oy, oz)
-    t1LitWorld(mt.outer, T1_MITO_OUT, T1_WHITE, 0.26f, 0.12f, ox, oy, oz)
+    t1LitWorld(mt.inner, T1_MITO_IN, T1_WHITE, 0.28f, 0.12f, ox, oy, oz)
+    t1LitWorld(mt.outer, T1_MITO_OUT, T1_WHITE, 0.34f, 0.15f, ox, oy, oz)
     GLES20.glDepthMask(true)
     if (quality < 2) t1Color(mt.porins, null, 0f, 0f, 0f, 2.2f, true, 0.9f, depthWrite = false, ox = ox, oy = oy, oz = oz)
 }
@@ -2848,14 +2848,14 @@ private fun t1BuildAtom(set: Int): PointMesh {
     for (k in 0..2) {
         val d = bl0[k] / 8f
         var placed = 0
-        while (placed < 170) {
+        while (placed < 260) {
             val t = rnd.nextFloat()
             if (rnd.nextFloat() > 0.35f + 0.65f * sin(PI_F * t)) continue
             dir(u)
-            val g = t1Gamma(2, 1.1f, rnd)                      // spread across the bond, ~0.2 A
+            val g = t1Gamma(2, 1.5f, rnd)                      // spread across the bond, ~0.1 A
             val c = u[0] * bonds[k][0] + u[1] * bonds[k][1] + u[2] * bonds[k][2]
             val px = u[0] - c * bonds[k][0]; val py = u[1] - c * bonds[k][1]; val pz = u[2] - c * bonds[k][2]
-            add(bonds[k][0] * d * t + px * g, bonds[k][1] * d * t + py * g, bonds[k][2] * d * t + pz * g, 0.62f, 1f, 0.95f, 0.55f)
+            add(bonds[k][0] * d * t + px * g, bonds[k][1] * d * t + py * g, bonds[k][2] * d * t + pz * g, 1f, 0.84f, 0.45f, 0.75f)
             placed++
         }
     }
