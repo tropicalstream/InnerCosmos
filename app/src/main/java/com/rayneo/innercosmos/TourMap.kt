@@ -57,7 +57,7 @@ object Tours {
             TourNode("THE HEART", -2.6f, 0.0f, -64f, 3.2f, rgb(0.66f, 0.16f, 0.20f), 1.2e-2, Scene.HEART, Amb.BLOOD, 54f, 50f, "HEART", "12 mm"),
             TourNode("THE SENTINEL", 2.4f, -0.3f, -80f, 3.0f, rgb(0.70f, 0.26f, 0.30f), 1.2e-5, Scene.SENTINEL, Amb.BLOOD, 51f, 30f, "NECK · VENULE", "12 µm"),
             TourNode("THE NEURON", -2.0f, 0.3f, -96f, 5.5f, rgb(0.14f, 0.10f, 0.22f), 1.2e-5, Scene.NEURON, Amb.NEURAL, 50f, 12f, "BRAIN · NEURON", "12 µm → 120 nm"),
-            TourNode("THE MEMBRANE", 2.2f, 0.2f, -112f, 3.0f, rgb(0.20f, 0.55f, 0.55f), 1.2e-7, Scene.MEMBRANE, Amb.CYTO, 50f, 12f, "CELL MEMBRANE", "120 nm"),
+            TourNode("THE MEMBRANE", 2.2f, 0.2f, -112f, 3.0f, rgb(0.12f, 0.24f, 0.32f), 1.2e-7, Scene.MEMBRANE, Amb.CYTO, 50f, 12f, "CELL MEMBRANE", "120 nm"),
             TourNode("THE MITOCHONDRION", -2.4f, -0.2f, -128f, 4.4f, rgb(0.30f, 0.50f, 0.48f), 1.2e-7, Scene.MITOCHONDRION, Amb.CYTO, 50f, 12f, "MITOCHONDRION", "120 nm"),
             TourNode("THE NUCLEUS", 2.0f, 0.3f, -144f, 8.0f, rgb(0.26f, 0.22f, 0.55f), 1.2e-8, Scene.NUCLEUS, Amb.CYTO, 50f, 12f, "CELL NUCLEUS", "12 nm"),
             TourNode("THE RIBOSOME", -2.2f, 0.0f, -160f, 4.0f, rgb(0.20f, 0.48f, 0.50f), 1.2e-8, Scene.RIBOSOME, Amb.CYTO, 50f, 12f, "RIBOSOME", "12 nm"),
