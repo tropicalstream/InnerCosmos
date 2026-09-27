@@ -1880,7 +1880,7 @@ private fun t1AvCusp(j: Int, u: Float, v: Float, o: Float, out: FloatArray) {
 }
 
 private class T1Heart {
-    val ant = T1DynSurface(9, 26); val post = T1DynSurface(9, 36)
+    val ant = T1DynSurface(8, 22); val post = T1DynSurface(8, 30)
     val cusps = Array(3) { T1DynSurface(8, 16) }
     val antR = T1DynSurface(3, 26); val postR = T1DynSurface(3, 36)
     var mvOpen = -1f; var avOpen = -1f            // re-tessellate only when the valve has moved (not per eye)
@@ -2048,7 +2048,7 @@ internal fun StereoBodyRenderer.drawHeart(n: TourNode, i: Int, seconds: Float) {
         t1Shape(t1Disc(), fav, 0.8f, cos(th) * (r - 0.03f), sin(th) * (r - 0.03f), 0f, -cos(th), -sin(th), 1f, 0f, 0f, 0.2f, 0.22f, 1f, T1_CAP_DEEP, T1_CAP_DEEP, 1f)
     }
     val q = FloatArray(3)
-    val redoA = abs(oA - hs.avOpen) > 0.004f
+    val redoA = abs(oA - hs.avOpen) > 0.02f || (oA != hs.avOpen && (oA == 0f || oA == 1f))
     if (redoA) hs.avOpen = oA
     for (j in 0 until 3) {
         if (redoA) hs.cusps[j].update { u, vv, out -> t1AvCusp(j, u, vv, oA, q); out[0] = q[0]; out[1] = q[1]; out[2] = -q[2] }
@@ -2059,7 +2059,7 @@ internal fun StereoBodyRenderer.drawHeart(n: TourNode, i: Int, seconds: Float) {
     val leafA = ((min(abs(aShip), abs(aCam)) - 0.3f) / 0.9f).coerceIn(0f, 1f)
     val h = FloatArray(3); val kk = FloatArray(3)
     if (leafA > 0.02f) {
-        if (abs(oM - hs.mvOpen) > 0.004f) {
+        if (abs(oM - hs.mvOpen) > 0.02f || (oM != hs.mvOpen && (oM == 0f || oM == 1f))) {
             hs.mvOpen = oM
             hs.ant.update { u, v, out -> t1MvLeaf(true, u, v, oM, h, kk, q); out[0] = q[0]; out[1] = q[1]; out[2] = -q[2] }
             hs.post.update { u, v, out -> t1MvLeaf(false, u, v, oM, h, kk, q); out[0] = q[0]; out[1] = q[1]; out[2] = -q[2] }
