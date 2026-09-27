@@ -32,7 +32,7 @@
 ### 1. The Cavity
 
 **00:01** · look: *BRIDGE (helm)* · SFX: `drive_engage`
-> **HELM:** [warm] Helm to all stations. We are trimmed and holding inside a human lung, and tonight's chapter belongs to Doc. Chief, take us down to forty microns and keep the drive quiet. Everyone else, watch the window.
+> **HELM:** [warm] Helm to all stations. We are trimmed and holding inside a human lung, and tonight's chapter belongs to Doc. Chief, take us down to a hundred and twenty microns and keep the drive quiet. Everyone else, watch the window.
 
 **00:18** · look: *EXTERNAL (chase, the Mote)*
 > **DOC:** [reflective] Those pale sacs are alveoli, thinner than soap film, where oxygen crosses into blood. Now look at the dark hollow ahead. A slow bacterium started it. The body's own defence did the killing. The dead core liquefied, drained into an airway and was coughed away, leaving the hole.
@@ -64,7 +64,7 @@
 
 ### 2. The Vein
 
-**03:21** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
+**03:21** · look: *EXTERNAL (chase, the Mote)* · SFX: `grow`
 > **HELM:** [warm] Scale change, and mind your footing. We are inside a vein now, running with the current. That grey wall sliding past is endothelium. The polished edge ahead is a cannula, a needle in a soldier's arm, ninety years ago.
 
 **03:40** · look: *SCALE DRIVE CORE*
@@ -88,7 +88,7 @@
 
 ### 3. The Bottle
 
-**05:41** · look: *EXTERNAL (chase, the Mote)*
+**05:41** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 > **HELM:** [hushed] Look out to starboard. Stored blood: cells settled into a dark floor, plasma standing pale above them, everything blue with cold. Somebody gave that away in a room a long way from where it is going to be used.
 
 **06:00** · look: *SCALE DRIVE CORE*
@@ -154,7 +154,7 @@
 
 ### 6. The Table
 
-**12:41** · look: *EXTERNAL (chase, the Mote)*
+**12:41** · look: *EXTERNAL (chase, the Mote)* · SFX: `grow`
 > **HELM:** [warm] Different window. This is a war wound handled properly, with not one stitch in it: packed with dry gauze, held open on purpose, to be sewn shut at four or five days if it stays clean. Doc, tell them why it gapes, because that is not neglect.
 
 **13:01** · look: *BRIDGE (helm)*
@@ -181,7 +181,7 @@
 
 ### 7. The Students
 
-**15:41** · look: *EXTERNAL (chase, the Mote)* · SFX: `grow`
+**15:41** · look: *EXTERNAL (chase, the Mote)* · SFX: `shrink`
 > **HELM:** [awe] New chamber, and this is the busiest room in the body. Red marrow. Those giants at the sinus wall are megakaryocytes. They never divide, they copy their DNA and swell, then push arms through the wall and shed platelets into the current, working in minutes. Red cells take a week.
 
 **16:04** · look: *BRIDGE (helm)*
@@ -230,7 +230,7 @@
 ### 9. The Fever
 
 **21:14** · look: *EXTERNAL (chase, the Mote)* · SFX: `alarm`
-> **HELM:** [urgent] Bridge to all stations. I am not enjoying this window. The bacteria are in the bloodstream, dividing while we watch, and the white cells coming at them are outnumbered. This is a body losing an argument with its own circulation.
+> **HELM:** [urgent] Bridge to all stations. I am not enjoying this window. The bacteria are in the bloodstream, dividing while we watch, and the white cells coming at them are not winning. This is a body losing an argument with its own circulation.
 
 **21:33** · look: *BRIDGE (helm)*
 > **DOC:** [grave] This is septicaemia. The danger is not only the bacteria. The defence goes off everywhere at once, fever, inflammation, vessels leaking and widening. Blood pressure drops, and the response begins destroying the tissue it was called to protect.
