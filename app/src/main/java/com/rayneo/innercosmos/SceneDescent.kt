@@ -2951,59 +2951,157 @@ internal fun StereoBodyRenderer.drawLookBack(n: TourNode, i: Int, seconds: Float
     if (map.id == 3 && routeProgress > i - 0.35f) drawPlate("portrait", frameAt(i + 0.12f), tunnelRadius(i + 0.12f) * 0.34f, tunnelRadius(i + 0.12f) * 0.10f, 3.6f, seconds)
 }
 
-/** One rib: an arc of a ring open at the front (the sternum), laid horizontal around the chest. */
-private val ribArc by lazy { ParamMesh.torusArc(0.045f, 0.80f, 24) }
+/**
+ * The figure's geometry in figure space, shaded once: each vertex carries the colour the lit shader
+ * would give it under the craft's bow lamp (diffuse, rim, organ mottling, glow), so the whole person
+ * draws in a few calls instead of ~80 per eye. Every primitive is a canonical shape placed by an
+ * orthonormal basis and per-axis scales, so its normals stay exact; triangles are wound outward so
+ * back faces can be culled like the old sphere shells.
+ */
+private class PersonBaker {
+    private var d = FloatArray(1 shl 17); private var n = 0
+    private val P = FloatArray(3); private val N = FloatArray(3)
+    // Lamp and eye in figure space: the craft is in front of her (+z), off her right side (-x).
+    private val lx = -0.33f; private val ly = 0.30f; private val lz = 0.89f
+    private val vx = -0.29f; private val vy = 0.05f; private val vz = 0.955f
+
+    private fun put(x: Float, y: Float, z: Float, c: FloatArray) {
+        if (n + 7 > d.size) d = d.copyOf(d.size * 2)
+        d[n] = x; d[n + 1] = y; d[n + 2] = z; d[n + 3] = c[0]; d[n + 4] = c[1]; d[n + 5] = c[2]; d[n + 6] = c[3]; n += 7
+    }
+
+    /**
+     * Canonical surface [fn] (writes position and unit normal for u,v in [0,1]) placed at c with axes
+     * X, Y, Z (orthonormal) scaled sx, sy, sz, and shaded as the lit shader shades base/accent.
+     */
+    fun prim(stacks: Int, slices: Int, cx: Float, cy: Float, cz: Float, X: FloatArray, Y: FloatArray, Z: FloatArray,
+             sx: Float, sy: Float, sz: Float, base: FloatArray, accent: FloatArray, a: Float, pattern: Float, glow: Float,
+             fn: (Float, Float, FloatArray, FloatArray) -> Unit) {
+        val row = slices + 1; val cnt = (stacks + 1) * row
+        val pos = FloatArray(cnt * 3); val nor = FloatArray(cnt * 3); val col = FloatArray(cnt * 4)
+        for (i in 0..stacks) for (j in 0..slices) {
+            fn(i.toFloat() / stacks, j.toFloat() / slices, P, N)
+            val k = i * row + j; val k3 = k * 3; val k4 = k * 4
+            val px = P[0] * sx; val py = P[1] * sy; val pz = P[2] * sz
+            pos[k3] = cx + X[0] * px + Y[0] * py + Z[0] * pz
+            pos[k3 + 1] = cy + X[1] * px + Y[1] * py + Z[1] * pz
+            pos[k3 + 2] = cz + X[2] * px + Y[2] * py + Z[2] * pz
+            // normal through the inverse transpose of the scaled basis
+            val qx = N[0] / sx; val qy = N[1] / sy; val qz = N[2] / sz
+            var nx = X[0] * qx + Y[0] * qy + Z[0] * qz; var ny = X[1] * qx + Y[1] * qy + Z[1] * qz; var nz = X[2] * qx + Y[2] * qy + Z[2] * qz
+            val l = sqrt(nx * nx + ny * ny + nz * nz).coerceAtLeast(1e-9f); nx /= l; ny /= l; nz /= l
+            nor[k3] = nx; nor[k3 + 1] = ny; nor[k3 + 2] = nz
+            // the lit shader: mottling from the mesh's own normal, lamp diffuse, a rim toward the eye, glow
+            val s = if (pattern > 0f) {
+                val t = ((sin(N[0] * 11f + N[1] * 7f) * sin(N[2] * 9f + N[0] * 5f) - 0.35f) / 0.45f).coerceIn(0f, 1f)
+                t * t * (3f - 2f * t) * pattern * 0.6f
+            } else 0f
+            val diff = max(nx * lx + ny * ly + nz * lz, 0f)
+            val rim = (1f - max(nx * vx + ny * vy + nz * vz, 0f)).pow(2.5f)
+            for (q in 0..2) {
+                val cc = base[q] + (accent[q] - base[q]) * s
+                col[k4 + q] = cc * (0.24f + 0.76f * diff) + accent[q] * rim * 0.45f + cc * glow
+            }
+            col[k4 + 3] = base[3] * a
+        }
+        val c0 = FloatArray(4); val c1 = FloatArray(4); val c2 = FloatArray(4)
+        fun tri(a0: Int, b0: Int, e0: Int) {
+            val A = a0 * 3; val B = b0 * 3; val E = e0 * 3
+            val ux = pos[B] - pos[A]; val uy = pos[B + 1] - pos[A + 1]; val uz = pos[B + 2] - pos[A + 2]
+            val wx = pos[E] - pos[A]; val wy = pos[E + 1] - pos[A + 1]; val wz = pos[E + 2] - pos[A + 2]
+            val fx = uy * wz - uz * wy; val fy = uz * wx - ux * wz; val fz = ux * wy - uy * wx
+            if (fx * fx + fy * fy + fz * fz < 1e-20f) return            // degenerate (a pole)
+            val out = fx * (nor[A] + nor[B] + nor[E]) + fy * (nor[A + 1] + nor[B + 1] + nor[E + 1]) + fz * (nor[A + 2] + nor[B + 2] + nor[E + 2])
+            System.arraycopy(col, a0 * 4, c0, 0, 4); System.arraycopy(col, b0 * 4, c1, 0, 4); System.arraycopy(col, e0 * 4, c2, 0, 4)
+            put(pos[A], pos[A + 1], pos[A + 2], c0)
+            if (out >= 0f) { put(pos[B], pos[B + 1], pos[B + 2], c1); put(pos[E], pos[E + 1], pos[E + 2], c2) }
+            else { put(pos[E], pos[E + 1], pos[E + 2], c2); put(pos[B], pos[B + 1], pos[B + 2], c1) }
+        }
+        for (i in 0 until stacks) for (j in 0 until slices) {
+            val k00 = i * row + j; val k10 = k00 + row; val k11 = k10 + 1; val k01 = k00 + 1
+            tri(k00, k10, k11); tri(k00, k11, k01)
+        }
+    }
+
+    /** Axis-aligned ellipsoid (the old part()). */
+    fun ell(x: Float, y: Float, z: Float, rx: Float, ry: Float, rz: Float, base: FloatArray, accent: FloatArray, a: Float, pattern: Float = 0f, glow: Float = 0f) {
+        val big = max(rx, max(ry, rz)) > 0.04f
+        prim(if (big) 12 else 7, if (big) 18 else 10, x, y, z, EX, EY, EZ, rx, ry, rz, base, accent, a, pattern, glow) { u, v, p, q ->
+            val ph = u * PI_F; val th = v * TAU
+            q[0] = sin(ph) * cos(th); q[1] = cos(ph); q[2] = sin(ph) * sin(th); p[0] = q[0]; p[1] = q[1]; p[2] = q[2]
+        }
+    }
+
+    /** A capsule of radius r whose axis runs from p0 to p1 (the old seg()). */
+    fun seg(x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float, r: Float, base: FloatArray, accent: FloatArray, a: Float, glow: Float = 0f) {
+        val Z = floatArrayOf(x1 - x0, y1 - y0, z1 - z0); val len = norm(Z)
+        val X = perp(Z); val Y = cross(Z, X)
+        val h = len * 0.5f; val m = 4
+        prim(2 * m + 1, 10, (x0 + x1) * 0.5f, (y0 + y1) * 0.5f, (z0 + z1) * 0.5f, X, Y, Z, 1f, 1f, 1f, base, accent, a, 0f, glow) { u, v, p, q ->
+            val i = (u * (2 * m + 1) + 0.5f).toInt()
+            val top = i <= m
+            val ph = if (top) i.toFloat() / m * PI_F / 2f else PI_F / 2f + (i - m - 1).toFloat() / m * PI_F / 2f
+            val th = v * TAU
+            q[0] = sin(ph) * cos(th); q[1] = sin(ph) * sin(th); q[2] = cos(ph)
+            p[0] = q[0] * r; p[1] = q[1] * r; p[2] = q[2] * r + if (top) h else -h
+        }
+    }
+
+    /** An arc of a ring (rib, mandible, pelvic brim): ParamMesh.torusArc(0.045, 0.80) placed as drawBasis placed it. */
+    fun arc(x: Float, y: Float, z: Float, zAxis: FloatArray, yHint: FloatArray, sx: Float, sy: Float, sz: Float, base: FloatArray, accent: FloatArray, a: Float) {
+        val Z = zAxis.copyOf(); norm(Z)
+        val dd = yHint[0] * Z[0] + yHint[1] * Z[1] + yHint[2] * Z[2]
+        val Y = floatArrayOf(yHint[0] - dd * Z[0], yHint[1] - dd * Z[1], yHint[2] - dd * Z[2]); norm(Y)
+        val X = cross(Y, Z)
+        val minor = 0.045f; val sweep = 0.80f
+        prim(16, 8, x, y, z, X, Y, Z, sx, sy, sz, base, accent, a, 0f, 0f) { u, v, p, q ->
+            val an = (u - 0.5f) * sweep * TAU - PI_F / 2f; val b = v * TAU
+            q[0] = cos(an) * cos(b); q[1] = sin(an) * cos(b); q[2] = sin(b)
+            p[0] = cos(an) + minor * q[0]; p[1] = sin(an) + minor * q[1]; p[2] = minor * q[2]
+        }
+    }
+
+    fun data(): FloatArray = d.copyOf(n)
+
+    companion object {
+        val EX = floatArrayOf(1f, 0f, 0f); val EY = floatArrayOf(0f, 1f, 0f); val EZ = floatArrayOf(0f, 0f, 1f)
+        fun norm(v: FloatArray): Float { val l = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).coerceAtLeast(1e-9f); v[0] /= l; v[1] /= l; v[2] /= l; return l }
+        fun cross(a: FloatArray, b: FloatArray) = floatArrayOf(a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
+        fun perp(z: FloatArray): FloatArray {
+            val h = if (abs(z[1]) < 0.9f) floatArrayOf(0f, 1f, 0f) else floatArrayOf(1f, 0f, 0f)
+            val c = cross(h, z); norm(c); return c
+        }
+    }
+}
+
+/** The baked figure of one tour: organs and bones (opaque), then stop markers and skin (translucent), and the route. */
+private class PersonMeshes(val solid: TriMesh, val glass: TriMesh, val route: LineMesh?)
+private var personCache: PersonMeshes? = null
+private var personKey: Any? = null
+private var personTour = -1
 
 /**
- * An upright person facing the craft, H units tall, soles at the bottom. Figure-space x is across
- * (+x = her LEFT, on the viewer's right), y is up from the soles, z is toward the viewer; all in
- * fractions of her height. Proportions follow the eight-head canon. Organs are opaque and drawn
- * first; bones next; the skin is a translucent shell over everything, so the viscera read through it.
+ * Build the figure once per tour (and again if the GL context was recreated). Figure-space x is
+ * across (+x = her LEFT, on the viewer's right), y is up from the soles, z is toward the viewer;
+ * all in fractions of her height. Proportions follow the eight-head canon. Organs are opaque and
+ * drawn first; bones next; the skin is a translucent shell over everything, so the viscera read
+ * through it.
  */
-internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha: Float, seconds: Float) {
-    val f = frameAt(routeProgress)
-    // The craft holds station a fixed PHYSICAL distance from her while it grows: its bow 2.5 m from
-    // her. In scene units that distance shrinks as the craft grows (1.5 units = the Mote), so she
-    // keeps her angular size and only shrinks relative to the hull — which is what a growing ship
-    // holding station in front of a person would actually see. She stands a little to one side of
-    // the axis so the hull never blocks her from the chase camera.
-    val lengthM = shipLengthM(routeProgress).toFloat()
-    val ahead = 0.75f + 2.5f / lengthM * 1.5f
-    val side = 0.9f + 0.28f * H
-    val bx = shipX + f.dx * ahead + f.sx * side; val bz = shipZ + f.dz * ahead + f.sz * side
-    val by = shipY - H * 0.5f
-    // Figure axes in world space. She faces the craft, so her LEFT is on the viewer's RIGHT, and
-    // the rail's side vector is the viewer's right: across = +side. Up = world up; toward the viewer = -dir.
-    val ax = f.sx; val az = f.sz
-    val tx = -f.dx; val tz = -f.dz
-    val sway = 0.004f * sin(seconds * 0.6f)
-    fun wx(x: Float, z: Float) = bx + ax * (x + sway) * H + tx * z * H
-    fun wz(x: Float, z: Float) = bz + az * (x + sway) * H + tz * z * H
-    fun wy(y: Float) = by + y * H
-    val yaw = atan2(tx, tz) * 180f / PI.toFloat()
-    // Small parts use the low-poly sphere; only big shells whose silhouettes show get the smooth one
-    // (the look-back is otherwise the heaviest frame of the tour on a fanless device).
+private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
+    val hit = personCache
+    if (hit != null && personKey === sphere && personTour == map.id) return hit
+    // (a recreated context already freed the old buffers; their ids may now belong to others)
+    if (hit != null && personKey === sphere) { hit.solid.release(); hit.glass.release(); hit.route?.release() }
+    val s = PersonBaker()
     fun part(x: Float, y: Float, z: Float, rx: Float, ry: Float, rz: Float, col: FloatArray, acc: FloatArray, a: Float, pat: Float = 0f, glow: Float = 0f) =
-        drawSphereAt(wx(x, z), wy(y), wz(x, z), rx * H, ry * H, rz * H, col, acc, a * alpha, yaw, 0f, 1f, 0f,
-            if (max(rx, max(ry, rz)) * H > 0.9f) sphere else blob, pat, glow)
-    /** A smooth capsule between two figure-space points (limbs, torso, vessels). */
-    fun seg(x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float, r: Float, col: FloatArray, acc: FloatArray, a: Float, glow: Float = 0f) {
-        val px0 = wx(x0, z0); val py0 = wy(y0); val pz0 = wz(x0, z0)
-        val px1 = wx(x1, z1); val py1 = wy(y1); val pz1 = wz(x1, z1)
-        val dx = px1 - px0; val dy = py1 - py0; val dz = pz1 - pz0
-        val len = sqrt(dx * dx + dy * dy + dz * dz)
-        val rr = r * H
-        // capsule is length 2 along z with radius 0.45: scale so its caps meet the joints.
-        val half = len * 0.5f + rr * 0.9f
-        drawBasis((px0 + px1) * 0.5f, (py0 + py1) * 0.5f, (pz0 + pz1) * 0.5f, dx, dy, dz, tx, 0f, tz,
-            rr / 0.45f, rr / 0.45f, half, capsule, col, acc, a * alpha, 0f, glow)
-    }
+        s.ell(x, y, z, rx, ry, rz, col, acc, a, pat, glow)
+    fun seg(x0: Float, y0: Float, z0: Float, x1: Float, y1: Float, z1: Float, r: Float, col: FloatArray, acc: FloatArray, a: Float, glow: Float = 0f) =
+        s.seg(x0, y0, z0, x1, y1, z1, r, col, acc, a, glow)
 
     // ---- organs (opaque), in their true places
     part(0f, 0.922f, 0.005f, 0.046f, 0.038f, 0.052f, COL_ORG_BRAIN, COL_LAMP, 1f, 0.8f)                   // brain
-    part(0f, 0.93f, 0f, 0.051f, 0.05f, 0.058f, COL_BONE, COL_LAMP, 0.35f)                                   // cranium, see-through
-    drawBasis(wx(0f, 0.022f), wy(0.892f), wz(0f, 0.022f), 0f, 1f, 0f, -tx, 0f, -tz, 0.034f * H, 0.036f * H, 0.012f * H,
-        ribArc, COL_BONE, COL_LAMP, 0.85f * alpha, 0f, 0f)                                                  // mandible, open behind
+    s.arc(0f, 0.892f, 0.022f, floatArrayOf(0f, 1f, 0f), floatArrayOf(0f, 0f, -1f), 0.034f, 0.036f, 0.012f,
+        COL_BONE, COL_LAMP, 0.85f)                                                                           // mandible, open behind
     seg(0f, 0.83f, 0.01f, 0f, 0.76f, 0.01f, 0.010f, COL_BONE, COL_LAMP, 0.9f)                              // trachea
     // Lungs either side of the mediastinum: the right (her -x) is the larger, three-lobed lung; the
     // left is narrower with a cardiac notch where the heart sits. Bases on the diaphragm (~0.645),
@@ -3022,19 +3120,16 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
     part(0f, 0.522f, 0.022f, 0.068f, 0.048f, 0.042f, COL_ORG_GUT, COL_LAMP, 1f, 1f)                       // small intestine
     part(0f, 0.466f, 0.026f, 0.021f, 0.018f, 0.018f, COL_ORG_BLADDER, COL_LAMP, 1f)                       // bladder
 
-    // ---- skeleton: spine, ribs open at the sternum, clavicles, femurs
+    // ---- skeleton: spine, ribs open at the sternum, clavicles, limbs
     for (k in 0 until 7) part(0f, 0.475f + k * 0.058f, -0.047f, 0.013f, 0.019f, 0.013f, COL_BONE, COL_LAMP, 1f, 0.6f)   // vertebral column
-    for (k in 0 until if (quality == 0) 7 else 4) {
-        val y = 0.785f - k * (if (quality == 0) 0.028f else 0.049f)
+    for (k in 0 until 7) {
+        val y = 0.785f - k * 0.028f
         val w = 0.105f + 0.012f * sin(k * 0.55f + 0.4f)                                                      // widest at the 7th rib
-        // Ring in the horizontal plane: local z = up, local y = toward the viewer; the arc's gap faces front.
-        // Ribs slope down toward the front: tilt each ring's plane forward by ~22 degrees.
-        val c22 = 0.927f; val s22 = 0.375f
-        drawBasis(wx(0f, -0.004f), wy(y), wz(0f, -0.004f), tx * s22, c22, tz * s22, tx, 0f, tz, w * H, 0.068f * H, 0.012f * H,
-            ribArc, COL_BONE, COL_LAMP, 0.75f * alpha, 0f, 0f)
+        // Ring in the horizontal plane with its gap at the front; ribs slope down toward the front,
+        // so each ring's plane is tilted forward by ~22 degrees.
+        s.arc(0f, y, -0.004f, floatArrayOf(0f, 0.927f, 0.375f), floatArrayOf(0f, 0f, 1f), w, 0.068f, 0.012f, COL_BONE, COL_LAMP, 0.75f)
     }
-    drawBasis(wx(0f, 0f), wy(0.50f), wz(0f, 0f), 0f, 1f, 0f, tx, 0f, tz, 0.11f * H, 0.07f * H, 0.014f * H,
-        ribArc, COL_BONE, COL_LAMP, 0.85f * alpha, 0f, 0f)                                                  // pelvic brim
+    s.arc(0f, 0.50f, 0f, floatArrayOf(0f, 1f, 0f), floatArrayOf(0f, 0f, 1f), 0.11f, 0.07f, 0.014f, COL_BONE, COL_LAMP, 0.85f) // pelvic brim
     for (sgn in SIGNS) {
         part(sgn * 0.075f, 0.515f, -0.01f, 0.05f, 0.04f, 0.012f, COL_BONE, COL_LAMP, 0.85f)                 // iliac wings
         seg(sgn * 0.012f, 0.822f, 0.03f, sgn * 0.125f, 0.83f, 0.0f, 0.007f, COL_BONE, COL_LAMP, 1f)          // clavicle
@@ -3046,57 +3141,97 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
         seg(sgn * 0.075f, 0.265f, 0.004f, sgn * 0.078f, 0.055f, 0.004f, 0.009f, COL_BONE, COL_LAMP, 1f)      // tibia
         seg(sgn * 0.090f, 0.255f, -0.006f, sgn * 0.090f, 0.06f, -0.006f, 0.005f, COL_BONE, COL_LAMP, 1f)     // fibula (lateral)
     }
+    val solid = TriMesh(s.data())
 
-    // ---- this tour's stops, where they happened, joined in order
-    GLES20.glDepthMask(false)
-    val arr = dynLines.data
-    var v = 0
+    // ---- translucent: the cranium, this tour's stops, and the skin
+    val g = PersonBaker()
+    g.ell(0f, 0.93f, 0f, 0.051f, 0.05f, 0.058f, COL_BONE, COL_LAMP, 0.35f)                                 // cranium, see-through
+    // Stops where they happened. Map coordinates follow the 2D inset: a figure facing you,
+    // image-left = her right (-x); just under the skin (limbs are thin).
+    fun mx(t: TourNode) = (t.mapX - 50f) / 150f
+    fun my(t: TourNode) = 1f - t.mapY / 150f
+    fun mz(x: Float) = if (abs(x) > 0.12f) 0.008f else 0.035f
+    val route = ArrayList<Float>()
     for (k in 0 until nodes.size - 1) {
-        val a0 = nodes[k]
-        // Map coordinates follow the 2D inset: a figure facing you, image-left = her right (-x).
-        val mx = (a0.mapX - 50f) / 150f; val my = 1f - a0.mapY / 150f
-        val mz = if (abs(mx) > 0.12f) 0.008f else 0.035f          // just under the skin: limbs are thin
-        part(mx, my, mz, 0.011f, 0.011f, 0.011f, COL_LAMP, COL_LAMP, 1f, 0f, 0.9f)
-        if (k + 1 < nodes.size - 1 && v + 14 <= arr.size) {
+        val a0 = nodes[k]; val x = mx(a0); val y = my(a0)
+        g.ell(x, y, mz(x), 0.011f, 0.011f, 0.011f, COL_LAMP, COL_LAMP, 1f, 0f, 0.9f)
+        if (k + 1 < nodes.size - 1) {
             val b0 = nodes[k + 1]
-            val nx = (b0.mapX - 50f) / 150f; val ny = 1f - b0.mapY / 150f
-            for ((qx, qy) in listOf(mx to my, nx to ny)) {
-                val qz = if (abs(qx) > 0.12f) 0.008f else 0.035f
-                arr[v++] = wx(qx, qz); arr[v++] = wy(qy); arr[v++] = wz(qx, qz)
-                arr[v++] = 1f; arr[v++] = 0.77f; arr[v++] = 0.42f; arr[v++] = 0.8f * alpha
+            for ((qx, qy) in listOf(x to y, mx(b0) to my(b0))) {
+                route.add(qx); route.add(qy); route.add(mz(qx)); route.add(1f); route.add(0.77f); route.add(0.42f); route.add(0.8f)
             }
         }
     }
-    if (v > 0) {
-        Matrix.setIdentityM(model, 0)
-        Matrix.multiplyMM(mv, 0, view, 0, model, 0)
-        Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
-        colorShader.use(mvp, 1f)
+    val sk = COL_SKIN_SHELL; val rim = COL_SKIN_RIM
+    g.ell(0f, 0.928f, 0f, 0.056f, 0.068f, 0.064f, sk, rim, 0.3f, glow = 0.35f)                             // head
+    // A face: eyes (sclera + iris), the nose and the lips, so she reads as a person, not a mannequin.
+    for (sgn in SIGNS) {
+        g.ell(sgn * 0.021f, 0.938f, 0.052f, 0.009f, 0.006f, 0.006f, COL_SCLERA, COL_LAMP, 0.9f, 0f, 0.3f)
+        g.ell(sgn * 0.021f, 0.938f, 0.057f, 0.0045f, 0.0045f, 0.003f, COL_IRIS, COL_LAMP, 1f, 0f, 0.2f)
+    }
+    g.ell(0f, 0.922f, 0.062f, 0.008f, 0.013f, 0.009f, sk, rim, 0.6f, glow = 0.35f)                         // nose
+    g.ell(0f, 0.902f, 0.056f, 0.015f, 0.0045f, 0.006f, COL_LIPS, COL_LAMP, 0.9f, 0f, 0.3f)                 // lips
+    g.seg(0f, 0.845f, 0f, 0f, 0.878f, 0f, 0.028f, sk, rim, 0.3f, glow = 0.35f)                             // neck
+    g.ell(0f, 0.735f, 0f, 0.115f, 0.095f, 0.072f, sk, rim, 0.24f, glow = 0.35f)                            // chest and shoulders
+    g.ell(0f, 0.545f, 0f, 0.112f, 0.105f, 0.066f, sk, rim, 0.26f, glow = 0.35f)                            // abdomen and pelvis, one shell
+    for (sgn in SIGNS) {
+        g.seg(sgn * 0.13f, 0.805f, 0f, sgn * 0.155f, 0.635f, 0f, 0.034f, sk, rim, 0.3f, glow = 0.35f)      // upper arm
+        g.seg(sgn * 0.155f, 0.635f, 0f, sgn * 0.17f, 0.47f, 0.01f, 0.027f, sk, rim, 0.3f, glow = 0.35f)    // forearm
+        g.ell(sgn * 0.175f, 0.43f, 0.012f, 0.021f, 0.042f, 0.012f, sk, rim, 0.3f, glow = 0.35f)            // hand
+        g.seg(sgn * 0.072f, 0.475f, 0f, sgn * 0.078f, 0.27f, 0f, 0.056f, sk, rim, 0.27f, glow = 0.35f)     // thigh
+        g.seg(sgn * 0.078f, 0.27f, 0f, sgn * 0.08f, 0.05f, 0f, 0.040f, sk, rim, 0.28f, glow = 0.35f)       // lower leg
+        g.ell(sgn * 0.082f, 0.018f, 0.03f, 0.029f, 0.018f, 0.058f, sk, rim, 0.3f, glow = 0.35f)            // foot
+    }
+    val made = PersonMeshes(solid, TriMesh(g.data()), if (route.isEmpty()) null else LineMesh(route.toFloatArray()))
+    personCache = made; personKey = sphere; personTour = map.id
+    return made
+}
+
+/**
+ * An upright person facing the craft, H units tall, soles at the bottom (see [personMeshes] for
+ * the figure itself). Only her placement changes per frame: one model matrix for the whole body.
+ */
+internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha: Float, seconds: Float) {
+    val f = frameAt(routeProgress)
+    // The craft holds station a fixed PHYSICAL distance from her while it grows: its bow 2.5 m from
+    // her. In scene units that distance shrinks as the craft grows (1.5 units = the Mote), so she
+    // keeps her angular size and only shrinks relative to the hull — which is what a growing ship
+    // holding station in front of a person would actually see. She stands a little to one side of
+    // the axis so the hull never blocks her from the chase camera.
+    val lengthM = shipLengthM(routeProgress).toFloat()
+    val ahead = 0.75f + 2.5f / lengthM * 1.5f
+    val side = 0.9f + 0.28f * H
+    // Figure axes in world space. She faces the craft, so her LEFT is on the viewer's RIGHT, and
+    // the rail's side vector is the viewer's right: across = +side. Up = world up; toward the viewer = -dir.
+    val ax = f.sx; val az = f.sz
+    val tx = -f.dx; val tz = -f.dz
+    val sway = 0.004f * sin(seconds * 0.6f)
+    val meshes = personMeshes()
+    model[0] = ax * H; model[1] = 0f; model[2] = az * H; model[3] = 0f
+    model[4] = 0f; model[5] = H; model[6] = 0f; model[7] = 0f
+    model[8] = tx * H; model[9] = 0f; model[10] = tz * H; model[11] = 0f
+    model[12] = shipX + f.dx * ahead + f.sx * side + ax * sway * H
+    model[13] = shipY - H * 0.5f
+    model[14] = shipZ + f.dz * ahead + f.sz * side + az * sway * H
+    model[15] = 1f
+    Matrix.multiplyMM(mv, 0, view, 0, model, 0)
+    Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
+    // The baker winds triangles outward in figure space; if the placement mirrors, so does the winding.
+    val det = ax * tz - az * tx
+    GLES20.glFrontFace(if (det >= 0f) GLES20.GL_CCW else GLES20.GL_CW)
+    GLES20.glEnable(GLES20.GL_CULL_FACE)
+    val keep = colorShader.globalFade
+    colorShader.globalFade = keep * alpha * landmarkFade
+    colorShader.use(mvp, 1f)
+    meshes.solid.draw(colorShader.positionHandle, colorShader.colorHandle)
+    GLES20.glDepthMask(false)
+    meshes.route?.let {
         lineWidth(2f)
-        dynLines.draw(colorShader.positionHandle, colorShader.colorHandle, GLES20.GL_LINES, v / 7)
+        it.draw(colorShader.positionHandle, colorShader.colorHandle)
         lineWidth(1f)
     }
-
-    // ---- the skin: one smooth translucent shell (head, neck, trunk, limbs)
-    val sk = COL_SKIN_SHELL; val rim = COL_SKIN_RIM
-    part(0f, 0.928f, 0f, 0.056f, 0.068f, 0.064f, sk, rim, 0.3f, glow = 0.35f)
-    // A face: eyes (sclera + iris), the nose and the lips, so she reads as a person, not a mannequin.
-    if (quality == 0) for (sgn in SIGNS) {
-        part(sgn * 0.021f, 0.938f, 0.052f, 0.009f, 0.006f, 0.006f, COL_SCLERA, COL_LAMP, 0.9f, 0f, 0.3f)
-        part(sgn * 0.021f, 0.938f, 0.057f, 0.0045f, 0.0045f, 0.003f, COL_IRIS, COL_LAMP, 1f, 0f, 0.2f)
-    }
-    part(0f, 0.922f, 0.062f, 0.008f, 0.013f, 0.009f, sk, rim, 0.6f, glow = 0.35f)                          // nose
-    part(0f, 0.902f, 0.056f, 0.015f, 0.0045f, 0.006f, COL_LIPS, COL_LAMP, 0.9f, 0f, 0.3f)                  // lips                                            // head
-    seg(0f, 0.845f, 0f, 0f, 0.878f, 0f, 0.028f, sk, rim, 0.3f, glow = 0.35f)                                              // neck
-    part(0f, 0.735f, 0f, 0.115f, 0.095f, 0.072f, sk, rim, 0.24f, glow = 0.35f)                                            // chest and shoulders
-    part(0f, 0.545f, 0f, 0.112f, 0.105f, 0.066f, sk, rim, 0.26f, glow = 0.35f)                             // abdomen and pelvis, one shell
-    for (sgn in SIGNS) {
-        seg(sgn * 0.13f, 0.805f, 0f, sgn * 0.155f, 0.635f, 0f, 0.034f, sk, rim, 0.3f, glow = 0.35f)                       // upper arm
-        seg(sgn * 0.155f, 0.635f, 0f, sgn * 0.17f, 0.47f, 0.01f, 0.027f, sk, rim, 0.3f, glow = 0.35f)                     // forearm
-        part(sgn * 0.175f, 0.43f, 0.012f, 0.021f, 0.042f, 0.012f, sk, rim, 0.3f, glow = 0.35f)                            // hand
-        seg(sgn * 0.072f, 0.475f, 0f, sgn * 0.078f, 0.27f, 0f, 0.056f, sk, rim, 0.27f, glow = 0.35f)                      // thigh
-        seg(sgn * 0.078f, 0.27f, 0f, sgn * 0.08f, 0.05f, 0f, 0.040f, sk, rim, 0.28f, glow = 0.35f)                        // lower leg
-        part(sgn * 0.082f, 0.018f, 0.03f, 0.029f, 0.018f, 0.058f, sk, rim, 0.3f, glow = 0.35f)                            // foot
-    }
+    meshes.glass.draw(colorShader.positionHandle, colorShader.colorHandle)
     GLES20.glDepthMask(true)
+    GLES20.glFrontFace(GLES20.GL_CCW)
+    colorShader.globalFade = keep
 }
