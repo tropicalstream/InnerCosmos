@@ -1082,15 +1082,15 @@ internal fun StereoBodyRenderer.drawThreshold(n: TourNode, i: Int, seconds: Floa
         t1Lit(lip, fT, 0f, 0f, 0f, T1_LIP, T1_SKIN_RIM, face, 0.12f)
         // a cue that this is a face, at the patch's fading lower edge: the mouth line and the lower lip
         GLES20.glDepthMask(false)
-        val mouth = t1Mesh("face9.mouth") { ParamMesh(2, 30) { u, v, out ->
+        val mouth = t1Mesh("face10.mouth") { ParamMesh(2, 30) { u, v, out ->
             // the line where the lips meet (stomion), 1.2 mm wide so it reads at display resolution
             val w = 2f * v - 1f; val Y = T1_MID + w * 2.35f
-            val X = -3.75f - 0.15f * u + 0.3f * w * w
+            val X = -3.75f - 0.15f * u + 0.12f * w * w
             out[0] = X; out[1] = Y; out[2] = -(t1FaceDepth(X, Y) - 0.02f) } }
         t1Lit(mouth, fT, 0f, 0f, 0f, T1_MOUTH, T1_MOUTH, face, 0f)
-        val lip2 = t1Mesh("face9.lip2") { ParamMesh(3, 30) { u, v, out ->
+        val lip2 = t1Mesh("face10.lip2") { ParamMesh(3, 30) { u, v, out ->
             val w = 2f * v - 1f; val Y = T1_MID + w * 2.2f
-            val X = -3.92f + 0.3f * w * w - 0.7f * u * (1f - w * w).pow(0.6f)
+            val X = -3.92f + 0.12f * w * w - 0.7f * u * (1f - w * w).pow(0.6f)
             out[0] = X; out[1] = Y; out[2] = -(t1FaceDepth(X, Y) - 0.015f) } }
         t1Lit(lip2, fT, 0f, 0f, 0f, T1_LIP2, T1_SKIN_RIM, face, 0.12f)
         GLES20.glDepthMask(true)
@@ -3008,7 +3008,7 @@ private const val T1_MEM_R = 2.8f                       // the patch's radius: i
 private const val T1_MEM_TILT = 45f * DEG
 private val T1_SHEAR = tan(T1_MEM_TILT)
 /** The three Na+/K+ pumps next to the pit, where the camera finds them. */
-private val T1_PUMP_XY = floatArrayOf(1.85f, -0.55f, 2.70f, -0.05f, 0.35f, -1.95f)   // the second stands on the cut edge, seen side-on
+private val T1_PUMP_XY = floatArrayOf(1.85f, -0.55f, 0f, 1.0f, 0.35f, -1.95f)   // the second is the named pump on the pit's lip (drawn with the pit)   // the second stands on the cut edge, seen side-on
 
 private fun t1BuildMembrane(): T1MemStatic {
     val rnd = java.util.Random(77)
@@ -3138,7 +3138,7 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
         f0.sx * tc - f0.dx * ts, f0.sy * tc - f0.dy * ts, f0.sz * tc - f0.dz * ts, f0.ux, f0.uy, f0.uz)
     val so = 0f; val uo = 0f
     val m = t1Mem ?: T1Membrane().also { t1Mem = it }
-    val st = t1Mesh("membrane7") { t1BuildMembrane() }
+    val st = t1Mesh("membrane8") { t1BuildMembrane() }
     val sShip = t1Along(fm, shipX, shipY, shipZ)
     val pinchH = T1_FIL + sqrt(T1_RV * T1_RV + 2f * T1_RV * T1_FIL)
     val h = max(-T1_RV, sShip)
@@ -3155,13 +3155,8 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
     for (k in 0 until 3) {
         val x = T1_PUMP_XY[2 * k]; val y = T1_PUMP_XY[2 * k + 1]
         val ks = 1f; val gl = if (k == 1) 0.3f else 0.35f   // the edge pump, seen side-on at its true size: its profile across the cut edge does the work
-        if (k == 1) {
-            // the edge pump, in profile on the cut edge: its transmembrane body a cylinder spanning exactly the
-            // bilayer (between the two leaflet lines drawn below), the cytoplasmic head a separate ball beneath
-            t1Shape(cylinder, fm, 0f, x, y, 1f, 0f, 0f, 0f, 1f, 0f, 0.06f, 0.06f, T1_LEAF, T1_PUMP, T1_WHITE, 1f, gl)
-            for (sg in SIGNS) t1Shape(t1Disc(), fm, sg * T1_LEAF, x, y, sg, 0f, 0f, 0f, 1f, 0f, 0.06f, 0.06f, 1f, T1_PUMP, T1_WHITE, 1f, gl)
-            t1Lit(sphere, fm, T1_LEAF + 0.06f + 0.05f, x, y, T1_PUMP, T1_WHITE, 1f, gl, 0.05f, 0.05f, 0.05f)
-        } else {
+        if (k == 1) continue                  // the named pump stands on the pit's lip, drawn with the pit below
+        run {
         t1Lit(sphere, fm, 0f, x, y, T1_PUMP, T1_WHITE, 1f, gl, 0.06f * ks, 0.06f * ks, 0.07f * ks)            // transmembrane body (alpha subunit)
         t1Lit(sphere, fm, 0.085f * ks, x, y, T1_PUMP, T1_WHITE, 1f, gl, 0.03f * ks, 0.03f * ks, 0.03f * ks)   // neck
         t1Lit(sphere, fm, 0.18f * ks, x, y, T1_PUMP, T1_WHITE, 1f, gl, 0.09f * ks, 0.09f * ks, 0.1f * ks)     // cytoplasmic head: the N and P (ATP-binding) domains
@@ -3176,19 +3171,6 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
                 iv = t1Put(d, iv, fx(fm, al, ss, uu), fy(fm, al, ss, uu), fz(fm, al, ss, uu), kc, 1f) } }
     }
     t1DynDraw(iv, GLES20.GL_POINTS, 4.5f)
-    // the edge pump spans the bilayer: faint lines of both leaflets' head planes drawn across it
-    run {
-        val x = T1_PUMP_XY[2]; val y = T1_PUMP_XY[3]; val rl = sqrt(x * x + y * y); val tx = -y / rl; val ty = x / rl
-        var lv = 0
-        val lc = floatArrayOf(1f, 0.80f, 0.55f)
-        for (sg in SIGNS) for (m in 0 until 6) for (hh in 0..1) {
-            val t = -0.25f + 0.5f * (m + hh) / 6f; val ss = x + tx * t; val uu = y + ty * t; val al = sg * T1_LEAF
-            lv = t1Put(d, lv, fx(fm, al, ss, uu), fy(fm, al, ss, uu), fz(fm, al, ss, uu), lc, 1f)
-        }
-        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
-        t1DynDraw(lv, GLES20.GL_LINES, 3f, 1f, depthWrite = false)
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
-    }
     // ---- flat bilayer: heads (jiggling), tails, and the cut edge in profile
     // three interleaved sets of heads, each jostling on its own: the fluid mosaic
     t1Color(st.headsA, fm, 0f, so + 0.016f * sin(seconds * 8.3f), uo - 0.016f * cos(seconds * 6.1f), 3f, true)
@@ -3262,6 +3244,49 @@ internal fun StereoBodyRenderer.drawMembrane(n: TourNode, i: Int, seconds: Float
             if (zl2 < 1e-3f) { zx = fm.dx; zy = fm.dy; zz = fm.dz } else { zx /= zl2; zy /= zl2; zz /= zl2 }
             drawBasis(pw[0], pw[1], pw[2], zx, zy, zz, nx, ny, nz2, 1f, 1f, 1f, rec, T1_RECEPTOR, T1_WHITE, 1f, 0f, 0.25f)
         }
+    }
+    // The named Na+/K+ pump, on the pit's lip where the membrane curves down: the one place the camera sees
+    // this membrane side-on. Its transmembrane body a cylinder spanning exactly the bilayer between the two
+    // leaflet lines, along the local surface normal; its cytoplasmic head a separate ball beneath the lower
+    // line, against the dark of the pit.
+    if (m.np > 2) {
+        var kb = -1; var best = -1f
+        for (k in 1 until m.np - 1) if (m.pr[k] > 0.85f && abs(m.nr[k]) > best) { best = abs(m.nr[k]); kb = k }
+        if (kb < 0) kb = m.np - 2
+        val ang = 90f * DEG                                       // the pit's upper lip, in the bridge's view
+        val q = FloatArray(3)
+        fun wp(k: Int, off: Float, out: FloatArray) {
+            val rr = m.pr[k] + m.nr[k] * off; val zl = -(m.pz[k] + m.nz[k] * off)
+            val lx = cos(ang) * rr + T1_SHEAR * zl; val ly = sin(ang) * rr
+            out[0] = fm.cx + fm.sx * lx + fm.ux * ly - fm.dx * zl; out[1] = fm.cy + fm.sy * lx + fm.uy * ly - fm.dy * zl; out[2] = fm.cz + fm.sz * lx + fm.uz * ly - fm.dz * zl
+        }
+        val c0 = FloatArray(3); val c1 = FloatArray(3)
+        wp(kb, 0f, c0); wp(kb, 0.1f, c1)
+        var nx = c1[0] - c0[0]; var ny = c1[1] - c0[1]; var nz = c1[2] - c0[2]
+        val nl = sqrt(nx * nx + ny * ny + nz * nz).coerceAtLeast(1e-5f); nx /= nl; ny /= nl; nz /= nl
+        // a tangent round the pit (perpendicular to the normal) for the meshes' y axis
+        val ta = ang + 0.01f
+        val rr0 = m.pr[kb]; val zl0 = -m.pz[kb]
+        val lx2 = cos(ta) * rr0 + T1_SHEAR * zl0; val ly2 = sin(ta) * rr0
+        var tx = fm.cx + fm.sx * lx2 + fm.ux * ly2 - fm.dx * zl0 - c0[0]; var ty = fm.cy + fm.sy * lx2 + fm.uy * ly2 - fm.dy * zl0 - c0[1]; var tz = fm.cz + fm.sz * lx2 + fm.uz * ly2 - fm.dz * zl0 - c0[2]
+        val tl = sqrt(tx * tx + ty * ty + tz * tz).coerceAtLeast(1e-6f); tx /= tl; ty /= tl; tz /= tl
+        drawBasis(c0[0], c0[1], c0[2], nx, ny, nz, tx, ty, tz, 0.06f, 0.06f, T1_LEAF, cylinder, T1_PUMP, T1_WHITE, landmarkFade, 0f, 0.3f)
+        for (sg in SIGNS) drawBasis(c0[0] + nx * sg * T1_LEAF, c0[1] + ny * sg * T1_LEAF, c0[2] + nz * sg * T1_LEAF, nx * sg, ny * sg, nz * sg, tx, ty, tz,
+            0.06f, 0.06f, 1f, t1Disc(), T1_PUMP, T1_WHITE, landmarkFade, 0f, 0.3f)
+        // the head, in the cytoplasm (the side away from the receptors' stalks)
+        val hd = T1_LEAF + 0.06f + 0.05f
+        drawBasis(c0[0] - nx * hd, c0[1] - ny * hd, c0[2] - nz * hd, nx, ny, nz, tx, ty, tz, 0.05f, 0.05f, 0.05f, sphere, T1_PUMP, T1_WHITE, landmarkFade, 0f, 0.3f)
+        // the two leaflet lines, 3 px, running along the membrane's profile across the pump's body
+        var lv = 0
+        val lc = floatArrayOf(1f, 0.80f, 0.55f)
+        val ka = max(0, kb - 3); val kz = min(m.np - 1, kb + 3)
+        for (sg in SIGNS) for (k in ka until kz) {
+            wp(k, sg * T1_LEAF, q); lv = t1Put(d, lv, q[0], q[1], q[2], lc, 1f)
+            wp(k + 1, sg * T1_LEAF, q); lv = t1Put(d, lv, q[0], q[1], q[2], lc, 1f)
+        }
+        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
+        t1DynDraw(lv, GLES20.GL_LINES, 3f, 1f, depthWrite = false)
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
     }
     // clathrin coat on the cytoplasmic face of the pit (on the vesicle after scission, until it falls away)
     val psi = if (pinched) PI_F else if (h <= -T1_RV + 0.01f) 0f else {
