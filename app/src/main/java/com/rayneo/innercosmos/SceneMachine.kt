@@ -56,6 +56,7 @@ internal val T2_VOCAL_CORD = floatArrayOf(0.98f, 0.97f, 0.94f, 1f)
 internal val T2_LARYNX = floatArrayOf(0.9f, 0.5f, 0.56f, 1f)
 internal val T2_VILLUS = floatArrayOf(0.95f, 0.6f, 0.62f, 1f)
 internal val T2_VILLUS_TIP = floatArrayOf(0.99f, 0.69f, 0.69f, 1f)
+internal val T2_VILLUS_GLASS = floatArrayOf(1f, 0.8f, 0.8f, 1f)
 internal val T2_CRYPT = floatArrayOf(0.62f, 0.24f, 0.3f, 1f)
 internal val T2_LACTEAL = floatArrayOf(0.98f, 0.98f, 0.9f, 1f)
 internal val T2_CHYME = floatArrayOf(0.86f, 0.76f, 0.55f, 1f)
@@ -1001,7 +1002,7 @@ internal fun StereoBodyRenderer.drawGut(n: TourNode, i: Int, seconds: Float) {
         val al = sqrt(ax * ax + ay * ay + az * az); ax /= al; ay /= al; az /= al
         val h = 1.1f + 0.12f * (k % 3)
         // the lacteal (lymph, pale) up the core; the capillary loop just under the surface
-        drawStrut(bx + ax * 0.05f, by + ay * 0.05f, bz + az * 0.05f, bx + ax * h * 0.84f, by + ay * h * 0.84f, bz + az * h * 0.84f, 0.035f, T2_LACTEAL, T2_LACTEAL, 0.5f)
+        drawStrut(bx + ax * 0.05f, by + ay * 0.05f, bz + az * 0.05f, bx + ax * h * 0.84f, by + ay * h * 0.84f, bz + az * h * 0.84f, 0.05f, T2_LACTEAL, T2_LACTEAL, 0.9f)
         var px = 0f; var py = 0f; var pz = 0f
         for (q in 0..36) {
             val t = q / 36f; val up = if (t < 0.5f) t * 2f else (1f - t) * 2f
@@ -1014,7 +1015,7 @@ internal fun StereoBodyRenderer.drawGut(n: TourNode, i: Int, seconds: Float) {
             px = hx; py = hy; pz = hz
         }
         t2Q[0] = bx; t2Q[1] = by; t2Q[2] = bz
-        t2Basis(t2Q, ax, ay, az, tx, ty, tz, 0.15f, 0.11f, h, vm, T2_VILLUS_TIP, T2_LACTEAL, 0.34f, 0.15f)
+        t2Basis(t2Q, ax, ay, az, tx, ty, tz, 0.16f, 0.12f, h, vm, T2_VILLUS_GLASS, T2_LACTEAL, 0.45f, 0.25f)
     }
     // mucus strands drifting over the villus tips
     for (m in 0 until 4) {
@@ -2372,7 +2373,7 @@ internal fun StereoBodyRenderer.drawHighway(n: TourNode, i: Int, seconds: Float)
 // plasma membrane and releasing hexamers that fall apart into monomers.
 
 /** The factory is laid out from the pore; this shifts it all 3 units ahead so the pore is framed from the stop. */
-private const val T2_FZ = 6.5f
+private const val T2_FZ = 8f
 
 private fun StereoBodyRenderer.t2FactoryMeshes(i: Int): Array<ColorVboMesh> = t2Get("factory$i") {
     val g = T2Geo(); val glass = T2Geo(); val heads = ArrayList<Float>(); val fg = ArrayList<Float>(); val rnd = java.util.Random(83L)
@@ -2386,17 +2387,20 @@ private fun StereoBodyRenderer.t2FactoryMeshes(i: Int): Array<ColorVboMesh> = t2
         val a = u * 2f * T2PI; val b = T2PI * 0.5f + v * T2PI; val rr = 8.35f + 2.1f * cos(b)
         t2v(cos(a) * rr, sin(a) * rr, 2.3f + 2.1f * sin(b))
     }
-    // the pore complex: cytoplasmic, inner (spoke) and nuclear rings, eight-fold; luminal ring
+    // the pore complex: cytoplasmic, inner (spoke) and nuclear rings, eight-fold, each a continuous
+    // ring carrying its eight subunits
+    g.torus(t2v(0f, 0f, 4.8f), t2v(0f, 0f, 1f), 5.6f, 0.42f, T2_NPC_CYTO, 1f, 48, 8)
+    g.torus(t2v(0f, 0f, -0.2f), t2v(0f, 0f, 1f), 5.6f, 0.42f, T2_NPC, 1f, 48, 8)
+    g.torus(t2v(0f, 0f, 2.3f), t2v(0f, 0f, 1f), 4.1f, 0.5f, T2_NPC, 1f, 48, 8)
     for (k in 0 until 8) {
         val a = k * T2PI / 4f + T2PI / 8f; val d = t2v(cos(a), sin(a), 0f); val tg = t2v(-sin(a), cos(a), 0f)
         for (h in SIGNS) {   // the Y-complex pairs of the cytoplasmic and nuclear rings
             val a2 = a + h * 0.17f; val d2 = t2v(cos(a2), sin(a2), 0f); val t2 = t2v(-sin(a2), cos(a2), 0f)
-            g.ell(d2 * 5.6f + t2v(0f, 0f, 4.8f), d2 * 0.8f, t2 * 0.55f, t2v(0f, 0f, 0.55f), T2_NPC_CYTO, 1f, 7, 10)
-            g.ell(d2 * 5.6f + t2v(0f, 0f, -0.2f), d2 * 0.8f, t2 * 0.55f, t2v(0f, 0f, 0.55f), T2_NPC, 1f, 7, 10)
+            g.ell(d2 * 5.6f + t2v(0f, 0f, 4.95f), d2 * 0.62f, t2 * 0.45f, t2v(0f, 0f, 0.5f), T2_NPC_CYTO, 1f, 7, 10)
+            g.ell(d2 * 5.6f + t2v(0f, 0f, -0.35f), d2 * 0.62f, t2 * 0.45f, t2v(0f, 0f, 0.5f), T2_NPC, 1f, 7, 10)
         }
-        g.ell(d * 4.25f + t2v(0f, 0f, 2.3f), d * 0.95f, tg * 0.9f, t2v(0f, 0f, 1.6f), T2_NPC, 1f, 7, 10)
-        g.tube(d * 4.6f + t2v(0f, 0f, 0.5f), d * 4.6f + t2v(0f, 0f, 4.1f), 0.35f, 0.35f, T2_NPC, 1f, 6, false)
-        g.ball(d * 9.9f + t2v(0f, 0f, 2.3f), 0.7f, T2_NPC, 1f, 6, 8)
+        g.ell(d * 4.25f + t2v(0f, 0f, 2.3f), d * 0.7f, tg * 0.62f, t2v(0f, 0f, 1.3f), T2_NPC, 1f, 7, 10)
+        g.tube(d * 4.4f + t2v(0f, 0f, 2.3f), d * 7.6f + t2v(0f, 0f, 2.3f), 0.28f, 0.28f, T2_NPC, 1f, 6, false)
         // cytoplasmic filaments reaching into the cytoplasm
         g.path((0..6).map { q -> val t = q / 6f; d * (5.4f + 0.8f * sin(t * 3f + k)) + tg * (0.6f * sin(t * 4f + k * 2f)) + t2v(0f, 0f, 5.4f + t * 5f) }, { t -> 0.12f - 0.05f * t }, T2_NPC, 1f, 5, true)
         // nuclear basket: filaments converging on the distal ring 75 nm into the nucleus
@@ -2448,14 +2452,14 @@ private fun StereoBodyRenderer.t2FactoryMeshes(i: Int): Array<ColorVboMesh> = t2
 /** The insulin granule and the plasma membrane it fuses with (far ahead-right; rigid frame). */
 private fun StereoBodyRenderer.t2GranuleMeshes(i: Int): Array<ColorVboMesh> = t2Get("granule$i") {
     val glass = T2Geo(); val core = ArrayList<Float>(); val rnd = java.util.Random(89L)
-    val gcx = 6f; val gcy = 3f; val gcz = 46f
+    val gcx = 14f; val gcy = 3f; val gcz = 40f
     glass.surf(18, 28, T2_GRANULE, 0.26f) { u, v -> val th = u * T2PI; val ph = v * 2f * T2PI; t2v(gcx + sin(th) * cos(ph) * 15f, gcy + cos(th) * 15f, gcz + sin(th) * sin(ph) * 15f) }
     repeat(2200) {   // the dense core: a crystal of zinc-insulin hexamers
         var x: Float; var y: Float; var z: Float
         do { x = rnd.nextFloat() * 2f - 1f; y = rnd.nextFloat() * 2f - 1f; z = rnd.nextFloat() * 2f - 1f } while (x * x + y * y + z * z > 1f)
         core.addAll(listOf(gcx + 0.5f + x * 9f, gcy + y * 9f, gcz + z * 9f, 0.98f, 0.9f, 0.5f, 0.9f))
     }
-    glass.surf(10, 14, T2_PM, 0.3f) { u, v -> t2v(21.3f, -16f + 38f * u, 20f + 54f * v) }
+    glass.surf(10, 14, T2_PM, 0.3f) { u, v -> t2v(29.3f, -16f + 38f * u, 16f + 54f * v) }
     val rigid0 = t2Bend(i, 0f, 0f); val rigid = { o: FloatArray, k: Int -> o[k + 2] += T2_FZ; rigid0(o, k) }
     val cA = core.toFloatArray(); for (k in 0 until cA.size / 7) rigid(cA, k * 7)
     arrayOf(TriMesh(glass.baked(rigid)), PointMesh(cA))
@@ -2540,14 +2544,14 @@ internal fun StereoBodyRenderer.drawFactory(n: TourNode, i: Int, seconds: Float)
             val f0 = t2Rigid(i, 0f, FloatArray(13))
             val t = (seconds % 20f) / 20f
             val rho = 0.4f + 3.6f * t2sm(t / 0.35f)
-            val fp = t2W(f0, 21.3f, 3f, 46f + T2_FZ).copyOf()
+            val fp = t2W(f0, 29.3f, 3f, 40f + T2_FZ).copyOf()
             t2Basis(fp, f0[6], f0[7], f0[8], f0[9], f0[10], f0[11], rho, rho, 6f, t2RingMesh(), T2_PM, COL_LAMP, 0.8f, 0.3f)
             t2LinesBegin()
             for (k in 0 until 40) {
                 val tk = (t * 1.6f - k * 0.02f); if (tk < 0.15f || tk > 1.3f) continue
                 val u = (tk - 0.15f) / 1.15f
                 val a = k * 2.4f; val spread = u * 7f
-                val x = 21.3f + u * 9f; val y = 3f + cos(a) * min(rho * 0.8f, 3f) + sin(a) * spread * 0.6f; val z = 46f + sin(a) * min(rho * 0.8f, 3f) + cos(a) * spread * 0.6f
+                val x = 29.3f + u * 9f; val y = 3f + cos(a) * min(rho * 0.8f, 3f) + sin(a) * spread * 0.6f; val z = 40f + sin(a) * min(rho * 0.8f, 3f) + cos(a) * spread * 0.6f
                 val split = t2sm((u - 0.4f) / 0.2f)
                 for (sd in SIGNS) {
                     val w = t2W(f0, x + sd * split * 0.6f, y + sd * split * 0.4f, z + T2_FZ)
