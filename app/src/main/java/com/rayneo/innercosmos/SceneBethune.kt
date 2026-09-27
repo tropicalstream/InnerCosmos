@@ -7,6 +7,9 @@ import kotlin.math.*
 // Chapter III — Bethune: a life told through the tissues it touched.
 // Landmark scenes, drawn by StereoBodyRenderer.drawLandmarks via the stop's Scene.
 
+/** What drifts past at each stop of this tour, by stop index; stops not listed use DriftSpec.forAmb. */
+internal val BETHUNE_DRIFT: Map<Int, DriftSpec> = mapOf()
+
 // ------------------------------------------- draw: chapter III landmarks
 /**
  * Stop 1: a tuberculous lung. Air sacs on every side, and eaten out of the wall a cavity —
@@ -245,4 +248,17 @@ internal fun StereoBodyRenderer.drawSepsis(n: TourNode, i: Int, seconds: Float) 
     val glow = 0.35f + 0.3f * exp(-heartPhase * 5f)
     blobAt(f, 0f, 0f, 0f, rr * 1.04f, rr * 1.04f, 4.5f, COL_FEVER, COL_FEVER, 0.10f + 0.05f * glow,
         yawOf(f), 0f, 1f, 0f, sphere, 0f, glow)
+}
+
+/** Chapter III stop 5: the transfusion (red cells come from the BodyField). */
+internal fun StereoBodyRenderer.drawTransfusion(n: TourNode, i: Int, seconds: Float) {
+}
+
+/** Chapter III stop 7: the students — bone marrow making new cells (placeholder: Tour II's marrow). */
+internal fun StereoBodyRenderer.drawStudents(n: TourNode, i: Int, seconds: Float) {
+    drawMarrow(n, i, seconds)
+}
+
+/** Chapter III stop 8: the cut in his finger. */
+internal fun StereoBodyRenderer.drawCut(n: TourNode, i: Int, seconds: Float) {
 }

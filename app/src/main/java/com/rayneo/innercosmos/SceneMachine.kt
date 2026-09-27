@@ -7,6 +7,9 @@ import kotlin.math.*
 // Tour II — The Living Machine: mouth to mitosis.
 // Landmark scenes, drawn by StereoBodyRenderer.drawLandmarks via the stop's Scene.
 
+/** What drifts past at each stop of this tour, by stop index; stops not listed use DriftSpec.forAmb. */
+internal val MACHINE_DRIFT: Map<Int, DriftSpec> = mapOf()
+
 /** Tour II stop 1: the lips as a wide oval of flesh, an upper and a lower arch of teeth with a
  *  dark gape between them, the tongue below, the uvula above, daylight behind. */
 internal fun StereoBodyRenderer.drawMouth(n: TourNode, i: Int, seconds: Float) {

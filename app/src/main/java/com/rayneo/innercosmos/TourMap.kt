@@ -4,7 +4,8 @@ package com.rayneo.innercosmos
 enum class Scene {
     THRESHOLD, AIRWAY, ALVEOLUS, BLOOD, HEART, SENTINEL, NEURON, MEMBRANE, MITOCHONDRION, NUCLEUS, RIBOSOME, ATOM, LOOKBACK,
     MOUTH, GUT, PHAGE, LIVER, KIDNEY, MUSCLE, MARROW, VDJ, HIGHWAY, FACTORY, MOTOR, DIVISION,
-    CAVITY, DONOR, STORED, WOUND, SUTURE, SEPSIS
+    CAVITY, DONOR, STORED, WOUND, SUTURE, SEPSIS,
+    TRANSFUSION, STUDENTS, CUT
 }
 
 /** Ambience family of a stop: the synthesized sound bed and which particles drift past. */
@@ -106,10 +107,10 @@ object Tours {
             TourNode("THE VEIN", 2.4f, 0.3f, -16f, 2.2f, rgb(0.58f, 0.10f, 0.16f), 1.2e-5, Scene.DONOR, Amb.BLOOD, 22f, 66f, "DONOR'S VEIN", "12 \u00b5m"),
             TourNode("THE BOTTLE", -2.2f, -0.2f, -32f, 3.0f, rgb(0.34f, 0.16f, 0.26f), 1.2e-5, Scene.STORED, Amb.CYTO, 14f, 80f, "STORED BLOOD", "12 \u00b5m"),
             TourNode("THE FRONT", 2.0f, 0.4f, -48f, 2.8f, rgb(0.70f, 0.20f, 0.18f), 1.2e-5, Scene.WOUND, Amb.BLOOD, 40f, 105f, "THE WOUND", "12 \u00b5m"),
-            TourNode("THE TRANSFUSION", -2.6f, 0.0f, -64f, 2.0f, rgb(0.62f, 0.08f, 0.10f), 1.2e-5, Scene.BLOOD, Amb.BLOOD, 24f, 70f, "TRANSFUSION", "12 \u00b5m"),
+            TourNode("THE TRANSFUSION", -2.6f, 0.0f, -64f, 2.0f, rgb(0.62f, 0.08f, 0.10f), 1.2e-5, Scene.TRANSFUSION, Amb.BLOOD, 24f, 70f, "TRANSFUSION", "12 \u00b5m"),
             TourNode("THE TABLE", 2.4f, -0.3f, -80f, 3.2f, rgb(0.78f, 0.34f, 0.32f), 1.2e-4, Scene.SUTURE, Amb.BLOOD, 50f, 60f, "THE TABLE", "120 \u00b5m"),
-            TourNode("THE STUDENTS", -2.0f, 0.3f, -96f, 3.2f, rgb(0.90f, 0.82f, 0.70f), 1.2e-5, Scene.MARROW, Amb.CYTO, 39f, 118f, "BONE MARROW", "12 \u00b5m"),
-            TourNode("THE CUT", 2.2f, 0.2f, -112f, 2.6f, rgb(0.82f, 0.40f, 0.38f), 1.2e-5, Scene.WOUND, Amb.CYTO, 19f, 76f, "A CUT FINGER", "12 \u00b5m"),
+            TourNode("THE STUDENTS", -2.0f, 0.3f, -96f, 3.2f, rgb(0.90f, 0.82f, 0.70f), 1.2e-5, Scene.STUDENTS, Amb.CYTO, 39f, 118f, "BONE MARROW", "12 \u00b5m"),
+            TourNode("THE CUT", 2.2f, 0.2f, -112f, 2.6f, rgb(0.82f, 0.40f, 0.38f), 1.2e-5, Scene.CUT, Amb.CYTO, 19f, 76f, "A CUT FINGER", "12 \u00b5m"),
             TourNode("THE FEVER", -2.4f, -0.2f, -128f, 2.4f, rgb(0.66f, 0.10f, 0.14f), 1.2e-6, Scene.SEPSIS, Amb.BLOOD, 54f, 50f, "BLOODSTREAM", "1.2 \u00b5m"),
             TourNode("THE MEMORY", 0.0f, 0.2f, -146f, 9.0f, rgb(0.38f, 0.22f, 0.36f), 12.0, Scene.LOOKBACK, Amb.LOOKBACK, 50f, 60f, "WHOLE BODY", "1.2 \u00b5m \u2192 12 m")
         ),

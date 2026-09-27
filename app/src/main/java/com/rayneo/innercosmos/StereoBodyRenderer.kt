@@ -98,7 +98,7 @@ class StereoBodyRenderer(
     internal val drift = DriftField(150)
     internal val air = AirField(96)
     internal var airFlow = 0f       // signed airspeed along the rail: + = inhale (deeper), - = exhale
-    internal val bodies = BodyField(20)
+    internal val bodies = BodyField(44)
     internal val dynTris = DynMesh(24)          // valve leaflets
     internal val dynLines = DynMesh(64)         // action-potential ring, spindle fibres, misc
 
@@ -226,7 +226,7 @@ class StereoBodyRenderer(
         inflateT = 0f
         growing = false
         drift.blowOut(shipX, shipY, shipZ, 1f)
-        bodies.blowOut(shipX, shipY, shipZ, 1f)
+        bodies.blowOut(routeProgress, 1f)
     }
 
     /** The reverse step (tour II climbs the ladder several times): the world contracts about the ship, the hull swells, particles rush in. */
@@ -235,7 +235,7 @@ class StereoBodyRenderer(
         inflateT = 0f
         growing = true
         drift.blowOut(shipX, shipY, shipZ, -0.6f)
-        bodies.blowOut(shipX, shipY, shipZ, -0.6f)
+        bodies.blowOut(routeProgress, -0.6f)
     }
 
     /** The "lysis" cue: the phage stop's infected host bursts now, in step with the sound. */
@@ -440,7 +440,8 @@ class StereoBodyRenderer(
         // DriftField's flow is along +z (toward the nose on this rail): negative on the inhale.
         val dustFlow = if (amb == Amb.AIR) -airFlow * 0.7f else flowSpeed(amb)
         drift.update(shipX, shipY, shipZ, spread, amb, dustFlow, dt)
-        bodies.update(shipX, shipY, shipZ, spread, amb, flowSpeed(amb), dt)
+        val stopIdx = (routeProgress + 0.5f).toInt().coerceIn(0, nodes.lastIndex)
+        bodies.update(routeProgress, stopIdx, driftFor(stopIdx), airFlow * 0.7f, dt)
         if (inAir) air.update(shipX, shipY, shipZ, dirX, dirY, dirZ, sideX, sideY, sideZ, upX, upY, upZ, spread, airFlow, dt)
 
         // Fixed FOV: on a head-worn display the rendered field must stay matched to the optics.
@@ -747,9 +748,25 @@ class StereoBodyRenderer(
         GLES20.glDisable(GLES20.GL_CULL_FACE)
         // Time wraps at a common period of every sin(uTime * k) in the shader (k = 1.5, 0.3) so the
         // argument stays small for half-precision GPUs without a visible seam.
-        wallShader.use(mvp, model, lampX(), lampY(), lampZ(), seconds % TIME_WRAP, wallPulse, 0.02f, 1f, if (quality == 0) 1f else 0f)
+        // At the look-back the craft has left the body: the passage wall dissolves so the whole
+        // figure can be seen (and so the figure is never buried in the wall).
+        val wallAlpha = lookBackWallAlpha()
+        if (wallAlpha < 0.01f) { GLES20.glEnable(GLES20.GL_CULL_FACE); return }
+        if (wallAlpha < 0.999f) GLES20.glDepthMask(false)
+        wallShader.use(mvp, model, lampX(), lampY(), lampZ(), seconds % TIME_WRAP, wallPulse, 0.02f, wallAlpha, if (quality == 0) 1f else 0f)
         tunnel.draw(wallShader.positionHandle, wallShader.normalHandle, wallShader.colorHandle)
+        GLES20.glDepthMask(true)
         GLES20.glEnable(GLES20.GL_CULL_FACE)
+    }
+
+    /** Height of a 1.7 m person in scene units at the craft's current length (1.5 units = the Mote). */
+    internal fun personHeightUnits(): Float = (1.7 / shipLengthM(routeProgress) * 1.5).toFloat()
+
+    /** 1 inside the body; fades to 0 as the whole person comes into view at the look-back. */
+    internal fun lookBackWallAlpha(): Float {
+        if (nodes.last().scene != Scene.LOOKBACK || routeProgress < nodes.lastIndex - 1.2f) return 1f
+        val h = personHeightUnits()
+        return ((h - 45f) / 60f).coerceIn(0f, 1f)
     }
 
     internal fun drawRoute() {
@@ -789,27 +806,86 @@ class StereoBodyRenderer(
         GLES20.glDepthMask(true)
     }
 
+    /** The drift spec for one stop of the current tour: the tour's own table, else the ambience default. */
+    internal fun driftFor(stop: Int): DriftSpec {
+        val table = when (map.id) { 1 -> DESCENT_DRIFT; 2 -> MACHINE_DRIFT; else -> BETHUNE_DRIFT }
+        return table[stop] ?: DriftSpec.forAmb(nodes[stop.coerceIn(0, nodes.lastIndex)].amb)
+    }
+
+    /** µm per scene unit right now: the Mote (1.5 units) is shipLengthM long. */
+    internal fun umPerUnit(): Float = (shipLengthM(routeProgress) * 1e6 / 1.5).toFloat()
+
     internal fun drawBodies(seconds: Float) {
-        val n = when (quality) { 0 -> bodies.count; 1 -> bodies.count / 2; else -> bodies.count / 3 }
+        val n = bodies.live(quality)
+        if (n == 0 || bodies.fade <= 0.01f) return
+        val upu = umPerUnit()
         for (i in 0 until n) {
             val kind = bodies.kind[i]
-            // Skip anything already behind the camera.
-            if ((bodies.px[i] - camNowX) * dirX + (bodies.py[i] - camNowY) * dirY + (bodies.pz[i] - camNowZ) * dirZ < -1f) continue
-            val s = bodies.size[i]
-            val spin = seconds * 40f + bodies.spin[i] * 360f
+            if (kind == BodyField.NONE) continue
+            val rad = BodyField.DIAMETER_UM[kind] * 0.5f / upu * bodies.jitter[i]
+            val pr = bodies.p[i]
+            val tr = tunnelRadius(pr)
+            // Too small to see, or too big to fit this passage: not drawn at this magnification.
+            if (rad < 0.02f || rad > tr * 0.45f) continue
+            val f = frameAt(pr)
+            val rr = (tr - rad) * bodies.r[i]
+            val ca = cos(bodies.a[i]); val sa = sin(bodies.a[i])
+            val x = f.cx + (f.sx * ca + f.ux * sa) * rr
+            val y = f.cy + (f.sy * ca + f.uy * sa) * rr
+            val z = f.cz + (f.sz * ca + f.uz * sa) * rr
+            if ((x - camNowX) * dirX + (y - camNowY) * dirY + (z - camNowZ) * dirZ < -1f) continue
+            val al = bodies.fade
+            val tb = bodies.tumble[i]
             when (kind) {
-                BodyField.RED_CELL -> drawSphereAt(bodies.px[i], bodies.py[i], bodies.pz[i], s, s * 0.32f, s, COL_RED_CELL, COL_RED_CELL_DARK, 1f, spin, 0.4f, 1f, 0.2f, blob, 1f)
-                BodyField.PLATELET -> drawSphereAt(bodies.px[i], bodies.py[i], bodies.pz[i], s, s * 0.45f, s * 0.8f, COL_PLATELET, COL_LAMP, 1f, spin, 1f, 0.3f, 0f, blob)
-                BodyField.DUST -> drawSphereAt(bodies.px[i], bodies.py[i], bodies.pz[i], s, s, s, COL_DUST, COL_DUST, 0.9f, 0f, 0f, 1f, 0f, blob)
-                BodyField.POLLEN -> drawSphereAt(bodies.px[i], bodies.py[i], bodies.pz[i], s, s, s, COL_POLLEN, COL_LAMP, 1f, spin, 0f, 1f, 0f, blob, 1f)
-                BodyField.PROTEIN -> drawSphereAt(bodies.px[i], bodies.py[i], bodies.pz[i], s, s * 0.7f, s * 1.3f, COL_PROTEIN, COL_LAMP, 1f, spin, 0.5f, 1f, 0.5f, blob, 1f)
-                BodyField.VESICLE -> drawSphereAt(bodies.px[i], bodies.py[i], bodies.pz[i], s, s, s, COL_VESICLE, COL_LAMP, 0.45f, 0f, 0f, 1f, 0f, blob)
-                BodyField.TRANSMITTER -> drawSphereAt(bodies.px[i], bodies.py[i], bodies.pz[i], s, s, s, COL_TRANSMITTER, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 0f, 0.5f)
-                BodyField.WHITE_CELL -> drawSphereAt(bodies.px[i], bodies.py[i], bodies.pz[i], s, s * 0.9f, s, COL_WHITE_CELL, COL_WHITE_CELL_DARK, 0.95f, spin * 0.3f, 0f, 1f, 0.3f, sphere, 1f)
-                BodyField.BACTERIUM -> drawSphereAt(bodies.px[i], bodies.py[i], bodies.pz[i], s * 0.42f, s * 0.42f, s * 1.2f, COL_BACTERIUM, COL_BACTERIUM_DARK, 1f, spin * 0.5f, 0.3f, 1f, 0.5f, blob, 1f)
-                BodyField.CHYLE -> drawSphereAt(bodies.px[i], bodies.py[i], bodies.pz[i], s, s, s, COL_CHYLE, COL_LAMP, 0.7f, 0f, 0f, 1f, 0f, blob, 0f, 0.2f)
+                BodyField.RED_CELL -> {
+                    // Face-on to the flow: the disc's normal lies across the rail and turns slowly.
+                    val nx = f.sx * cos(tb) + f.ux * sin(tb); val ny = f.sy * cos(tb) + f.uy * sin(tb); val nz = f.sz * cos(tb) + f.uz * sin(tb)
+                    drawBasis(x, y, z, f.dx, f.dy, f.dz, nx, ny, nz, rad, rad, rad, rbc,
+                        if (bodies.oxy) COL_RBC_OXY else COL_RBC_DEOXY, COL_RBC_RIM, al, 0f, 0f)
+                }
+                BodyField.PLATELET -> {
+                    val nx = f.sx * cos(tb) + f.ux * sin(tb); val ny = f.sy * cos(tb) + f.uy * sin(tb); val nz = f.sz * cos(tb) + f.uz * sin(tb)
+                    drawBasis(x, y, z, f.dx, f.dy, f.dz, nx, ny, nz, rad, rad * 0.35f, rad * 0.8f, blob, COL_PLATELET, COL_LAMP, al, 0.4f, 0f)
+                }
+                BodyField.WHITE_CELL -> drawSphereAt(x, y, z, rad, rad * 0.95f, rad, COL_WHITE_CELL, COL_WHITE_CELL_DARK, 0.95f * al, tb * 20f, 0f, 1f, 0.3f, sphere, 1f)
+                BodyField.DUST -> drawSphereAt(x, y, z, rad, rad * 0.7f, rad * 0.85f, COL_DUST, COL_DUST, 0.9f * al, tb * 30f, 0.3f, 1f, 0.5f, blob)
+                BodyField.POLLEN -> drawSphereAt(x, y, z, rad, rad, rad, COL_POLLEN, COL_LAMP, al, tb * 20f, 0f, 1f, 0f, blob, 1f)
+                BodyField.PROTEIN -> drawSphereAt(x, y, z, rad, rad * 0.8f, rad * 1.2f, COL_PROTEIN, COL_LAMP, al, tb * 40f, 0.5f, 1f, 0.5f, blob, 1f)
+                BodyField.VESICLE -> drawSphereAt(x, y, z, rad, rad, rad, COL_VESICLE, COL_LAMP, 0.45f * al, 0f, 0f, 1f, 0f, blob)
+                BodyField.TRANSMITTER -> drawSphereAt(x, y, z, rad, rad, rad, COL_TRANSMITTER, COL_LAMP, al, 0f, 0f, 1f, 0f, blob, 0f, 0.5f)
+                BodyField.BACTERIUM -> drawBasis(x, y, z, f.sx * ca + f.ux * sa, f.sy * ca + f.uy * sa, f.sz * ca + f.uz * sa,
+                    f.dx, f.dy, f.dz, rad * 0.4f, rad * 0.4f, rad, capsule, COL_BACTERIUM, COL_BACTERIUM_DARK, al, 0.3f, 0f)
+                BodyField.CHYLE -> drawSphereAt(x, y, z, rad, rad, rad, COL_CHYLE, COL_LAMP, 0.7f * al, 0f, 0f, 1f, 0f, blob, 0f, 0.2f)
             }
         }
+    }
+
+    /**
+     * Draw [mesh] at (x,y,z) with its local z axis along (zx,zy,zz) and local y along (yx,yy,yz)
+     * (x completes a right-handed basis), scaled (sx,sy,sz) in local axes. The general way to
+     * orient a shaped primitive: a red cell face-on to the flow, a filament along its track, a
+     * cone pointing at a target.
+     */
+    internal fun drawBasis(
+        x: Float, y: Float, z: Float, zx: Float, zy: Float, zz: Float, yx0: Float, yy0: Float, yz0: Float,
+        sx: Float, sy: Float, sz: Float, mesh: LitMesh, base: FloatArray, accent: FloatArray,
+        alpha: Float, pattern: Float, glow: Float
+    ) {
+        var zl = sqrt(zx * zx + zy * zy + zz * zz).coerceAtLeast(1e-6f)
+        val Zx = zx / zl; val Zy = zy / zl; val Zz = zz / zl
+        // Make y orthogonal to z.
+        val d = yx0 * Zx + yy0 * Zy + yz0 * Zz
+        var Yx = yx0 - d * Zx; var Yy = yy0 - d * Zy; var Yz = yz0 - d * Zz
+        zl = sqrt(Yx * Yx + Yy * Yy + Yz * Yz)
+        if (zl < 1e-5f) { Yx = if (abs(Zy) < 0.9f) 0f else 1f; Yy = if (abs(Zy) < 0.9f) 1f else 0f; Yz = 0f
+            val d2 = Yx * Zx + Yy * Zy + Yz * Zz; Yx -= d2 * Zx; Yy -= d2 * Zy; Yz -= d2 * Zz; zl = sqrt(Yx * Yx + Yy * Yy + Yz * Yz) }
+        Yx /= zl; Yy /= zl; Yz /= zl
+        val Xx = Yy * Zz - Yz * Zy; val Xy = Yz * Zx - Yx * Zz; val Xz = Yx * Zy - Yy * Zx
+        model[0] = Xx * sx; model[1] = Xy * sx; model[2] = Xz * sx; model[3] = 0f
+        model[4] = Yx * sy; model[5] = Yy * sy; model[6] = Yz * sy; model[7] = 0f
+        model[8] = Zx * sz; model[9] = Zy * sz; model[10] = Zz * sz; model[11] = 0f
+        model[12] = x; model[13] = y; model[14] = z; model[15] = 1f
+        drawLitModel(mesh, base, accent, alpha * landmarkFade, pattern, glow)
     }
 
     internal fun drawBeacon(seconds: Float) {
@@ -860,7 +936,7 @@ class StereoBodyRenderer(
                 Scene.THRESHOLD -> drawThreshold(n, i, seconds)
                 Scene.AIRWAY -> drawAirway(n, i, seconds)
                 Scene.ALVEOLUS -> drawAlveolus(n, i, seconds)
-                Scene.BLOOD -> {}                                   // red cells come from the BodyField
+                Scene.BLOOD -> drawBloodstream(n, i, seconds)
                 Scene.HEART -> drawHeart(n, i, seconds)
                 Scene.SENTINEL -> drawSentinel(n, i, seconds)
                 Scene.NEURON -> drawNeuron(n, i, seconds)
@@ -888,6 +964,9 @@ class StereoBodyRenderer(
                 Scene.WOUND -> drawWound(n, i, seconds)
                 Scene.SUTURE -> drawSuture(n, i, seconds)
                 Scene.SEPSIS -> drawSepsis(n, i, seconds)
+                Scene.TRANSFUSION -> drawTransfusion(n, i, seconds)
+                Scene.STUDENTS -> drawStudents(n, i, seconds)
+                Scene.CUT -> drawCut(n, i, seconds)
             }
         }
         landmarkFade = 1f
@@ -2122,80 +2201,139 @@ internal class AirField(internal val count: Int) {
 }
 
 /** Coarse drift: red cells, platelets, dust, pollen, proteins, vesicles — drawn as shaded shapes. */
+/**
+ * What drifts past at one stop: a weighted mix of body kinds, how many, and how the fluid moves.
+ * Each tour keeps its own table (DESCENT_DRIFT, MACHINE_DRIFT, BETHUNE_DRIFT keyed by stop index);
+ * stops without an entry fall back to [DriftSpec.forAmb].
+ */
+internal class DriftSpec(
+    /** Relative weight per BodyField kind (indexed by the kind constants). */
+    val mix: FloatArray,
+    /** Fraction of the pool in use, 0..1. */
+    val density: Float = 1f,
+    /** Peak speed along the rail in scene units/s (+ = deeper, with the craft). NaN = ride the breath. */
+    val flow: Float = 1f,
+    /** Red cells oxygenated (bright) rather than deoxygenated (dark). */
+    val oxy: Boolean = true,
+    /** Seconds over which the population ramps up from 15% after arriving (a vessel refilling). */
+    val fill: Float = 0f,
+) {
+    companion object {
+        fun of(vararg w: Pair<Int, Float>, density: Float = 1f, flow: Float = 1f, oxy: Boolean = true, fill: Float = 0f): DriftSpec {
+            val m = FloatArray(BodyField.KINDS); for ((k, v) in w) m[k] = v
+            return DriftSpec(m, density, flow, oxy, fill)
+        }
+        val NONE = of(density = 0f)
+        fun forAmb(a: Amb): DriftSpec = when (a) {
+            Amb.AIR -> of(BodyField.DUST to 0.8f, BodyField.POLLEN to 0.2f, density = 0.45f, flow = Float.NaN)
+            // Real proportions are ~600 red cells : 40 platelets : 1 white cell.
+            Amb.BLOOD -> of(BodyField.RED_CELL to 0.94f, BodyField.PLATELET to 0.055f, BodyField.WHITE_CELL to 0.005f, flow = 1.2f)
+            Amb.NEURAL -> of(BodyField.VESICLE to 1f, density = 0.3f, flow = 0.15f)
+            Amb.CYTO -> of(BodyField.PROTEIN to 0.6f, BodyField.VESICLE to 0.4f, density = 0.5f, flow = 0.12f)
+            Amb.GUT -> of(BodyField.BACTERIUM to 0.6f, BodyField.CHYLE to 0.4f, density = 0.6f, flow = 0.6f)
+            Amb.ATOM, Amb.LOOKBACK, Amb.MOTOR, Amb.MUSCLE -> NONE
+        }
+    }
+}
+
+/**
+ * Coarse drifting bodies (cells, particles, organelles) in RAIL coordinates: each has a rail
+ * parameter p (node units), a radial fraction r of the passage radius and an angle a around the
+ * axis, so they stay inside the passage however it curves. Sizes are real diameters in µm,
+ * converted to scene units for the craft's current length (1.5 units = the Mote), so a red cell
+ * is always 7.5 µm across whatever the magnification. The population is re-seeded (with a short
+ * cross-fade) whenever the nearest stop changes, so nothing carries over from the last stop.
+ */
 internal class BodyField(val count: Int) {
-    val px = FloatArray(count); val py = FloatArray(count); val pz = FloatArray(count)
-    internal val vx = FloatArray(count); internal val vy = FloatArray(count); internal val vz = FloatArray(count)
-    val kind = IntArray(count); val size = FloatArray(count); val spin = FloatArray(count)
-    internal val rnd = java.util.Random(11)
-    internal var seeded = false
-    internal var lastAmb: Amb? = null
+    val p = FloatArray(count); val r = FloatArray(count); val a = FloatArray(count)
+    val kind = IntArray(count); val jitter = FloatArray(count); val spin = FloatArray(count)
+    val tumble = FloatArray(count)
+    private val vp = FloatArray(count)
+    private val rnd = java.util.Random(11)
+    private var stop = -1
+    private var spec: DriftSpec = DriftSpec.NONE
+    private var arrivedAt = 0f
+    private var clock = 0f
+    /** 0..1 global alpha (cross-fade between stops). */
+    var fade = 1f; private set
+    private var pending: Pair<Int, DriftSpec>? = null
+    private var seeded = false
 
     companion object {
         const val RED_CELL = 0; const val PLATELET = 1; const val DUST = 2; const val POLLEN = 3
         const val PROTEIN = 4; const val VESICLE = 5; const val TRANSMITTER = 6; const val WHITE_CELL = 7
         const val BACTERIUM = 8; const val CHYLE = 9; const val NONE = 10
+        const val KINDS = 11
+        /** Real diameters (µm): red cell 7.5, platelet 2.5, neutrophil 12, dust 6, pollen 25,
+         *  a globular protein 8 nm, a transport vesicle 100 nm, a small molecule 1 nm, E. coli 2 µm
+         *  long, a chylomicron 0.5 µm. */
+        val DIAMETER_UM = floatArrayOf(7.5f, 2.5f, 6f, 25f, 0.008f, 0.1f, 0.001f, 12f, 2f, 0.5f, 0f)
     }
 
-    fun reset() { seeded = false; lastAmb = null }
+    fun reset() { seeded = false; stop = -1 }
+    val oxy get() = spec.oxy
 
-    internal fun kindFor(amb: Amb): Int {
-        val r = rnd.nextFloat()
-        return when (amb) {
-            Amb.AIR -> if (r < 0.7f) DUST else if (r < 0.9f) POLLEN else NONE
-            Amb.BLOOD -> if (r < 0.78f) RED_CELL else if (r < 0.94f) PLATELET else WHITE_CELL
-            Amb.NEURAL -> if (r < 0.7f) TRANSMITTER else VESICLE
-            Amb.CYTO -> if (r < 0.65f) PROTEIN else VESICLE
-            Amb.ATOM -> NONE
-            Amb.GUT -> if (r < 0.55f) BACTERIUM else if (r < 0.8f) CHYLE else DUST
-            Amb.MUSCLE -> if (r < 0.3f) PROTEIN else NONE
-            Amb.MOTOR -> NONE
-            Amb.LOOKBACK -> if (r < 0.4f) RED_CELL else NONE
-        }
+    /** How many bodies are live right now (density, quality, and the refill ramp). */
+    fun live(quality: Int): Int {
+        val q = when (quality) { 0 -> 1f; 1 -> 0.6f; else -> 0.4f }
+        val ramp = if (spec.fill > 0f) (0.15f + 0.85f * ((clock - arrivedAt) / spec.fill).coerceIn(0f, 1f)) else 1f
+        return (count * spec.density * q * ramp).toInt().coerceIn(0, count)
     }
 
-    internal fun respawn(i: Int, cx: Float, cy: Float, cz: Float, spread: Float, amb: Amb) {
-        kind[i] = kindFor(amb)
-        size[i] = when (kind[i]) {
-            RED_CELL -> 0.30f + rnd.nextFloat() * 0.12f
-            PLATELET -> 0.10f + rnd.nextFloat() * 0.05f
-            DUST -> 0.05f + rnd.nextFloat() * 0.06f
-            POLLEN -> 0.09f + rnd.nextFloat() * 0.06f
-            PROTEIN -> 0.12f + rnd.nextFloat() * 0.14f
-            VESICLE -> 0.22f + rnd.nextFloat() * 0.18f
-            TRANSMITTER -> 0.05f + rnd.nextFloat() * 0.04f
-            WHITE_CELL -> 0.50f + rnd.nextFloat() * 0.15f
-            BACTERIUM -> 0.55f + rnd.nextFloat() * 0.25f
-            CHYLE -> 0.14f + rnd.nextFloat() * 0.12f
-            else -> 0f
-        }
+    private fun pickKind(): Int {
+        var total = 0f; for (w in spec.mix) total += w
+        if (total <= 0f) return NONE
+        var x = rnd.nextFloat() * total
+        for (k in spec.mix.indices) { x -= spec.mix[k]; if (x <= 0f) return k }
+        return NONE
+    }
+
+    private fun spawn(i: Int, rp: Float, anywhere: Boolean, ahead: Boolean) {
+        kind[i] = pickKind()
+        jitter[i] = 0.85f + 0.3f * rnd.nextFloat()
         spin[i] = rnd.nextFloat()
-        px[i] = cx + (rnd.nextFloat() - 0.5f) * 1.7f * spread
-        py[i] = cy + (rnd.nextFloat() - 0.5f) * 1.7f * spread
-        pz[i] = cz - 4f - rnd.nextFloat() * 22f
-        vx[i] = (rnd.nextFloat() - 0.5f) * 0.3f
-        vy[i] = (rnd.nextFloat() - 0.5f) * 0.3f
-        vz[i] = 0.5f + rnd.nextFloat() * 0.9f
+        tumble[i] = rnd.nextFloat() * 6.283f
+        // Uniform over the cross-section: r = sqrt(u).
+        r[i] = 0.82f * sqrt(rnd.nextFloat())
+        a[i] = rnd.nextFloat() * 6.283f
+        p[i] = when {
+            anywhere -> rp - 0.28f + rnd.nextFloat() * 1.35f
+            ahead -> rp + 0.95f + rnd.nextFloat() * 0.12f
+            else -> rp - 0.30f + rnd.nextFloat() * 0.08f
+        }
+        vp[i] = 0f
     }
 
-    fun blowOut(cx: Float, cy: Float, cz: Float, sign: Float) {
-        for (i in 0 until count) {
-            val dx = px[i] - cx; val dy = py[i] - cy; val dz = pz[i] - cz
-            val d = sqrt(dx * dx + dy * dy + dz * dz).coerceAtLeast(0.2f)
-            vx[i] += dx / d * 4f * sign; vy[i] += dy / d * 4f * sign; vz[i] += 3f * sign
-        }
+    /** A scale step: bodies are flung outward from the craft (sign > 0) or drawn in (sign < 0). */
+    fun blowOut(rp: Float, sign: Float) {
+        for (i in 0 until count) vp[i] += sign * (p[i] - rp) * 0.6f
     }
 
-    fun update(cx: Float, cy: Float, cz: Float, spread: Float, amb: Amb, flow: Float, dt: Float) {
-        if (!seeded) { for (i in 0 until count) respawn(i, cx, cy, cz, spread, amb); seeded = true }
-        if (amb != lastAmb) {
-            lastAmb = amb
-            // Inside the atom, the look back and the motor nothing drifts: clear the stragglers.
-            if (amb == Amb.ATOM || amb == Amb.LOOKBACK || amb == Amb.MOTOR) for (i in 0 until count) kind[i] = NONE
-        }
+    /**
+     * @param rp rail progress of the craft; @param stopIdx nearest stop; @param newSpec its spec;
+     * @param breath signed airspeed (units/s, + = deeper) used when the spec rides the breath.
+     */
+    fun update(rp: Float, stopIdx: Int, newSpec: DriftSpec, breath: Float, dt: Float) {
+        clock += dt
+        if (!seeded) { stop = stopIdx; spec = newSpec; arrivedAt = clock; for (i in 0 until count) spawn(i, rp, true, false); seeded = true; fade = 1f }
+        if (stopIdx != stop && pending?.first != stopIdx) pending = stopIdx to newSpec
+        val pend = pending
+        if (pend != null) {
+            fade = (fade - dt / 0.5f).coerceAtLeast(0f)
+            if (fade <= 0f) {
+                stop = pend.first; spec = pend.second; arrivedAt = clock; pending = null
+                for (i in 0 until count) spawn(i, rp, true, false)
+            }
+        } else fade = (fade + dt / 0.5f).coerceAtMost(1f)
+        val vmax = if (spec.flow.isNaN()) breath else spec.flow
         for (i in 0 until count) {
-            px[i] += vx[i] * dt; py[i] += vy[i] * dt; pz[i] += vz[i] * flow * dt
-            vx[i] *= 0.985f; vy[i] *= 0.985f
-            if (pz[i] > cz + 3f || abs(px[i] - cx) > 12f || abs(py[i] - cy) > 12f) respawn(i, cx, cy, cz, spread, amb)
+            // Poiseuille profile: fastest on the axis, still at the wall.
+            val v = vmax * (1f - r[i] * r[i] / 0.7f).coerceAtLeast(0.05f)
+            p[i] += (v + vp[i]) / 16f * dt
+            vp[i] *= 0.97f
+            tumble[i] += dt * (0.25f + 0.35f * spin[i])
+            if (p[i] > rp + 1.1f) spawn(i, rp, false, false)
+            else if (p[i] < rp - 0.32f) spawn(i, rp, false, true)
         }
     }
 }

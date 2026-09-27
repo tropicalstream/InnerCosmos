@@ -126,3 +126,21 @@ internal val COL_THREAD_S = floatArrayOf(0.95f, 0.93f, 0.85f, 1f)
 internal val COL_MICROBE = floatArrayOf(0.85f, 0.90f, 0.45f, 1f)
 internal val COL_MICROBE_DARK = floatArrayOf(0.45f, 0.52f, 0.20f, 1f)
 internal val COL_FEVER = floatArrayOf(1f, 0.35f, 0.30f, 1f)
+
+// Red cells: oxygenated (arterial / fresh donor blood) and deoxygenated (venous / stored).
+internal val COL_RBC_OXY = floatArrayOf(0.86f, 0.12f, 0.13f, 1f)
+internal val COL_RBC_DEOXY = floatArrayOf(0.52f, 0.07f, 0.13f, 1f)
+internal val COL_RBC_RIM = floatArrayOf(0.98f, 0.35f, 0.32f, 1f)
+
+// The person at the look-back: a translucent skin shell over conventionally coloured organs.
+internal val COL_SKIN_SHELL = floatArrayOf(0.96f, 0.74f, 0.64f, 1f)
+internal val COL_SKIN_RIM = floatArrayOf(1f, 0.86f, 0.78f, 1f)
+internal val COL_ORG_BRAIN = floatArrayOf(0.90f, 0.70f, 0.74f, 1f)
+internal val COL_ORG_LUNG = floatArrayOf(0.95f, 0.58f, 0.62f, 1f)
+internal val COL_ORG_HEART = floatArrayOf(0.78f, 0.10f, 0.14f, 1f)
+internal val COL_ORG_LIVER = floatArrayOf(0.52f, 0.17f, 0.13f, 1f)
+internal val COL_ORG_STOMACH = floatArrayOf(0.92f, 0.56f, 0.52f, 1f)
+internal val COL_ORG_KIDNEY = floatArrayOf(0.62f, 0.20f, 0.22f, 1f)
+internal val COL_ORG_GUT = floatArrayOf(0.94f, 0.66f, 0.56f, 1f)
+internal val COL_ORG_BLADDER = floatArrayOf(0.95f, 0.86f, 0.52f, 1f)
+internal val COL_BONE = floatArrayOf(0.94f, 0.90f, 0.80f, 1f)

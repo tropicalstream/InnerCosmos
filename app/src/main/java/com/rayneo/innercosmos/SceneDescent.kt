@@ -7,6 +7,9 @@ import kotlin.math.*
 // Tour I — The Descent: nose to carbon atom.
 // Landmark scenes, drawn by StereoBodyRenderer.drawLandmarks via the stop's Scene.
 
+/** What drifts past at each stop of this tour, by stop index; stops not listed use DriftSpec.forAmb. */
+internal val DESCENT_DRIFT: Map<Int, DriftSpec> = mapOf()
+
 /** Node 0: the nostril as a cave mouth (a ring of flesh) with a forest of nasal hairs behind a warm bay glow. */
 internal fun StereoBodyRenderer.drawThreshold(n: TourNode, i: Int, seconds: Float) {
     val f = frameAt(i + 0.55f)
@@ -271,21 +274,128 @@ internal fun StereoBodyRenderer.drawAtom(n: TourNode, i: Int, seconds: Float) {
     drawSphereAt(n.x, n.y, n.z, 0.09f * pulse, 0.09f * pulse, 0.09f * pulse, COL_NUCLEON, COL_LAMP, 1f, 0f, 0f, 1f, 0f, blob, 0f, 1.5f)
 }
 
-/** Node 12: the body as a cosmos of cells (a starfield of points) around a warm world ahead. */
+/**
+ * The look-back (the last stop of every tour): the craft grows out through the body and the whole
+ * person comes into view — drawn at TRUE scale for the craft's current length (a 1.7 m person is
+ * 1.7 m / Mote-length × 1.5 units tall), so she fills the view as the climb passes ~0.25 m and
+ * recedes to a small figure beside the 12 m ship when the crew call "twelve metres". Skin is a
+ * translucent shell over the major organs; every stop of this tour is marked where it happened
+ * and joined in order, so the ride can be read back on the body. While the craft is still tiny
+ * the body is shown as what it is at that scale: a cosmos of cells.
+ */
 internal fun StereoBodyRenderer.drawLookBack(n: TourNode, i: Int, seconds: Float) {
-    GLES20.glDepthMask(false)
-    GLES20.glDisable(GLES20.GL_DEPTH_TEST)
-    Matrix.setIdentityM(model, 0)
-    Matrix.translateM(model, 0, n.x, n.y, n.z)
-    Matrix.rotateM(model, 0, seconds * 1.5f, 0f, 1f, 0f)
-    Matrix.multiplyMM(mv, 0, view, 0, model, 0)
-    Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
-    colorShader.use(mvp, 3.6f, points = true)
-    cellCosmos.draw(colorShader.positionHandle, colorShader.colorHandle)
-    GLES20.glEnable(GLES20.GL_DEPTH_TEST)
-    GLES20.glDepthMask(true)
+    val h = personHeightUnits()
+    // A cosmos of cells while the person is still far too big to see whole.
+    val cosmos = ((h - 30f) / 30f).coerceIn(0f, 1f)
+    if (cosmos > 0.01f) {
+        val keep = colorShader.globalFade
+        colorShader.globalFade = keep * cosmos
+        GLES20.glDepthMask(false)
+        GLES20.glDisable(GLES20.GL_DEPTH_TEST)
+        Matrix.setIdentityM(model, 0)
+        Matrix.translateM(model, 0, n.x, n.y, n.z)
+        Matrix.rotateM(model, 0, seconds * 1.5f, 0f, 1f, 0f)
+        Matrix.multiplyMM(mv, 0, view, 0, model, 0)
+        Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
+        colorShader.use(mvp, 3.6f, points = true)
+        cellCosmos.draw(colorShader.positionHandle, colorShader.colorHandle)
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
+        GLES20.glDepthMask(true)
+        colorShader.globalFade = keep
+    }
+    if (h < 40f) drawPerson(n, i, h, ((40f - h) / 8f).coerceIn(0f, 1f), seconds)
     // Chapter III closes on the man himself: the scroll portrait, out among the cells.
     if (map.id == 3) drawPlate("portrait", frameAt(i + 0.12f), tunnelRadius(i + 0.12f) * 0.34f, tunnelRadius(i + 0.12f) * 0.10f, 3.6f, seconds)
-    // The warm world ahead appears only once the re-expansion is under way (not from inside the atom).
-    if (routeProgress > i - 0.4f) drawSphereAt(n.x, n.y + 0.4f, n.z - 9f, 3.2f, 3.2f, 3.2f, COL_WORLD, COL_LAMP, 1f, seconds * 4f, 0f, 1f, 0f, sphere, 1f, 0.35f)
+}
+
+/**
+ * An upright person facing the craft, H units tall, feet at the bottom. Figure-space x is the
+ * person's LEFT (+x) / RIGHT (-x) as seen from the front, y is up from the soles, z toward the
+ * viewer. Proportions follow the classical eight-head canon.
+ */
+internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha: Float, seconds: Float) {
+    val f = frameAt(routeProgress)
+    // The craft holds station a fixed PHYSICAL distance from her while it grows: its bow 2.5 m from
+    // her. In scene units that distance shrinks as the craft grows (1.5 units = the Mote), so she
+    // keeps her angular size and only shrinks relative to the hull — which is what a growing ship
+    // holding station in front of a person would actually see. She stands a little to one side of
+    // the axis so the hull never blocks her from the chase camera.
+    val lengthM = shipLengthM(routeProgress).toFloat()
+    val ahead = 0.75f + 2.5f / lengthM * 1.5f
+    val side = 0.9f + 0.28f * H
+    val bx = shipX + f.dx * ahead + f.sx * side; val bz = shipZ + f.dz * ahead + f.sz * side
+    val by = shipY - H * 0.5f
+    // Figure axes in world space: across (x) = -side so her left is on the viewer's right; up = world up; toward viewer = -dir.
+    val ax = -f.sx; val az = -f.sz
+    val tx = -f.dx; val tz = -f.dz
+    fun wx(x: Float, z: Float) = bx + ax * x * H + tx * z * H
+    fun wz(x: Float, z: Float) = bz + az * x * H + tz * z * H
+    fun wy(y: Float) = by + y * H
+    val yaw = atan2(tx, tz) * 180f / PI.toFloat()
+    val sway = 0.004f * sin(seconds * 0.6f)
+    fun part(x: Float, y: Float, z: Float, rx: Float, ry: Float, rz: Float, col: FloatArray, acc: FloatArray, a: Float, pat: Float = 0f, glow: Float = 0f) =
+        drawSphereAt(wx(x + sway, z), wy(y), wz(x + sway, z), rx * H, ry * H, rz * H, col, acc, a * alpha, yaw, 0f, 1f, 0f, sphere, pat, glow)
+    fun limb(x0: Float, y0: Float, x1: Float, y1: Float, r: Float, col: FloatArray, a: Float) {
+        drawStrut(wx(x0 + sway, 0f), wy(y0), wz(x0 + sway, 0f), wx(x1 + sway, 0f), wy(y1), wz(x1 + sway, 0f), r * H, col, COL_SKIN_RIM, 0f)
+    }
+
+    // ---- organs first (opaque), so they read through the skin
+    part(0f, 0.925f, 0.005f, 0.045f, 0.036f, 0.05f, COL_ORG_BRAIN, COL_LAMP, 1f, 0.8f)                 // brain
+    for (sgn in SIGNS) part(sgn * 0.058f, 0.715f, 0f, 0.048f, 0.085f, 0.045f, COL_ORG_LUNG, COL_LAMP, 0.95f, 0.5f) // lungs
+    part(0.02f, 0.695f, 0.03f, 0.032f, 0.036f, 0.028f, COL_ORG_HEART, COL_LAMP, 1f, 0f, 0.2f)          // heart, left of midline
+    part(-0.045f, 0.615f, 0.01f, 0.075f, 0.035f, 0.05f, COL_ORG_LIVER, COL_LAMP, 1f)                    // liver, her right
+    part(0.045f, 0.61f, 0.015f, 0.04f, 0.03f, 0.03f, COL_ORG_STOMACH, COL_LAMP, 1f)                     // stomach, her left
+    for (sgn in SIGNS) part(sgn * 0.045f, 0.565f, -0.03f, 0.018f, 0.032f, 0.016f, COL_ORG_KIDNEY, COL_LAMP, 1f) // kidneys, posterior
+    part(0f, 0.525f, 0.02f, 0.072f, 0.05f, 0.045f, COL_ORG_GUT, COL_LAMP, 1f, 1f)                       // small intestine
+    part(0f, 0.465f, 0.025f, 0.022f, 0.02f, 0.02f, COL_ORG_BLADDER, COL_LAMP, 1f)                       // bladder
+    for (k in 0 until 14) part(0f, 0.47f + k * 0.03f, -0.045f, 0.012f, 0.011f, 0.012f, COL_BONE, COL_LAMP, 1f) // spine
+    for (sgn in SIGNS) limb(sgn * 0.07f, 0.46f, sgn * 0.075f, 0.28f, 0.012f, COL_BONE, 1f)              // femurs
+
+    // ---- the tour's stops, where they happened, joined in order
+    GLES20.glDepthMask(false)
+    val arr = dynLines.data
+    var v = 0
+    for (k in 0 until nodes.size - 1) {
+        val a0 = nodes[k]
+        val mx = (a0.mapX - 50f) / 100f * 0.667f; val my = 1f - a0.mapY / 150f
+        val hot = 0.9f
+        part(-mx, my, 0.075f, 0.011f, 0.011f, 0.011f, COL_LAMP, COL_LAMP, 1f, 0f, hot)
+        if (k + 1 < nodes.size - 1 && v + 14 <= arr.size) {
+            val b0 = nodes[k + 1]
+            val nx = (b0.mapX - 50f) / 100f * 0.667f; val ny = 1f - b0.mapY / 150f
+            for ((qx, qy) in listOf(-mx to my, -nx to ny)) {
+                arr[v++] = wx(qx + sway, 0.075f); arr[v++] = wy(qy); arr[v++] = wz(qx + sway, 0.075f)
+                arr[v++] = 1f; arr[v++] = 0.77f; arr[v++] = 0.42f; arr[v++] = 0.8f * alpha
+            }
+        }
+    }
+    if (v > 0) {
+        Matrix.setIdentityM(model, 0)
+        Matrix.multiplyMM(mv, 0, view, 0, model, 0)
+        Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0)
+        colorShader.use(mvp, 1f)
+        lineWidth(2f)
+        dynLines.draw(colorShader.positionHandle, colorShader.colorHandle, GLES20.GL_LINES, v / 7)
+        lineWidth(1f)
+    }
+
+    // ---- the translucent skin: head, neck, trunk, arms, legs (eight-head canon)
+    part(0f, 0.93f, 0f, 0.058f, 0.068f, 0.064f, COL_SKIN_SHELL, COL_SKIN_RIM, 0.3f)                    // head
+    limb(0f, 0.845f, 0f, 0.875f, 0.026f, COL_SKIN_SHELL, 0.3f)                                         // neck
+    part(0f, 0.72f, 0f, 0.125f, 0.12f, 0.07f, COL_SKIN_SHELL, COL_SKIN_RIM, 0.28f)                     // chest
+    part(0f, 0.575f, 0f, 0.105f, 0.085f, 0.062f, COL_SKIN_SHELL, COL_SKIN_RIM, 0.28f)                  // abdomen
+    part(0f, 0.49f, 0f, 0.12f, 0.06f, 0.068f, COL_SKIN_SHELL, COL_SKIN_RIM, 0.28f)                     // pelvis
+    for (sgn in SIGNS) {
+        limb(sgn * 0.165f, 0.80f, sgn * 0.19f, 0.63f, 0.04f, COL_SKIN_SHELL, 0.3f)                      // upper arm
+        limb(sgn * 0.19f, 0.63f, sgn * 0.205f, 0.47f, 0.032f, COL_SKIN_SHELL, 0.3f)                     // forearm
+        part(sgn * 0.21f, 0.43f, 0f, 0.022f, 0.04f, 0.012f, COL_SKIN_SHELL, COL_SKIN_RIM, 0.3f)          // hand
+        limb(sgn * 0.072f, 0.47f, sgn * 0.078f, 0.27f, 0.062f, COL_SKIN_SHELL, 0.28f)                   // thigh
+        limb(sgn * 0.078f, 0.27f, sgn * 0.08f, 0.045f, 0.045f, COL_SKIN_SHELL, 0.28f)                   // shin
+        part(sgn * 0.082f, 0.018f, 0.03f, 0.03f, 0.018f, 0.06f, COL_SKIN_SHELL, COL_SKIN_RIM, 0.3f)      // foot
+    }
+    GLES20.glDepthMask(true)
+}
+
+/** Tour I stop 4: the bloodstream (the drifting red cells come from the BodyField). */
+internal fun StereoBodyRenderer.drawBloodstream(n: TourNode, i: Int, seconds: Float) {
 }
