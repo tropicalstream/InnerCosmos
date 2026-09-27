@@ -3272,7 +3272,7 @@ private fun t1CapR(a: Float, R: Float, lead: Float): Float {
 
 private fun t1CristaGap(j: Int) = (if (j % 2 == 0) 90f else 270f) * DEG
 
-private class T1Mito(val outer: T1Batch, val inner: T1Batch, val sacs: T1Batch, val lumens: T1Batch, val junctions: T1Batch, val heads: T1Batch,
+private class T1Mito(val outer: T1Batch, val inner: T1Batch, val back: T1Batch, val sacs: T1Batch, val lumens: T1Batch, val junctions: T1Batch, val heads: T1Batch,
                      val stalks: T1Batch, val etc: T1Batch, val porins: PointMesh, val dna: LineMesh, val granules: T1Batch, val synth: FloatArray, val rims: LineMesh)
 
 private fun StereoBodyRenderer.t1BuildMito(): T1Mito {
@@ -3283,6 +3283,10 @@ private fun StereoBodyRenderer.t1BuildMito(): T1Mito {
         t1RailPoint(T1_MITO_TIP + a / 16f, v * TAU, r, out)
     }
     shell(outer, T1_MO_R, 0f); shell(inner, T1_MI_R, 0.75f)
+    // the matrix's dark backdrop: the inner membrane's side wall only (not its cap, which lies between the
+    // camera and the cristae on the way in)
+    val back = T1Builder()
+    back.surface(30, 40) { u, v, out -> val a = 3.5f + 19f * u; t1RailPoint(T1_MITO_TIP + a / 16f, v * TAU, t1CapR(a, T1_MI_R, 0.75f) - 0.05f, out) }
     val q = FloatArray(3); val q2 = FloatArray(3)
     val synth = ArrayList<Float>()        // per synthase: crista index, base xyz, head direction xyz
     val rnd = java.util.Random(88)
@@ -3402,7 +3406,7 @@ private fun StereoBodyRenderer.t1BuildMito(): T1Mito {
         t1RailPoint(T1_MITO_TIP + a / 16f, th, t1CapR(a, T1_MO_R, 0f) - 0.02f, q); addp(q, oc)
         t1RailPoint(T1_MITO_TIP + a / 16f, th, t1CapR(a, T1_MI_R, 0.75f) - 0.02f, q); addp(q, ic)
     }
-    return T1Mito(outer.build(), inner.build(), sacs.build(), lum.build(), junc.build(), heads.build(), stalks.build(), etc.build(),
+    return T1Mito(outer.build(), inner.build(), back.build(), sacs.build(), lum.build(), junc.build(), heads.build(), stalks.build(), etc.build(),
         PointMesh(por.toFloatArray()), LineMesh(dna.toFloatArray()), gran.build(), synth.toFloatArray(), LineMesh(rim.toFloatArray()))
 }
 
@@ -3449,7 +3453,7 @@ internal fun StereoBodyRenderer.drawMitochondrion(n: TourNode, i: Int, seconds: 
     landmarkFade *= vis; colorShader.globalFade *= vis
     val ow = t1ShipOffWorld(); t1Ox = ow[0]; t1Oy = ow[1]; t1Oz = ow[2]
     t1K = (4e-8 / shipLengthM(rp)).toFloat().coerceIn(0.2f, 1f)
-    val mt = t1Mesh("mito5") { t1BuildMito() }
+    val mt = t1Mesh("mito6") { t1BuildMito() }
     // opaque: intracristal spaces, junctions, synthases, complexes, nucleoid, granules
     t1LitK(mt.lumens, T1_ICS2, T1_WHITE, 1f, 0.12f)
     t1LitK(mt.junctions, T1_CRISTA, T1_WHITE, 1f, 0.15f)
@@ -3504,8 +3508,9 @@ internal fun StereoBodyRenderer.drawMitochondrion(n: TourNode, i: Int, seconds: 
     // translucent: the cristae's membranes, the inner boundary membrane, the outer membrane and its porins
     t1LitK(mt.sacs, T1_CRISTA2, T1_WHITE, 1f, 0.4f)
     GLES20.glDepthMask(false)
-    t1LitK(mt.inner, T1_MATRIX, T1_MATRIX, 0.85f, 0f)                 // the matrix: a dark space the cristae cross
-    t1LitK(mt.outer, T1_MITO_OUT2, T1_WHITE, 0.3f, 0.18f)
+    t1LitK(mt.back, T1_MATRIX, T1_MATRIX, 0.85f, 0f)                  // the matrix: a dark space the cristae cross
+    t1LitK(mt.inner, T1_MITO_IN, T1_WHITE, 0.2f, 0.15f)
+    t1LitK(mt.outer, T1_MITO_OUT2, T1_WHITE, 0.15f, 0.18f)
     GLES20.glDepthMask(true)
     if (quality < 2) t1ColorK(mt.porins, 2.4f, true, 0.9f, depthWrite = false)
 }
