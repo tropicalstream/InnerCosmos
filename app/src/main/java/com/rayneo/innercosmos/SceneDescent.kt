@@ -4468,7 +4468,15 @@ private class PersonBaker {
 }
 
 /** The baked figure of one tour: organs and bones (opaque), then stop markers and skin (translucent), and the route. */
-private class PersonMeshes(val solid: TriMesh, val glass: TriMesh, val marks: TriMesh, val route: LineMesh?)
+private class PersonMeshes(
+    val solid: TriMesh, val glass: TriMesh, val marks: TriMesh, val route: LineMesh?,
+    /** Lungs and diaphragm, scaled per frame about the apices to breathe. */
+    val breath: TriMesh,
+    /** Tour II: the wiping forearm and hand (bones, skin), turned per frame about [pivot] on [axis]. */
+    val wipeSolid: TriMesh?, val wipeGlass: TriMesh?, val pivot: FloatArray?, val axis: FloatArray?,
+) {
+    fun release() { solid.release(); glass.release(); marks.release(); route?.release(); breath.release(); wipeSolid?.release(); wipeGlass?.release() }
+}
 
 /**
  * A stop's place in the look-back figure (x across, +x her left; y up from the soles; z toward the
@@ -4492,10 +4500,10 @@ private val BODY_MARKS: Map<Int, Array<BodyMark>> = mapOf(
         BodyMark(0.02f, 0.74f, 0.062f),                // heart
         BodyMark(0.022f, 0.86f, 0.022f),               // neck venule, by the jugular
         BodyMark(-0.020f, 0.975f, 0.030f),             // a neuron in the cortex, and inside it:
-        BodyMark(-0.020f, 0.975f, 0.030f, 0.016f),     //   the membrane,
-        BodyMark(-0.020f, 0.975f, 0.030f, 0.013f),     //   a mitochondrion,
-        BodyMark(-0.020f, 0.975f, 0.030f, 0.010f),     //   the nucleus,
-        BodyMark(-0.020f, 0.975f, 0.030f, 0.007f),     //   a ribosome,
+        BodyMark(-0.020f, 0.975f, 0.030f, 0.024f),     //   the membrane,
+        BodyMark(-0.020f, 0.975f, 0.030f, 0.019f),     //   a mitochondrion,
+        BodyMark(-0.020f, 0.975f, 0.030f, 0.014f),     //   the nucleus,
+        BodyMark(-0.020f, 0.975f, 0.030f, 0.009f),     //   a ribosome,
         BodyMark(-0.020f, 0.975f, 0.030f, 0.004f),     //   a carbon atom
         BodyMark(0f, 0.6f, 0.04f)),                    // (the look-back itself: not marked)
     2 to arrayOf(
@@ -4529,10 +4537,10 @@ private val BODY_MARKS: Map<Int, Array<BodyMark>> = mapOf(
 /** Waypoints for route legs that should follow a passage (leg k runs from stop k to stop k + 1). */
 private val BODY_ROUTES: Map<Int, Map<Int, List<FloatArray>>> = mapOf(
     1 to mapOf(
-        0 to listOf(floatArrayOf(0f, 0.918f, 0.06f), floatArrayOf(0f, 0.925f, 0f), floatArrayOf(0f, 0.85f, -0.012f), floatArrayOf(0f, 0.845f, 0.018f)),
-        1 to listOf(floatArrayOf(0f, 0.785f, 0f), floatArrayOf(-0.03f, 0.765f, -0.004f))),
+        0 to listOf(floatArrayOf(0f, 0.915f, 0.06f), floatArrayOf(0f, 0.912f, -0.004f), floatArrayOf(0f, 0.85f, -0.012f), floatArrayOf(0f, 0.845f, 0.018f)),
+        1 to listOf(floatArrayOf(0f, 0.785f, 0f), floatArrayOf(-0.016f, 0.768f, -0.004f), floatArrayOf(-0.030f, 0.752f, 0.012f))),
     2 to mapOf(
-        0 to listOf(floatArrayOf(0f, 0.87f, -0.012f), floatArrayOf(0f, 0.835f, -0.018f), floatArrayOf(0.004f, 0.75f, -0.022f),
+        0 to listOf(floatArrayOf(0f, 0.893f, 0.03f), floatArrayOf(0f, 0.885f, -0.008f), floatArrayOf(0f, 0.835f, -0.018f), floatArrayOf(0.004f, 0.75f, -0.022f),
             floatArrayOf(0.006f, 0.71f, -0.02f), floatArrayOf(0.04f, 0.693f, -0.002f))),
 )
 private var personCache: PersonMeshes? = null
@@ -4558,6 +4566,7 @@ private val COL_PLEURA = floatArrayOf(0.75f, 0.85f, 0.95f, 1f)
 private val COL_STORED_BLOOD = floatArrayOf(0.55f, 0.06f, 0.11f, 1f)
 
 private val COL_CEREBELLUM = floatArrayOf(0.80f, 0.60f, 0.66f, 1f)
+private val COL_GYRI = floatArrayOf(0.75f, 0.52f, 0.58f, 1f)
 private val COL_CORD = floatArrayOf(0.96f, 0.90f, 0.72f, 1f)
 private val COL_PHARYNX = floatArrayOf(0.88f, 0.52f, 0.55f, 1f)
 private val COL_CARTILAGE_LB = floatArrayOf(0.82f, 0.88f, 0.92f, 1f)
@@ -4589,7 +4598,10 @@ private fun FloatArray.plus(o: FloatArray, k: Float) = floatArrayOf(this[0] + o[
  * the skin go in. Returns the tip of the middle finger.
  */
 private fun personArm(b: PersonBaker, sgn: Float, S: FloatArray, E: FloatArray, W: FloatArray, bones: Boolean,
-                      handDir: FloatArray? = null, thumbDir: FloatArray? = null): FloatArray {
+                      handDir: FloatArray? = null, thumbDir: FloatArray? = null, part: Int = 0): FloatArray {
+    // part: 0 the whole arm, 1 the upper arm only, 2 the forearm and hand only (so a moving
+    // forearm can be baked into its own mesh)
+    val up1 = part != 2; val lo = part != 1
     val fore = floatArrayOf(W[0] - E[0], W[1] - E[1], W[2] - E[2]); PersonBaker.norm(fore)
     val lat = PersonBaker.cross(fore, PersonBaker.EZ); PersonBaker.norm(lat)
     for (q in 0..2) lat[q] *= -sgn                                           // toward the thumb side
@@ -4613,11 +4625,13 @@ private fun personArm(b: PersonBaker, sgn: Float, S: FloatArray, E: FloatArray, 
     val tBase = W.plus(hd, 0.014f).plus(th, 0.013f)
     digits.add(tBase to tBase.plus(tDir, 0.034f))
     if (bones) {
-        b.seg(S, E, 0.009f, COL_BONE, COL_LAMP, 1f)                                                   // humerus
-        b.seg(E.plus(lat, 0.0065f), W.plus(th, 0.0065f), 0.0055f, COL_BONE, COL_LAMP, 1f)              // radius (to the thumb side)
-        b.seg(E.plus(lat, -0.0065f), W.plus(th, -0.0065f), 0.006f, COL_BONE, COL_LAMP, 1f)             // ulna
-        b.ellAxis(palm, hd, th, 0.013f, 0.026f, 0.005f, COL_BONE, COL_LAMP, 1f)                        // carpals and metacarpals
-        for ((p0, p1) in digits) b.seg(p0, p1, 0.0028f, COL_BONE, COL_LAMP, 1f)                         // phalanges
+        if (up1) b.seg(S, E, 0.009f, COL_BONE, COL_LAMP, 1f)                                          // humerus
+        if (lo) {
+            b.seg(E.plus(lat, 0.0065f), W.plus(th, 0.0065f), 0.0055f, COL_BONE, COL_LAMP, 1f)          // radius (to the thumb side)
+            b.seg(E.plus(lat, -0.0065f), W.plus(th, -0.0065f), 0.006f, COL_BONE, COL_LAMP, 1f)         // ulna
+            b.ellAxis(palm, hd, th, 0.013f, 0.026f, 0.005f, COL_BONE, COL_LAMP, 1f)                    // carpals and metacarpals
+            for ((p0, p1) in digits) b.seg(p0, p1, 0.0028f, COL_BONE, COL_LAMP, 1f)                     // phalanges
+        }
         return digits[1].second
     }
     // Superficial veins, just under the skin: cephalic up the thumb side, basilic up the little-finger
@@ -4627,14 +4641,18 @@ private fun personArm(b: PersonBaker, sgn: Float, S: FloatArray, E: FloatArray, 
     val cS = S.plus(lat, 0.022f).plus(front, 0.010f); val cE = E.plus(lat, 0.018f).plus(front, 0.012f); val cW = W.plus(lat, 0.014f).plus(front, 0.008f)
     val bM = floatArrayOf((S[0] + E[0]) * 0.5f, (S[1] + E[1]) * 0.5f, (S[2] + E[2]) * 0.5f).plus(lat, -0.020f).plus(front, 0.008f)
     val bE = E.plus(lat, -0.017f).plus(front, 0.012f); val bW = W.plus(lat, -0.013f).plus(front, 0.008f)
-    b.seg(cS, cE, 0.003f, vc, COL_LAMP, 0.75f); b.seg(cE, cW, 0.0028f, vc, COL_LAMP, 0.75f)
-    b.seg(bM, bE, 0.0033f, vc, COL_LAMP, 0.75f); b.seg(bE, bW, 0.0028f, vc, COL_LAMP, 0.75f)
-    b.seg(bE.plus(fore, 0.016f).plus(front, 0.004f), cE.plus(up, 0.010f).plus(front, 0.004f), 0.0033f, vc, COL_LAMP, 0.8f)
     val sk = COL_SKIN_SHELL; val rim = COL_SKIN_RIM
-    b.seg(S.plus(up, -0.004f), E, 0.028f, sk, rim, 0.3f, glow = 0.35f)                                // upper arm
-    b.seg(E, W, 0.022f, sk, rim, 0.3f, glow = 0.35f)                                                   // forearm
-    b.ellAxis(palm, hd, th, 0.022f, 0.032f, 0.010f, sk, rim, 0.3f, glow = 0.35f)                       // palm
-    for ((p0, p1) in digits) b.seg(p0, p1, 0.0055f, sk, rim, 0.28f, glow = 0.35f)                      // fingers and thumb
+    if (up1) {
+        b.seg(cS, cE, 0.003f, vc, COL_LAMP, 0.75f); b.seg(bM, bE, 0.0033f, vc, COL_LAMP, 0.75f)
+        b.seg(bE.plus(fore, 0.016f).plus(front, 0.004f), cE.plus(up, 0.010f).plus(front, 0.004f), 0.0033f, vc, COL_LAMP, 0.8f)
+        b.seg(S.plus(up, -0.004f), E, 0.028f, sk, rim, 0.3f, glow = 0.35f)                            // upper arm
+    }
+    if (lo) {
+        b.seg(cE, cW, 0.0028f, vc, COL_LAMP, 0.75f); b.seg(bE, bW, 0.0028f, vc, COL_LAMP, 0.75f)
+        b.seg(E, W, 0.022f, sk, rim, 0.3f, glow = 0.35f)                                               // forearm
+        b.ellAxis(palm, hd, th, 0.022f, 0.032f, 0.010f, sk, rim, 0.3f, glow = 0.35f)                   // palm
+        for ((p0, p1) in digits) b.seg(p0, p1, 0.0055f, sk, rim, 0.28f, glow = 0.35f)                  // fingers and thumb
+    }
     return digits[1].second
 }
 
@@ -4671,11 +4689,12 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     val hit = personCache
     if (hit != null && personKey === sphere && personTour == map.id) return hit
     // (a recreated context already freed the old buffers; their ids may now belong to others)
-    if (hit != null && personKey === sphere) { hit.solid.release(); hit.glass.release(); hit.marks.release(); hit.route?.release() }
+    if (hit != null && personKey === sphere) hit.release()
     val him = map.id == 3
     val kitchen = map.id == 2
     val mx = if (him) 0.008f else 0f              // his mediastinum pulled toward the shrunken left lung
-    val s = PersonBaker()
+    val s0 = PersonBaker(); val br = PersonBaker()
+    var s = s0                                    // (the lungs and diaphragm go into [br], which breathes)
     // A little self-light on the organs so they read through the skin at the look-back's size.
     fun part(x: Float, y: Float, z: Float, rx: Float, ry: Float, rz: Float, col: FloatArray, acc: FloatArray, a: Float, pat: Float = 0f, glow: Float = 0.12f) =
         s.ell(x, y, z, rx, ry, rz, col, acc, a, pat, glow)
@@ -4692,10 +4711,13 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     val armW = { sgn: Float -> v3(sgn * (sh + 0.040f), 0.485f, 0.015f) }
     val upperLen = 0.1832f; val foreLen = 0.1474f
     class ArmPose(val S: FloatArray, val E: FloatArray, val W: FloatArray, val hand: FloatArray?, val thumb: FloatArray?)
+    val wS = PersonBaker(); val wG = PersonBaker()
     val arms = SIGNS.map { sgn ->
         if (kitchen && sgn < 0f) {
-            val S = armS(sgn); val W = v3(-0.030f, 0.885f, 0.078f)
-            ArmPose(S, elbowFor(S, W, upperLen, foreLen, v3(-0.35f, -0.85f, 0.45f)), W, v3(1f, 0.08f, 0.12f), v3(0f, 1f, 0f))
+            // The back of the fingers across the lips, the forearm a steep diagonal at her side,
+            // the elbow at lower-rib level; thumb medial, palm facing away from the face.
+            val S = armS(sgn); val W = v3(-0.045f, 0.800f, 0.082f)
+            ArmPose(S, elbowFor(S, W, upperLen, foreLen, v3(-0.4f, -1f, 0.1f)), W, v3(0.35f, 0.90f, -0.25f), v3(1f, -0.35f, 0f))
         } else ArmPose(armS(sgn), armE(sgn), armW(sgn), null, null)
     }
 
@@ -4710,15 +4732,20 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
 
     // ---- head and neck: the brain above the eyes, the cerebellum under its back, the brainstem
     // and the spinal cord down the canal to L1.
-    part(0f, 0.953f, -0.008f, 0.048f, 0.037f, 0.056f, COL_ORG_BRAIN, COL_LAMP, 1f, 0.8f)                   // cerebrum
+    part(0f, 0.958f, -0.008f, 0.048f, 0.034f, 0.056f, COL_ORG_BRAIN, COL_GYRI, 1f, 0.8f, 0.35f)            // cerebrum, self-lit so it reads through the head
+    for (sgn in SIGNS) part(sgn * 0.038f, 0.930f, -0.005f, 0.012f, 0.014f, 0.024f, COL_ORG_BRAIN, COL_GYRI, 1f, 0.8f, 0.35f)  // temporal lobes
     part(0f, 0.918f, -0.040f, 0.028f, 0.013f, 0.020f, COL_CEREBELLUM, COL_LAMP, 1f, 0.9f)                  // cerebellum
     seg(0f, 0.925f, -0.018f, 0f, 0.885f, -0.028f, 0.007f, COL_CEREBELLUM, COL_LAMP, 1f)                    // brainstem
-    tube(listOf(v3(0f, 0.885f, -0.028f), v3(0f, 0.84f, -0.048f), v3(0f, 0.76f, -0.064f), v3(0f, 0.655f, -0.060f)), 0.004f, COL_CORD)  // spinal cord
+    tube(listOf(v3(0f, 0.885f, -0.040f), v3(0f, 0.84f, -0.062f), v3(0f, 0.76f, -0.072f), v3(0f, 0.655f, -0.062f)), 0.004f, COL_CORD)  // spinal cord
     s.arc(0f, 0.886f, 0.02f, v3(0f, 1f, 0f), v3(0f, 0f, -1f), 0.034f, 0.036f, 0.012f, COL_BONE, COL_LAMP, 0.85f)  // mandible, open behind
     // Airway: nasal cavity, pharynx, larynx, trachea with its C-rings open behind, the carina and
     // the two main bronchi, the right steeper and wider.
-    tube(listOf(v3(0f, 0.918f, 0.060f), v3(0f, 0.925f, 0.0f)), 0.006f, COL_PHARYNX)
-    tube(listOf(v3(0f, 0.925f, -0.002f), v3(0f, 0.885f, -0.008f), v3(0f, 0.85f, -0.012f)), 0.007f, COL_PHARYNX)
+    tube(listOf(v3(0f, 0.915f, 0.060f), v3(0f, 0.912f, -0.004f)), 0.006f, COL_PHARYNX)                    // nasal cavity
+    tube(listOf(v3(0f, 0.912f, -0.004f), v3(0f, 0.885f, -0.008f), v3(0f, 0.85f, -0.012f)), 0.007f, COL_PHARYNX)   // pharynx
+    // Mouth: the oral cavity and tongue, opening back into the oropharynx.
+    part(0f, 0.893f, 0.030f, 0.017f, 0.007f, 0.022f, COL_PHARYNX, COL_LAMP, 1f)
+    part(0f, 0.889f, 0.026f, 0.011f, 0.005f, 0.018f, COL_TONGUE, COL_LAMP, 1f)
+    tube(listOf(v3(0f, 0.893f, 0.008f), v3(0f, 0.885f, -0.008f)), 0.006f, COL_PHARYNX)
     part(0f, 0.845f, 0.018f, 0.014f, 0.016f, 0.012f, COL_CARTILAGE_LB, COL_LAMP, 1f)                        // larynx (thyroid cartilage)
     val carina = v3(mx, 0.785f, 0f)
     tube(listOf(v3(0f, 0.835f, 0.012f), carina), 0.009f, COL_CARTILAGE_LB)                                  // trachea
@@ -4727,8 +4754,11 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
         s.ring(v3(mx * t, 0.835f - 0.05f * t, 0.012f * (1f - t)), v3(mx, 0.05f, -0.012f), v3(0f, 0f, -1f), 0.0098f, 0.0098f, 0.0016f,
             COL_CARTILAGE_LB, COL_LAMP, 1f, 0.12f, sweep = 0.8f)
     }
-    tube(listOf(carina, v3(-0.03f + mx, 0.765f, -0.004f)), 0.0065f, COL_CARTILAGE_LB)                       // right main bronchus
-    tube(listOf(carina, v3(0.036f + mx, 0.77f, -0.004f)), 0.0055f, COL_CARTILAGE_LB)                        // left main bronchus
+    val rMain = v3(-0.016f + mx, 0.768f, -0.004f); val lMain = v3(0.028f + mx, 0.768f, -0.004f)
+    tube(listOf(carina, rMain), 0.0065f, COL_CARTILAGE_LB)                                                  // right main bronchus, short and steep
+    tube(listOf(carina, lMain), 0.0055f, COL_CARTILAGE_LB)                                                  // left main bronchus, longer and flatter
+    for (e in listOf(v3(-0.030f, 0.782f, -0.004f), v3(-0.030f, 0.752f, 0.012f), v3(-0.028f, 0.735f, -0.012f))) tube(listOf(rMain, e), 0.004f, COL_CARTILAGE_LB)  // upper, middle, lower lobe
+    for (e in listOf(v3(0.040f + mx, 0.775f, 0f), v3(0.040f + mx, 0.745f, -0.012f))) tube(listOf(lMain, e), 0.004f, COL_CARTILAGE_LB)                             // upper, lower lobe
     // Oesophagus: behind the trachea, down through the diaphragm and over to the cardia on her left.
     tube(spline(listOf(v3(0f, 0.87f, -0.012f), v3(0f, 0.835f, -0.018f), v3(0.004f, 0.75f, -0.022f), v3(0.006f, 0.71f, -0.02f), v3(0.04f, 0.693f, -0.002f)), 6), 0.0065f, COL_OESOPHAGUS)
 
@@ -4738,39 +4768,45 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
         val k = 1f - ((x - cx) / rx).pow(2) - ((y - cy) / ry).pow(2)
         return v3(x, y, cz + rz * sqrt(max(0.02f, k)) + 0.0015f)
     }
-    part(-0.050f, 0.755f, -0.004f, 0.034f, 0.058f, 0.044f, COL_LUNG_LB, COL_LAMP, 0.95f, 0.5f)            // right lung
+    s = br
+    part(-0.050f, 0.772f, -0.004f, 0.034f, 0.055f, 0.044f, COL_LUNG_LB, COL_LAMP, 0.95f, 0.5f)            // right lung, its base on the dome
     part(-0.046f, 0.812f, -0.008f, 0.025f, 0.035f, 0.028f, COL_LUNG_LB, COL_LAMP, 0.95f, 0.5f)             //   apex
-    tube(List(10) { k -> val x = -0.078f + 0.05f * k / 9f; onLung(-0.050f, 0.755f, -0.004f, 0.034f, 0.058f, 0.044f, x, 0.765f) }, 0.0012f, COL_FISSURE)   // horizontal fissure
-    tube(List(10) { k -> val t = k / 9f; onLung(-0.050f, 0.755f, -0.004f, 0.034f, 0.058f, 0.044f, -0.080f + 0.045f * t, 0.795f - 0.09f * t) }, 0.0012f, COL_FISSURE)   // oblique
+    tube(List(10) { k -> val x = -0.078f + 0.05f * k / 9f; onLung(-0.050f, 0.772f, -0.004f, 0.034f, 0.055f, 0.044f, x, 0.765f) }, 0.0012f, COL_FISSURE)   // horizontal fissure
+    tube(List(10) { k -> val t = k / 9f; onLung(-0.050f, 0.772f, -0.004f, 0.034f, 0.055f, 0.044f, -0.080f + 0.045f * t, 0.795f - 0.09f * t) }, 0.0012f, COL_FISSURE)   // oblique
     if (!him) {
         part(0.054f, 0.772f, -0.008f, 0.030f, 0.046f, 0.042f, COL_LUNG_LB, COL_LAMP, 0.95f, 0.5f)         // left lung, upper lobe
         part(0.062f, 0.735f, -0.014f, 0.024f, 0.030f, 0.036f, COL_LUNG_LB, COL_LAMP, 0.95f, 0.5f)          //   lower, round the cardiac notch
         part(0.048f, 0.812f, -0.008f, 0.023f, 0.035f, 0.027f, COL_LUNG_LB, COL_LAMP, 0.95f, 0.5f)          //   apex
         tube(List(10) { k -> val t = k / 9f; onLung(0.054f, 0.772f, -0.008f, 0.030f, 0.046f, 0.042f, 0.080f - 0.04f * t, 0.795f - 0.08f * t) }, 0.0012f, COL_FISSURE)
     } else {
+        s = s0                                    // (his fibrotic left lung hardly moves)
         // Bethune's left lung, contracted and fibrotic after the 1927 pneumothorax: small, grey,
         // streaked, inside a thickened pleura at the lung's old size (drawn with the skin). In its
         // apex the old tuberculous cavity: a hollow in a caseous rim, puckered scar strands round it.
-        part(0.056f, 0.745f, -0.012f, 0.026f, 0.050f, 0.032f, COL_LUNG_FIBROTIC, COL_FIBROSIS, 1f, 0.8f)
-        part(0.050f, 0.800f, -0.012f, 0.020f, 0.030f, 0.022f, COL_LUNG_FIBROTIC, COL_FIBROSIS, 1f, 0.8f)
-        part(0.050f, 0.800f, 0.004f, 0.016f, 0.017f, 0.012f, COL_LUNG_FIBROTIC, COL_SCAR, 1f, 0.8f)            // scar zone
-        part(0.050f, 0.800f, 0.012f, 0.019f, 0.019f, 0.005f, COL_CASEUM_LB, COL_LAMP, 1f)                      // caseous rim
-        part(0.050f, 0.800f, 0.015f, 0.013f, 0.015f, 0.006f, COL_LB_CAVITY, COL_LB_CAVITY, 1f, 0f, 0f)         // the hollow
+        part(0.050f, 0.752f, -0.012f, 0.020f, 0.040f, 0.028f, COL_LUNG_FIBROTIC, COL_FIBROSIS, 1f, 0.8f)
+        part(0.045f, 0.795f, -0.012f, 0.016f, 0.024f, 0.018f, COL_LUNG_FIBROTIC, COL_FIBROSIS, 1f, 0.8f)
+        part(0.045f, 0.797f, -0.004f, 0.018f, 0.018f, 0.014f, COL_LUNG_FIBROTIC, COL_SCAR, 1f, 0.8f)           // scar zone
+        part(0.045f, 0.797f, -0.004f, 0.015f, 0.016f, 0.010f, COL_CASEUM_LB, COL_LAMP, 1f)                     // caseous rim
+        part(0.045f, 0.797f, -0.002f, 0.010f, 0.012f, 0.008f, COL_LB_CAVITY, COL_LB_CAVITY, 1f, 0f, 0f)        // the hollow
         for (k in 0 until 4) { val an = k * PI_F / 2f + 0.4f
-            seg(0.050f + 0.019f * cos(an), 0.800f + 0.019f * sin(an), 0.012f, 0.050f + 0.034f * cos(an), 0.800f + 0.034f * sin(an), 0.008f, 0.0015f, COL_SCAR, COL_SCAR, 1f) }
+            seg(0.045f + 0.015f * cos(an), 0.797f + 0.015f * sin(an), 0.004f, 0.045f + 0.028f * cos(an), 0.797f + 0.028f * sin(an), 0.0f, 0.0015f, COL_SCAR, COL_SCAR, 1f) }
     }
 
+    s = s0
     // ---- heart (drawn live, so it can beat) and the great vessels
-    tube(spline(listOf(v3(0.005f + mx, 0.770f, 0.030f), v3(0f + mx, 0.805f, 0.015f), v3(0.012f + mx, 0.800f, -0.020f), v3(0.014f, 0.780f, -0.032f)), 6), 0.008f, COL_AORTA)  // aortic arch
-    tube(listOf(v3(0.014f, 0.780f, -0.032f), v3(0.010f, 0.68f, -0.03f), v3(0.008f, 0.585f, -0.028f)), 0.0075f, COL_AORTA)          // descending aorta to L4
-    tube(listOf(v3(0.003f + mx, 0.803f, 0.012f), v3(-0.012f, 0.815f, 0.01f), v3(-0.015f, 0.885f, 0.010f)), 0.0035f, COL_AORTA)       // right common carotid
-    tube(listOf(v3(0.010f + mx, 0.806f, 0.004f), v3(0.015f, 0.815f, 0.008f), v3(0.015f, 0.885f, 0.010f)), 0.0035f, COL_AORTA)        // left common carotid
+    // The arch passes back on the trachea's left, over the left main bronchus.
+    tube(spline(listOf(v3(0.006f + mx, 0.772f, 0.032f), v3(0.004f + mx, 0.806f, 0.020f), v3(0.022f + mx, 0.803f, -0.004f), v3(0.020f + mx, 0.785f, -0.030f)), 6), 0.008f, COL_AORTA)  // aortic arch
+    tube(listOf(v3(0.020f + mx, 0.785f, -0.030f), v3(0.016f, 0.68f, -0.036f), v3(0.008f, 0.585f, -0.028f)), 0.0075f, COL_AORTA)   // descending aorta to L4
+    tube(listOf(v3(0.004f + mx, 0.806f, 0.018f), v3(-0.012f, 0.818f, 0.012f), v3(-0.015f, 0.885f, 0.010f)), 0.0035f, COL_AORTA)       // right common carotid (via the brachiocephalic trunk)
+    tube(listOf(v3(0.012f + mx, 0.807f, 0.010f), v3(0.015f, 0.818f, 0.010f), v3(0.015f, 0.885f, 0.010f)), 0.0035f, COL_AORTA)        // left common carotid
     for (sgn in SIGNS) {
         tube(listOf(v3(sgn * 0.022f, 0.885f, 0.012f), v3(sgn * 0.022f, 0.80f, 0.014f), v3(sgn * 0.010f, 0.79f, 0.02f)), 0.0045f, COL_VEIN_BLUE)  // internal jugular
         tube(listOf(v3(0.008f, 0.585f, -0.028f), v3(sgn * 0.045f, 0.545f, -0.010f), v3(sgn * 0.06f, 0.52f, 0.03f), v3(sgn * 0.058f, 0.40f, 0.01f), v3(sgn * 0.055f, 0.30f, -0.005f)), 0.0045f, COL_AORTA)  // iliac and femoral arteries
         tube(listOf(v3(-0.015f, 0.585f, -0.022f), v3(sgn * 0.040f, 0.545f, -0.016f), v3(sgn * 0.052f, 0.52f, 0.024f), v3(sgn * 0.050f, 0.40f, 0.004f), v3(sgn * 0.048f, 0.30f, -0.01f)), 0.005f, COL_VEIN_BLUE)  // iliac and femoral veins
     }
     tube(listOf(v3(-0.022f + mx, 0.81f, 0.02f), v3(-0.022f + mx, 0.765f, 0.02f)), 0.0075f, COL_VEIN_BLUE)                          // superior vena cava
+    tube(listOf(v3(0.010f, 0.790f, 0.020f), v3(0.022f, 0.797f, 0.016f), v3(-0.022f + mx, 0.810f, 0.020f)), 0.005f, COL_VEIN_BLUE)   // left brachiocephalic vein
+    tube(listOf(v3(-0.010f, 0.790f, 0.020f), v3(-0.022f + mx, 0.810f, 0.020f)), 0.005f, COL_VEIN_BLUE)                                // right brachiocephalic vein
     tube(listOf(v3(-0.015f + mx, 0.725f, 0.005f), v3(-0.015f, 0.66f, -0.012f), v3(-0.015f, 0.585f, -0.022f)), 0.0085f, COL_VEIN_BLUE)  // inferior vena cava
     tube(spline(listOf(v3(0.014f + mx, 0.765f, 0.045f), v3(0.010f + mx, 0.785f, 0.03f), v3(-0.035f + mx, 0.765f, 0f)), 5), 0.006f, COL_PULMONARY)   // pulmonary trunk, right
     tube(listOf(v3(0.010f + mx, 0.785f, 0.03f), v3(0.035f + mx, 0.768f, 0f)), 0.0055f, COL_PULMONARY)                                             //   and left branch
@@ -4779,9 +4815,11 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     // heart (translucent, so the organs above and below read through it). His left dome is drawn up
     // by the shrunken lung.
     val lDome = if (him) 0.687f else 0.675f
+    s = br
     s.ell(-0.045f, 0.683f, 0f, 0.058f, 0.032f, 0.058f, COL_DIAPHRAGM, COL_LAMP, 0.6f, 0f, 0.1f, 0f, PI_F / 2f)
     s.ell(0.047f, lDome, 0f, 0.056f, 0.030f, 0.058f, COL_DIAPHRAGM, COL_LAMP, 0.6f, 0f, 0.1f, 0f, PI_F / 2f)
     s.ell(0f, 0.700f, 0.01f, 0.03f, 0.005f, 0.04f, COL_DIAPHRAGM, COL_LAMP, 0.6f)
+    s = s0
 
     // ---- abdomen, at the vertebral levels: liver and gallbladder, the J of the stomach, duodenum
     // round the pancreas head, spleen, kidneys and ureters, the small intestine in coils framed by
@@ -4790,7 +4828,7 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     part(0.018f, 0.682f, 0.030f, 0.042f, 0.018f, 0.028f, COL_ORG_LIVER, COL_LAMP, 1f)                      //   left lobe
     part(-0.035f, 0.632f, 0.040f, 0.008f, 0.014f, 0.008f, COL_GALLBLADDER, COL_LAMP, 1f)                   // gallbladder
     tube(listOf(v3(-0.033f, 0.625f, 0.036f), v3(-0.028f, 0.61f, 0.02f)), 0.002f, COL_GALLBLADDER)          //   bile duct
-    part(0.058f, 0.690f, 0f, 0.024f, 0.024f, 0.024f, COL_STOMACH_LB, COL_LAMP, 1f)                         // stomach: fundus,
+    part(0.058f, if (him) 0.690f else 0.682f, 0f, 0.022f, 0.022f, 0.022f, COL_STOMACH_LB, COL_LAMP, 1f)     // stomach: fundus under the dome,
     s.ellAxis(v3(0.055f, 0.655f, 0.022f), v3(-0.25f, -1f, 0.1f), v3(1f, 0f, 0f), 0.026f, 0.038f, 0.024f, COL_STOMACH_LB, COL_LAMP, 1f, 0f, 0.12f)   // body,
     s.tube(spline(listOf(v3(0.046f, 0.625f, 0.028f), v3(0.03f, 0.618f, 0.034f), v3(0.012f, 0.628f, 0.035f)), 5), { k -> 0.014f - k * 0.0006f }, COL_STOMACH_LB, COL_LAMP, 1f, 0f, 0.12f)  // antrum to pylorus
     val pylorus = v3(0.012f, 0.628f, 0.035f); val djFlexure = v3(0.022f, 0.592f, 0.010f)
@@ -4850,8 +4888,8 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     part(0f, 0.705f, 0.050f, 0.005f, 0.008f, 0.003f, COL_CARTILAGE_LB, COL_LAMP, 1f)                      // xiphoid
     // Pelvis: a closed ring round the inlet (tilted ~55 degrees forward), the pubic symphysis in
     // front, each ilium a thin fan whose crest is the widest part, the pubic rami and ischia.
-    val inletX = if (him) 0.055f else 0.065f
-    s.ring(v3(0f, 0.535f, 0.005f), v3(0f, 0.57f, 0.82f), v3(0f, -0.82f, 0.57f), inletX, 0.050f, 0.0045f, COL_BONE, COL_LAMP, 1f, 0.12f)
+    val inletX = if (him) 0.040f else 0.046f
+    s.ring(v3(0f, 0.540f, 0f), v3(0f, 0.80f, 0.60f), v3(0f, -0.60f, 0.80f), inletX, 0.040f, 0.0045f, COL_BONE, COL_LAMP, 1f, 0.12f)
     part(0f, 0.508f, 0.048f, 0.010f, 0.018f, 0.006f, COL_BONE, COL_LAMP, 1f)                              // pubic symphysis
     for (sgn in SIGNS) {
         val cs = if (him) 0.94f else 1f
@@ -4897,7 +4935,11 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
             seg(bx, 0.024f, 0.030f, tx, 0.012f, 0.095f, 0.003f, COL_BONE, COL_LAMP, 1f)                      // metatarsal
             seg(tx, 0.012f, 0.095f, tx * 1.02f, 0.008f, 0.12f - abs(j - 1.5f) * 0.004f, 0.0028f, COL_BONE, COL_LAMP, 1f)  // toe
         }
-        val p = arms[k]; personArm(s, sgn, p.S, p.E, p.W, bones = true, handDir = p.hand, thumbDir = p.thumb)
+        val p = arms[k]
+        if (p.hand != null) {
+            personArm(s, sgn, p.S, p.E, p.W, bones = true, handDir = p.hand, thumbDir = p.thumb, part = 1)
+            personArm(wS, sgn, p.S, p.E, p.W, bones = true, handDir = p.hand, thumbDir = p.thumb, part = 2)
+        } else personArm(s, sgn, p.S, p.E, p.W, bones = true)
     }
     val solid = TriMesh(s.data())
 
@@ -4907,7 +4949,7 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     if (him) {
         // The thickened pleura (fibrothorax) round the lung's old envelope, and the bottle of stored
         // blood beside him (the chapter's stop outside any body).
-        g.ell(0.054f, 0.765f, -0.008f, 0.032f, 0.064f, 0.044f, COL_PLEURA_THICK, COL_LAMP, 0.45f, 0f, 0.3f, twoSided = true)
+        g.ell(0.054f, 0.765f, -0.008f, 0.032f, 0.064f, 0.044f, COL_PLEURA_THICK, COL_LAMP, 0.45f, 0f, 0.5f, twoSided = true)
         g.cyl(0.24f, 0.628f, 0.663f, 0.008f, 0.016f, COL_STORED_BLOOD, COL_LAMP, 0.85f, capped = true, glow = 0.2f)
         g.cyl(0.24f, 0.626f, 0.678f, 0.008f, 0.018f, COL_PERSON_GLASS, COL_LAMP, 0.35f, capped = false, glow = 0.3f)
     }
@@ -4935,7 +4977,11 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
     if (!him) for (sgn in SIGNS) g.ell(sgn * 0.048f, 0.725f, 0.058f, 0.034f, 0.030f, 0.026f, sk, rim, 0.2f, glow = 0.35f) // breasts
     g.ell(0f, 0.575f, 0f, if (him) 0.095f else 0.105f, 0.105f, 0.068f, sk, rim, 0.2f, glow = 0.35f)       // abdomen and pelvis, one shell
     for ((k, sgn) in SIGNS.withIndex()) {
-        val p = arms[k]; personArm(g, sgn, p.S, p.E, p.W, bones = false, handDir = p.hand, thumbDir = p.thumb)
+        val p = arms[k]
+        if (p.hand != null) {
+            personArm(g, sgn, p.S, p.E, p.W, bones = false, handDir = p.hand, thumbDir = p.thumb, part = 1)
+            personArm(wG, sgn, p.S, p.E, p.W, bones = false, handDir = p.hand, thumbDir = p.thumb, part = 2)
+        } else personArm(g, sgn, p.S, p.E, p.W, bones = false)
         g.tube(List(6) { j -> val t = j / 5f; v3(sgn * (0.068f - 0.014f * t), 0.50f - 0.215f * t, 0f) }, { j -> 0.052f - 0.0024f * j }, sk, rim, 0.27f, 0f, 0.35f, 12)   // thigh
         g.tube(List(6) { j -> val t = j / 5f; v3(sgn * (0.054f + 0.004f * t), 0.285f - 0.235f * t, -0.004f * sin(PI_F * t)) }, { j -> 0.036f - 0.0024f * j + 0.003f * sin(PI_F * j / 5f) }, sk, rim, 0.28f, 0f, 0.35f, 12)  // lower leg
         g.ell(sgn * 0.060f, 0.018f, 0.045f, 0.030f, 0.018f, 0.075f, sk, rim, 0.3f, glow = 0.35f)            // foot
@@ -4959,14 +5005,14 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
         val n = if (dashed) max(1, (len / 0.02f).toInt()) else 1
         for (j in 0 until n) {
             val t0 = j / n.toFloat(); val t1 = if (dashed) t0 + 0.6f / n else 1f
-            for (t in floatArrayOf(t0, t1)) { route.add(a[0] + dx * t); route.add(a[1] + dy * t); route.add(a[2] + dz * t); route.add(c[0]); route.add(c[1]); route.add(c[2]); route.add(0.5f) }
+            for (t in floatArrayOf(t0, t1)) { route.add(a[0] + dx * t); route.add(a[1] + dy * t); route.add(a[2] + dz * t); route.add(c[0]); route.add(c[1]); route.add(c[2]); route.add(if (map.id == 2) 0.3f else 0.5f) }
         }
     }
     val via = BODY_ROUTES[map.id] ?: emptyMap()
     for (k in 0 until nodes.size - 1) {
         val q = mark(k); val p = floatArrayOf(q.x, q.y, q.z)
         val col = if (q.other) COL_OTHER_BODY else COL_LAMP
-        if (q.ring > 0f) mk.ring(p, v3(0f, 0f, 1f), v3(0f, 1f, 0f), q.ring, q.ring, if (q.ring < 0.012f) 0.0012f else 0.0018f, col, col, 1f, 0.9f)
+        if (q.ring > 0f) mk.ring(p, v3(0f, 0f, 1f), v3(0f, 1f, 0f), q.ring, q.ring, if (map.id == 1 && q.ring > 0f) 0.0010f else if (q.ring < 0.012f) 0.0012f else 0.0018f, col, col, 1f, 0.9f)
         else mk.ell(q.x, q.y, q.z, 0.008f, 0.008f, 0.008f, col, col, 1f, 0f, 0.9f)
         if (k + 1 < nodes.size - 1) {
             val n2 = mark(k + 1)
@@ -4974,7 +5020,11 @@ private fun StereoBodyRenderer.personMeshes(): PersonMeshes {
             for (j in 0 until pts.size - 1) leg(pts[j], pts[j + 1], q.other || n2.other)
         }
     }
-    val made = PersonMeshes(solid, TriMesh(g.data()), TriMesh(mk.data()), if (route.isEmpty()) null else LineMesh(route.toFloatArray()))
+    // The wipe turns the forearm about the elbow's flexion axis (perpendicular to both bones).
+    val wipe = arms.firstOrNull { it.hand != null }
+    val axis = wipe?.let { val a = floatArrayOf(it.S[0] - it.E[0], it.S[1] - it.E[1], it.S[2] - it.E[2]); val b = floatArrayOf(it.W[0] - it.E[0], it.W[1] - it.E[1], it.W[2] - it.E[2]); PersonBaker.cross(a, b).also { c -> PersonBaker.norm(c) } }
+    val made = PersonMeshes(solid, TriMesh(g.data()), TriMesh(mk.data()), if (route.isEmpty()) null else LineMesh(route.toFloatArray()),
+        TriMesh(br.data()), wipe?.let { TriMesh(wS.data()) }, wipe?.let { TriMesh(wG.data()) }, wipe?.E, axis)
     personCache = made; personKey = sphere; personTour = map.id
     return made
 }
@@ -5027,8 +5077,33 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
     colorShader.globalFade = keep * alpha * landmarkFade
     colorShader.use(mvp, 1f)
     meshes.solid.draw(colorShader.positionHandle, colorShader.colorHandle)
+    // Breathing, ~13 a minute (inspiration 40% of the cycle): the lungs grow about their apices, so
+    // the diaphragm's domes descend as they fill.
+    val ph = (seconds * 0.22f) % 1f
+    val b = if (ph < 0.4f) 0.5f - 0.5f * cos(PI_F * ph / 0.4f) else 0.5f + 0.5f * cos(PI_F * (ph - 0.4f) / 0.6f)
+    val local = FloatArray(16); val lm = FloatArray(16)
+    Matrix.setIdentityM(local, 0)
+    Matrix.translateM(local, 0, 0f, 0.847f, 0f)
+    Matrix.scaleM(local, 0, 1f + 0.03f * b, 1f + 0.06f * b, 1f + 0.03f * b)
+    Matrix.translateM(local, 0, 0f, -0.847f, 0f)
+    fun useLocal() { Matrix.multiplyMM(lm, 0, model, 0, local, 0); Matrix.multiplyMM(mv, 0, view, 0, lm, 0); Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0); colorShader.use(mvp, 1f) }
+    useLocal(); meshes.breath.draw(colorShader.positionHandle, colorShader.colorHandle)
+    // Tour II: two quick sweeps of the back of the hand across the lips, then a rest.
+    val pv = meshes.pivot; val wax = meshes.axis
+    if (pv != null && wax != null) {
+        val t = seconds % 5.5f
+        val ang = if (t < 1.67f) 9f * sin(TAU * 1.2f * t) else 0f
+        Matrix.setIdentityM(local, 0)
+        Matrix.translateM(local, 0, pv[0], pv[1], pv[2])
+        Matrix.rotateM(local, 0, ang, wax[0], wax[1], wax[2])
+        Matrix.translateM(local, 0, -pv[0], -pv[1], -pv[2])
+        useLocal(); meshes.wipeSolid?.draw(colorShader.positionHandle, colorShader.colorHandle)
+    }
+    Matrix.multiplyMM(mv, 0, view, 0, model, 0); Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0); colorShader.use(mvp, 1f)
     GLES20.glDepthMask(false)
     meshes.glass.draw(colorShader.positionHandle, colorShader.colorHandle)
+    if (pv != null && wax != null) { useLocal(); meshes.wipeGlass?.draw(colorShader.positionHandle, colorShader.colorHandle)
+        Matrix.multiplyMM(mv, 0, view, 0, model, 0); Matrix.multiplyMM(mvp, 0, projection, 0, mv, 0); colorShader.use(mvp, 1f) }
     // The stops and the route between them sit at their true depth in the body but are drawn over
     // it, so no organ hides a marker (the kidney's is behind the gut).
     GLES20.glDisable(GLES20.GL_DEPTH_TEST)
