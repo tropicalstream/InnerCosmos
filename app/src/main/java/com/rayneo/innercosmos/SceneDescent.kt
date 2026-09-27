@@ -3012,7 +3012,7 @@ internal fun StereoBodyRenderer.drawPerson(n: TourNode, i: Int, H: Float, alpha:
     part(0f, 0.466f, 0.026f, 0.021f, 0.018f, 0.018f, COL_ORG_BLADDER, COL_LAMP, 1f)                       // bladder
 
     // ---- skeleton: spine, ribs open at the sternum, clavicles, femurs
-    for (k in 0 until 13) part(0f, 0.47f + k * 0.031f, -0.047f, 0.012f, 0.010f, 0.012f, COL_BONE, COL_LAMP, 1f)
+    for (k in 0 until 7) part(0f, 0.475f + k * 0.058f, -0.047f, 0.013f, 0.019f, 0.013f, COL_BONE, COL_LAMP, 1f, 0.6f)   // vertebral column
     for (k in 0 until if (quality == 0) 7 else 4) {
         val y = 0.785f - k * (if (quality == 0) 0.028f else 0.049f)
         val w = 0.105f + 0.012f * sin(k * 0.55f + 0.4f)                                                      // widest at the 7th rib
