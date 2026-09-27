@@ -1171,7 +1171,7 @@ private fun StereoBodyRenderer.t2StomachMeshes(i: Int): Array<ColorVboMesh> = t2
 
 /** A peristaltic constriction: a thick ring of contracted circular muscle (unit major radius). */
 private fun StereoBodyRenderer.t2PeriRing(): TriMesh = t2Get("peri") {
-    val g = T2Geo(); g.torus(t2v(0f, 0f, 0f), t2v(0f, 0f, 1f), 1f, 0.3f, T2_OES_MUSCLE, 1f, 32, 10); TriMesh(g.baked())
+    val g = T2Geo(); g.torus(t2v(0f, 0f, 0f), t2v(0f, 0f, 1f), 1f, 0.17f, T2_OES_MUSCLE, 1f, 32, 10); TriMesh(g.baked())
 }
 
 /** Tour II stop 2: the oesophagus (drawn through the swallow) and the stomach. */
@@ -1182,9 +1182,9 @@ internal fun StereoBodyRenderer.drawStomach(n: TourNode, i: Int, seconds: Float)
         t2DrawWorld(t2OesophagusMesh(i))
         // the peristaltic wave: a ring of contraction just behind the craft, walking it down
         val shipArc = t2ArcAtP(i, routeProgress); val l01 = -t2ArcAtP(i, 0f)
-        val ringA0 = shipArc + l01 - 2.4f
+        val ringA0 = shipArc + l01 - 2.0f
         if (ringA0 > T2_UES + 1.5f && ringA0 < T2_LES - 1f) {
-            t2Model(t2Frame(i, shipArc - 2.4f), 0f, 0f); Matrix.scaleM(model, 0, 1.45f, 1.45f, 1.45f); t2Draw(t2PeriRing())
+            t2Model(t2Frame(i, shipArc - 2.0f), 0f, 0f); Matrix.scaleM(model, 0, 1.45f, 1.45f, 1.45f); t2Draw(t2PeriRing())
         }
         if (routeProgress > 0.45f) {
             val m = t2StomachMeshes(i)
@@ -1323,17 +1323,26 @@ internal fun StereoBodyRenderer.drawGut(n: TourNode, i: Int, seconds: Float) {
         // other, joined by capillary rungs and a loop just under the tip
         drawStrut(bx + ax * 0.05f, by + ay * 0.05f, bz + az * 0.05f, bx + ax * (h - 0.15f), by + ay * (h - 0.15f), bz + az * (h - 0.15f), 0.035f, T2_LACTEAL, T2_LACTEAL, 0.6f)
         val bxv = ay * tz - az * ty; val byv = az * tx - ax * tz; val bzv = ax * ty - ay * tx
-        val off = 0.075f
+        val off = 0.09f
         fun pt3(side: Float, t: Float, lat: Float = 0f, o: FloatArray) {
             o[0] = bx + ax * (h * t) + tx * (off * side) + bxv * lat; o[1] = by + ay * (h * t) + ty * (off * side) + byv * lat; o[2] = bz + az * (h * t) + tz * (off * side) + bzv * lat
         }
         val pa = FloatArray(3); val pb = FloatArray(3)
         pt3(1f, 0.02f, 0f, pa); pt3(1f, 0.88f, 0f, pb); t2Seg(pa[0], pa[1], pa[2], pb[0], pb[1], pb[2], T2_ARTERIOLE, 1f)
         pt3(-1f, 0.02f, 0f, pa); pt3(-1f, 0.88f, 0f, pb); t2Seg(pa[0], pa[1], pa[2], pb[0], pb[1], pb[2], T2_VENULE, 1f)
-        for (r in 1..5) {   // capillary rungs passing round the lacteal, under the epithelium
+        for (r in 1..5) {   // the subepithelial capillary net: loops round the villus just under its surface
             val t = r / 6.4f
-            for (hs in SIGNS) { pt3(1f, t, 0f, pa); pt3(0f, t + 0.02f, hs * 0.08f, pb); t2Seg(pa[0], pa[1], pa[2], pb[0], pb[1], pb[2], T2_CAPILLARY, 0.9f)
-                pt3(-1f, t + 0.04f, 0f, pa); t2Seg(pb[0], pb[1], pb[2], pa[0], pa[1], pa[2], T2_CAPILLARY, 0.9f) }
+            for (hs in SIGNS) {
+                var qx0 = 0f; var qy0 = 0f; var qz0 = 0f
+                for (q in 0..8) {
+                    val ang = T2PI * q / 8f; val rr = 0.09f
+                    val cx = cos(ang) * rr; val cy = hs * sin(ang) * rr
+                    val hh = h * (t + 0.03f * q / 8f + 0.02f * sin(ang * 3f + r))
+                    val xx = bx + ax * hh + tx * cx + bxv * cy; val yy = by + ay * hh + ty * cx + byv * cy; val zz = bz + az * hh + tz * cx + bzv * cy
+                    if (q > 0) t2Seg(qx0, qy0, qz0, xx, yy, zz, T2_CAPILLARY, 0.85f)
+                    qx0 = xx; qy0 = yy; qz0 = zz
+                }
+            }
         }
         var qx = 0f; var qy = 0f; var qz = 0f
         for (q in 0..8) {   // the loop over the top, 0.1 below the tip
